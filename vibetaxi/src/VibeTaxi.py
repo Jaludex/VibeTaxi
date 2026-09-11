@@ -10,7 +10,7 @@ from src.states.game.Menus.TitleScreenState import TitleScreenState
 class VibeTaxi(Game):
     def init(self) -> None:
         self.state_stack = StateStack()
-        self.state_stack.push(TitleScreenState(self.state_stack))
+        self.state_stack.push(TitleScreenState(self.state_stack), )
 
     def update(self, dt: float) -> None:
         self.state_stack.update(dt)

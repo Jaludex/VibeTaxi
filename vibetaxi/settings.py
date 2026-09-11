@@ -7,6 +7,7 @@ from gale import input_handler
 from gale import tilemap
 
 input_handler.InputHandler.set_keyboard_action(input_handler.KEY_ESCAPE, "quit")
+input_handler.InputHandler.set_mouse_click_action(input_handler.MOUSE_BUTTON_1, "click")
 
 
 TITLE = "Ultimate Fantasy"
@@ -33,14 +34,14 @@ TEXTURES = {
     
 }
 
-TILESET = tilemap.Tileset(TEXTURES["tiles"], TILE_SIZE, TILE_SIZE)
+# TILESET = tilemap.Tileset(TEXTURES["tiles"], TILE_SIZE, TILE_SIZE)
 
 FRAMES = {
     
 }
 
 FONTS = {
-
+    "big": pygame.font.Font(BASE_DIR / "assets" / "fonts" / "Big.ttf", 32),
 }
 
 SOUNDS = {
