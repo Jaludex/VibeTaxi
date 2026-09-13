@@ -1,31 +1,25 @@
-import pygame
+import settings
 
-class Entity:
-    def __init__(self, x, y, definition):
+from src.mixins.DrawableMixin import DrawableMixin
+
+class Entity(DrawableMixin):
+    def __init__(self, x: float, y: float, definition: dict = None) -> None:
         self.x = x
         self.y = y
-        
-        self.width = definition.get("width", 32)
-        self.height = definition.get("height", 32)
-        
-        self.def_data = definition
+
+        self.texture_id = definition["texture"]
+        self.frame_index = definition["frame"]
+
+        frame = settings.FRAMES[self.texture_id][self.frame_index]
+
+        self.height = frame.height
+        self.width = frame.width
+
+        self.def_data = definition or {}
         
         self.vx = 0
         self.vy = 0
-        
-        self.state_machine = None
 
-    def update(self, dt):
+    def update(self, dt: float) -> None:
         self.x += self.vx * dt
         self.y += self.vy * dt
-        
-        if self.state_machine:
-            self.state_machine.update(dt)
-
-    def render(self, surface):
-        if self.state_machine:
-            self.state_machine.render(surface)
-
-    def on_input(self, input_id, input_data):
-        if self.state_machine:
-            self.state_machine.on_input(input_id, input_data)

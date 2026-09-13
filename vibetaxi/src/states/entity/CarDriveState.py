@@ -63,6 +63,3 @@ class CarDriveState(BaseEntityState):
 
         self.entity.vx = math.cos(self.entity.angle) * self.entity.speed
         self.entity.vy = math.sin(self.entity.angle) * self.entity.speed
-
-    def render(self, surface):
-        self.entity.render_sprite(surface)

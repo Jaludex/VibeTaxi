@@ -6,7 +6,15 @@ from src import commands
 class TaxiDriveState(CarDriveState):
     def update(self, dt):
         px, py = pygame.mouse.get_pos()
-        self.entity.target_x, self.entity.target_y = physical_to_virtual(px, py)
+        
+        vx, vy = physical_to_virtual(px, py)
+        
+        camera = getattr(self.entity, "camera", None)
+        if camera:
+            self.entity.target_x, self.entity.target_y = camera.screen_to_world((vx, vy))
+        else:
+            self.entity.target_x, self.entity.target_y = vx, vy
+        
         super().update(dt)
 
     def on_input(self, input_id, input_data):

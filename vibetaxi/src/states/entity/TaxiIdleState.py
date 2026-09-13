@@ -11,12 +11,8 @@ class TaxiIdleState(BaseEntityState):
         is_accelerating = getattr(self.entity, "is_accelerating", False)
         is_braking = getattr(self.entity, "is_braking", False)
         
-        # Si mantiene el clic y ya no está frenando, vuelve a arrancar automáticamente
         if is_accelerating and not is_braking:
             self.state_machine.change('drive')
-
-    def render(self, surface):
-        self.entity.render_sprite(surface)
 
     def on_input(self, input_id, input_data):
         if input_id == "mouse_click":

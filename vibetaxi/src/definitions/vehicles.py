@@ -2,9 +2,8 @@
 
 VEHICLE_DEFS = {
     "yellow_taxi": {
-        "width": 64,
-        "height": 32,
-        "texture": "yellow-taxi",
+        "texture": "cars",
+        "frame": 0,
         "max_speed": 300,
         "acceleration": 200, 
         "friction": 300,      

@@ -6,6 +6,8 @@ from gale import frames
 from gale import input_handler
 from gale import tilemap
 
+from src.frame_tools import generate_car_frames
+
 input_handler.InputHandler.set_keyboard_action(input_handler.KEY_ESCAPE, "quit")
 input_handler.InputHandler.set_mouse_click_action(input_handler.MOUSE_BUTTON_1, "mouse_click")
 input_handler.InputHandler.set_keyboard_action(input_handler.KEY_x, "brake")
@@ -14,7 +16,6 @@ input_handler.InputHandler.set_keyboard_action(input_handler.KEY_x, "brake")
 TITLE = "Vibe Taxi"
 
 SAVE_SLOTS = ["slot1", "slot2", "slot3"]
-
 
 BASE_DIR = pathlib.Path(__file__).parent
 
@@ -31,14 +32,21 @@ TILE_SIZE = 16
 TILE_WIDTH = VIRTUAL_WIDTH // TILE_SIZE
 TILE_HEIGHT = VIRTUAL_HEIGHT // TILE_SIZE
 
+CAMERA_FOLLOW_RATE = 8.0
+
 TEXTURES = {
-    
+    "city_tiles": pygame.image.load(BASE_DIR / "assets" / "graphics" / "city_tileset.png"),
+    "cars": pygame.image.load(BASE_DIR / "assets" / "graphics" / "cars.png"),
 }
 
 # TILESET = tilemap.Tileset(TEXTURES["tiles"], TILE_SIZE, TILE_SIZE)
 
+TILEMAPS = {
+    "city": str(BASE_DIR / "assets" / "tilemaps" / "city.json")
+}
+
 FRAMES = {
-    
+    "cars": generate_car_frames()
 }
 
 FONTS = {
