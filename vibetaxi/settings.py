@@ -11,6 +11,7 @@ from src.frame_tools import generate_car_frames
 input_handler.InputHandler.set_keyboard_action(input_handler.KEY_ESCAPE, "quit")
 input_handler.InputHandler.set_mouse_click_action(input_handler.MOUSE_BUTTON_1, "mouse_click")
 input_handler.InputHandler.set_keyboard_action(input_handler.KEY_x, "brake")
+input_handler.InputHandler.set_keyboard_action(input_handler.KEY_z, "reverse")
 
 
 TITLE = "Vibe Taxi"
@@ -37,6 +38,7 @@ CAMERA_FOLLOW_RATE = 8.0
 TEXTURES = {
     "city_tiles": pygame.image.load(BASE_DIR / "assets" / "graphics" / "city_tileset.png"),
     "cars": pygame.image.load(BASE_DIR / "assets" / "graphics" / "cars.png"),
+    "props": pygame.image.load(BASE_DIR / "assets" / "graphics" / "props.png")
 }
 
 # TILESET = tilemap.Tileset(TEXTURES["tiles"], TILE_SIZE, TILE_SIZE)
@@ -46,7 +48,8 @@ TILEMAPS = {
 }
 
 FRAMES = {
-    "cars": generate_car_frames()
+    "cars": generate_car_frames(),
+    "props": frames.generate_frames(TEXTURES["props"], 16, 16)
 }
 
 FONTS = {

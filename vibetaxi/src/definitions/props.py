@@ -1,0 +1,34 @@
+import math
+import random
+from gale.timer import Timer
+
+def destroy_prop(prop, vehicle):
+    prop.collidable = False 
+    initial_angle = prop.angle
+
+    rotation_direction = random.choice([1, -1])
+    
+    prop.pivot_x = (prop.width / 2) * rotation_direction
+    prop.pivot_y = prop.height / 2
+
+    Timer.tween(
+        0.2,
+        [(prop, {"angle": initial_angle + (rotation_direction * (math.pi / 2))})],
+        on_finish=lambda: fade_out(prop)
+    )
+
+def fade_out(prop):
+    Timer.tween(
+        1.0,
+        [(prop, {"alpha": 0})],
+        on_finish=lambda: setattr(prop, "active", False) # 3. Eliminación
+    )
+
+PROPS_DEF = {
+    6: {
+        "texture": "props",
+        "frame": 6,
+        "collidable": True,
+        "on_collide": destroy_prop
+    },
+}

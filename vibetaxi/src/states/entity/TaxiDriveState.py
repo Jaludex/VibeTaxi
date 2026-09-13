@@ -28,3 +28,8 @@ class TaxiDriveState(CarDriveState):
                 commands.BRAKE.execute(self.entity)
             else:
                 commands.STOP_BRAKE.execute(self.entity)
+        elif input_id == "reverse":
+            if input_data.pressed:
+                commands.REVERSE.execute(self.entity)
+            else:
+                commands.STOP_REVERSE.execute(self.entity)

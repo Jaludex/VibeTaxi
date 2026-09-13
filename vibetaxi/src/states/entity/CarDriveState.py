@@ -1,65 +1,63 @@
 import math
-import pygame
 from src.states.entity.BaseEntityState import BaseEntityState
 
 class CarDriveState(BaseEntityState):
     def update(self, dt):
         dx = self.entity.target_x - self.entity.x
         dy = self.entity.target_y - self.entity.y
-        target_angle = math.atan2(dy, dx)
-        
         distance = math.hypot(dx, dy)
-        slowdown_radius = 150.0  
         
-        if distance < 15: 
-            target_max_speed = 0
-        elif distance < slowdown_radius:
-            target_max_speed = self.entity.max_speed * (distance / slowdown_radius)
-        else:
-            target_max_speed = self.entity.max_speed
+        is_reversing = getattr(self.entity, "is_reversing", False)
+        is_accelerating = getattr(self.entity, "is_accelerating", True)
+        is_braking = getattr(self.entity, "is_braking", False)
         
-        speed_ratio = self.entity.speed / self.entity.max_speed if self.entity.max_speed > 0 else 1.0
-        
-        if self.entity.speed < 30:
-            turn_multiplier = (self.entity.speed / 30.0) 
-        else:
-            turn_multiplier = 1.5 - (0.9 * speed_ratio)
-            
-        dynamic_turn_speed = self.entity.turn_speed * turn_multiplier
+        # Dirección y ángulos unificados
+        dir_sign = -1 if is_reversing else 1
+        target_angle = math.atan2(dy, dx) + (math.pi if is_reversing else 0)
         
         angle_diff = (target_angle - self.entity.angle + math.pi) % (2 * math.pi) - math.pi
-        turn_amount = dynamic_turn_speed * dt
+
+        reverse_ratio = getattr(self.entity, "reverse_speed_ratio", 0.5)
         
+        # Multiplicador de giro dinámico según velocidad
+        current_spd_abs = abs(self.entity.speed)
+        max_spd = self.entity.max_speed * (reverse_ratio if is_reversing else 1.0)
+        speed_ratio = current_spd_abs / max_spd if max_spd > 0 else 0
+        turn_mult = (current_spd_abs / 30.0) if current_spd_abs < 30 else (1.5 - 0.9 * speed_ratio)
+        
+        turn_amount = self.entity.turn_speed * turn_mult * dt
         if abs(angle_diff) < turn_amount:
             self.entity.angle = target_angle
         else:
-            if angle_diff > 0:
-                self.entity.angle += turn_amount
-            else:
-                self.entity.angle -= turn_amount
-
+            self.entity.angle += turn_amount if angle_diff > 0 else -turn_amount
         self.entity.angle = (self.entity.angle + math.pi) % (2 * math.pi) - math.pi
-        
-        is_moving = getattr(self.entity, "is_accelerating", True)
-        is_braking = getattr(self.entity, "is_braking", False)
-        
-        current_friction = self.entity.friction * 3.0 if is_braking else self.entity.friction
 
-        if is_moving and distance >= 15 and not is_braking:
-            if self.entity.speed < target_max_speed:
-                self.entity.speed += self.entity.acceleration * dt
-                if self.entity.speed > target_max_speed:
-                    self.entity.speed = target_max_speed
-            elif self.entity.speed > target_max_speed:
-                self.entity.speed -= current_friction * dt
-                if self.entity.speed < target_max_speed:
-                    self.entity.speed = target_max_speed
+        # Cálculo unificado de la velocidad que el auto quiere alcanzar
+        target_speed = 0.0
+        if not is_reversing and distance < 15:
+            target_speed = 0.0
+        elif (is_accelerating or is_reversing) and not is_braking:
+            speed_limit = max_spd if (is_reversing or distance >= 150) else max_spd * (distance / 150.0)
+            target_speed = speed_limit * dir_sign
+
+        # Acercar la velocidad actual a la velocidad objetivo de forma suave (Aceleración / Fricción)
+        accel_rate = self.entity.acceleration * dt
+        friction_rate = self.entity.friction * (3.0 if is_braking else 1.0) * dt
+
+        if abs(target_speed) > abs(self.entity.speed):
+            rate = accel_rate
         else:
-            self.entity.speed -= current_friction * dt
-            if self.entity.speed <= 0:
-                self.entity.speed = 0
-                self.state_machine.change('idle')
-                return
+            rate = friction_rate
+
+        if self.entity.speed < target_speed:
+            self.entity.speed = min(self.entity.speed + rate, target_speed)
+        elif self.entity.speed > target_speed:
+            self.entity.speed = max(self.entity.speed - rate, target_speed)
+
+        # Si se detuvo por completo sin inputs, volver a idle
+        if self.entity.speed == 0 and not is_accelerating and not is_reversing:
+            self.state_machine.change('idle')
+            return
 
         self.entity.vx = math.cos(self.entity.angle) * self.entity.speed
         self.entity.vy = math.sin(self.entity.angle) * self.entity.speed

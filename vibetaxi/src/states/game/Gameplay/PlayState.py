@@ -22,6 +22,8 @@ class PlayState(BaseState):
         if self.taxi is None:
             self.taxi = Taxi(400, 300, VEHICLE_DEFS["yellow_taxi"])
 
+        self.taxi.tilemap = self.city_map.tilemap
+
         self.camera = enter_params.get("camera")
         if self.camera is None:
             self.camera = Camera(settings.VIRTUAL_WIDTH, settings.VIRTUAL_HEIGHT)
@@ -36,6 +38,11 @@ class PlayState(BaseState):
         self.taxi.update(dt)
         self.city_map.update(dt)
         self.camera.update(dt)
+        
+        for prop in self.city_map.props:
+            if prop.collidable and self.taxi.collides(prop):
+                prop.on_collide(self.taxi)
+                self.taxi.speed *= 0.5
 
     def render(self, surface: pygame.Surface) -> None:
         self.city_map.render(surface, self.camera)
