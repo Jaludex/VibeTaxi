@@ -44,9 +44,16 @@ class PlayState(BaseState):
                 prop.on_collide(self.taxi)
                 self.taxi.speed *= 0.5
 
-    def render(self, surface: pygame.Surface) -> None:
-        self.city_map.render(surface, self.camera)
+    def render(self, surface):
+        self.city_map.render_layers(surface, self.camera, settings.TILED_GROUND_LAYERS)
+        
+        for prop in self.city_map.props:
+            prop.render(surface, self.camera)
         self.taxi.render(surface, self.camera)
+        
+        self.city_map.render_layers(surface, self.camera, settings.TILED_UPPER_LAYERS)
+        
+        self.city_map.render_car_silhouette_if_obstructed(surface, self.taxi, self.camera)
 
     def on_input(self, input_id: str, input_data: InputData) -> None:
         self.taxi.on_input(input_id, input_data)

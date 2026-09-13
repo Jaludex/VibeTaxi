@@ -35,6 +35,9 @@ TILE_HEIGHT = VIRTUAL_HEIGHT // TILE_SIZE
 
 CAMERA_FOLLOW_RATE = 8.0
 
+TILED_UPPER_LAYERS = ["overheads"]
+TILED_GROUND_LAYERS = ["ground", "decoration", "buildings"]
+
 TEXTURES = {
     "city_tiles": pygame.image.load(BASE_DIR / "assets" / "graphics" / "city_tileset.png"),
     "cars": pygame.image.load(BASE_DIR / "assets" / "graphics" / "cars.png"),

@@ -43,19 +43,7 @@ class Entity(DrawableMixin, CollidableMixin):
                 self.vx * dt,
                 self.vy * dt,
             )
-            
-            # Movimiento contra la capa decoration
-            tl_x, tl_y, _, _ = move_and_collide(
-                self.tilemap,
-                "decoration",
-                tl_x,
-                tl_y,
-                self.width,
-                self.height,
-                0,
-                0,
-            )
-            
+
             self.x = tl_x + self.width / 2
             self.y = tl_y + self.height / 2
             
