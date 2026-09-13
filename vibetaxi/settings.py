@@ -7,10 +7,11 @@ from gale import input_handler
 from gale import tilemap
 
 input_handler.InputHandler.set_keyboard_action(input_handler.KEY_ESCAPE, "quit")
-input_handler.InputHandler.set_mouse_click_action(input_handler.MOUSE_BUTTON_1, "click")
+input_handler.InputHandler.set_mouse_click_action(input_handler.MOUSE_BUTTON_1, "mouse_click")
+input_handler.InputHandler.set_keyboard_action(input_handler.KEY_x, "brake")
 
 
-TITLE = "Ultimate Fantasy"
+TITLE = "Vibe Taxi"
 
 SAVE_SLOTS = ["slot1", "slot2", "slot3"]
 
