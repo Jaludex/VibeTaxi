@@ -8,6 +8,7 @@ from gale.state import BaseState
 import settings
 from src.world.CityMap import CityMap
 from src.entity.Taxi import Taxi
+from src.gui.RadioTuner import Radio
 from src.definitions.vehicles import VEHICLE_DEFS
 
 class PlayState(BaseState):
@@ -33,11 +34,17 @@ class PlayState(BaseState):
             self.camera.update(0)
 
         self.taxi.camera = self.camera
+        
+        #radio
+        self.radio =  enter_params.get("radio")
+        if self.radio is None:
+            self.radio = Radio(80, 296)
 
     def update(self, dt: float) -> None:
         self.taxi.update(dt)
         self.city_map.update(dt)
         self.camera.update(dt)
+        self.radio.update(dt)
         
         for prop in self.city_map.props:
             if prop.collidable and self.taxi.collides(prop):
@@ -46,6 +53,7 @@ class PlayState(BaseState):
 
     def render(self, surface):
         self.city_map.render_layers(surface, self.camera, settings.TILED_GROUND_LAYERS)
+       
         
         for prop in self.city_map.props:
             prop.render(surface, self.camera)
@@ -54,6 +62,8 @@ class PlayState(BaseState):
         self.city_map.render_layers(surface, self.camera, settings.TILED_UPPER_LAYERS)
         
         self.city_map.render_car_silhouette_if_obstructed(surface, self.taxi, self.camera)
-
+        self.radio.render(surface)
+        
     def on_input(self, input_id: str, input_data: InputData) -> None:
+        self.radio.on_input(input_id, input_data)
         self.taxi.on_input(input_id, input_data)

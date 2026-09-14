@@ -12,6 +12,11 @@ input_handler.InputHandler.set_keyboard_action(input_handler.KEY_ESCAPE, "quit")
 input_handler.InputHandler.set_mouse_click_action(input_handler.MOUSE_BUTTON_1, "mouse_click")
 input_handler.InputHandler.set_keyboard_action(input_handler.KEY_x, "brake")
 input_handler.InputHandler.set_keyboard_action(input_handler.KEY_z, "reverse")
+input_handler.InputHandler.set_keyboard_action(input_handler.KEY_a, "prev-song")
+input_handler.InputHandler.set_keyboard_action(input_handler.KEY_d, "next-song")
+input_handler.InputHandler.set_keyboard_action(input_handler.KEY_w, "vol-up")
+input_handler.InputHandler.set_keyboard_action(input_handler.KEY_s, "vol-down")
+
 
 
 TITLE = "Vibe Taxi"
@@ -41,7 +46,12 @@ TILED_GROUND_LAYERS = ["ground", "decoration", "buildings"]
 TEXTURES = {
     "city_tiles": pygame.image.load(BASE_DIR / "assets" / "graphics" / "city_tileset.png"),
     "cars": pygame.image.load(BASE_DIR / "assets" / "graphics" / "cars.png"),
-    "props": pygame.image.load(BASE_DIR / "assets" / "graphics" / "props.png")
+    "props": pygame.image.load(BASE_DIR / "assets" / "graphics" / "props.png"),
+    "radio": pygame.image.load(BASE_DIR / "assets" / "graphics" / "radio.png"),
+    "button-radio": pygame.image.load(BASE_DIR / "assets" / "graphics" / "button_radio.png"),
+    "button-plus": pygame.image.load(BASE_DIR / "assets" / "graphics" / "button_plus.png"),
+    "button-less": pygame.image.load(BASE_DIR / "assets" / "graphics" / "button_less.png"),
+    "marker": pygame.image.load(BASE_DIR / "assets" / "graphics" / "marker.png"),
 }
 
 # TILESET = tilemap.Tileset(TEXTURES["tiles"], TILE_SIZE, TILE_SIZE)
@@ -52,20 +62,38 @@ TILEMAPS = {
 
 FRAMES = {
     "cars": generate_car_frames(),
-    "props": frames.generate_frames(TEXTURES["props"], 16, 16)
+    "props": frames.generate_frames(TEXTURES["props"], 16, 16),
+    "button-less": frames.generate_frames(TEXTURES["button-less"], 47, 24),
+    "button-plus": frames.generate_frames(TEXTURES["button-plus"], 47, 24),
 }
 
 FONTS = {
     "big": pygame.font.Font(BASE_DIR / "assets" / "fonts" / "Big.ttf", 32),
+    "minecraft": pygame.font.Font(BASE_DIR/ "assets" / "fonts" / "Minecraft.ttf", 8)
 }
 
 SOUNDS = {
 
 }
 
-MUSIC_CHANNELS = {
+CANT_MUSIC_CHANNELS = 4
 
+MUSIC_ROCK = {
+    "rock-1": str(BASE_DIR / "assets" / "music" / "bombinsound-rock-music.mp3"),
+    "rock-2": str(BASE_DIR / "assets" / "music" / "jonasblakewood-rock.mp3"),
 }
+
+MUSIC_POP = {
+    "pop-1": str(BASE_DIR / "assets" / "music" / "happinessinmusic-pop-music.mp3"),
+}
+
+MUSIC_HIPHOP = {
+    "hiphop-1": str(BASE_DIR / "assets" / "music" / "kontraa-nba--hiphop-music.mp3"),
+}
+MUSIC_ELECTRONIC = {
+    "electronic-1": str(BASE_DIR / "assets" / "music" / "mondamusic-electronic-music.mp3"),
+}
+MUSIC_CHANNELS = 0
 
 
 def play_music(name: str) -> None:
