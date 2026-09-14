@@ -1,5 +1,6 @@
 import pygame
 import math
+import random
 from typing import Any, List
 
 from gale.tilemap import load_tiled_map
@@ -7,13 +8,25 @@ from gale.tilemap import load_tiled_map
 import settings
 
 from src.entity.Prop import Prop
+from src.entity.Passenger import Passenger
 from src.definitions.props import PROPS_DEF
+from src.definitions.passengers import PASSENGER_DEFS
 
 class CityMap:
     def __init__(self, map_key: str = "city") -> None:
         self.tilemap = load_tiled_map(settings.TILEMAPS[map_key])
         self.props: List[Prop] = []
         self._load_props()
+        self._load_nodes()
+
+    def _load_nodes(self) -> None:
+        self.nodes = {}
+        for obj in self.tilemap.object_layers.get("nodes", []):
+            center_x = obj.x + obj.width / 2
+            center_y = obj.y + obj.height / 2
+            
+            node_name = obj.name if obj.name else f"node_{len(self.nodes)}"
+            self.nodes[node_name] = (center_x, center_y)
 
     def _load_props(self) -> None:
         for obj in self.tilemap.object_layers.get("props", []):
@@ -34,7 +47,6 @@ class CityMap:
         pass
 
     def render_layers(self, surface: pygame.Surface, camera: Any = None, layer_names: list = None) -> None:
-        """Dibuja únicamente las capas especificadas en la lista proporcionada."""
         target_layers = layer_names or []
         for name in target_layers:
             self._render_single_layer(surface, camera, name)
@@ -111,3 +123,23 @@ class CityMap:
             sil_rect = camera.apply(sil_rect)
 
         surface.blit(silhouette, sil_rect)
+
+    def generate_passengers(self, spawn_chance: float = 0.3) -> List[Passenger]:
+        spawned_passengers = []
+        node_names = list(self.nodes.keys())
+        
+        if len(node_names) < 2:
+            print("Advertencia: Hay menos de 2 nodos cargados.")
+            return []
+
+        for name, (x, y) in self.nodes.items():
+            if random.random() < spawn_chance:
+                possible_destinations = [n for n in node_names if n != name]
+                destination = random.choice(possible_destinations)
+                ped_key = random.choice(list(PASSENGER_DEFS.keys()))
+                definition = PASSENGER_DEFS[ped_key]
+                
+                passenger = Passenger(x, y, destination, definition)
+                spawned_passengers.append(passenger)
+                
+        return spawned_passengers

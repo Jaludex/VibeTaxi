@@ -1,24 +1,39 @@
-PASSENGER_DEFS = {
-    "rocker": {
-        "width": 16,
-        "height": 16,
-        "texture": "punk_guy",
-        "favorite_genre": "rock",
-        "hints": [
-            "Man, I need some loud guitars right now.",
-            "Turn it up, I want to feel the bass!",
-            "I'm heading to a concert downtown."
-        ]
+from typing import Any, Dict
+
+PASSENGER_DEFS: Dict[str, Dict[str, Any]] = {
+    "pedestrian_1": {
+        "texture": "peds",
+        "animations": {
+            "idle": {"frames": [0, 1], "interval": 0.4},
+            "walk": {"frames": [2, 3, 4, 5], "interval": 0.15},
+        },
     },
-    "classical_fan": {
-        "width": 16,
-        "height": 16,
-        "texture": "fancy_lady",
-        "favorite_genre": "classical",
-        "hints": [
-            "Please, something soothing if you don't mind.",
-            "I have a terrible headache, keep it quiet.",
-            "Do you have anything orchestral?"
-        ]
-    }
+    "pedestrian_2": {
+        "texture": "peds",
+        "animations": {
+            "idle": {"frames": [6, 7], "interval": 0.4},
+            "walk": {"frames": [8, 9, 10, 11], "interval": 0.15},
+        },
+    },
+    "pedestrian_3": {
+        "texture": "peds",
+        "animations": {
+            "idle": {"frames": [12, 13], "interval": 0.4},
+            "walk": {"frames": [14, 15, 16, 17], "interval": 0.15},
+        },
+    },
+    "pedestrian_4": {
+        "texture": "peds",
+        "animations": {
+            "idle": {"frames": [18, 19], "interval": 0.4},
+            "walk": {"frames": [20, 21, 22, 23], "interval": 0.15},
+        },
+    },
+    "pedestrian_5": {
+        "texture": "peds",
+        "animations": {
+            "idle": {"frames": [24, 25], "interval": 0.4},
+            "walk": {"frames": [26, 27, 28, 29], "interval": 0.15},
+        },
+    },
 }
