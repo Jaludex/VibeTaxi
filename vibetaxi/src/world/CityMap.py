@@ -22,7 +22,7 @@ class CityMap:
             if tile_index in PROPS_DEF:
                 definition = PROPS_DEF[tile_index]
                 center_x = obj.x + obj.width / 2
-                center_y = obj.y + obj.height / 2
+                center_y = obj.y - obj.height / 2
                 
                 prop = Prop(center_x, center_y, definition)
                 self.props.append(prop)

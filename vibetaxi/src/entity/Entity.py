@@ -21,6 +21,9 @@ class Entity(DrawableMixin, CollidableMixin):
         else:
             self.height = 0
             self.width = 0
+
+        self.collision_width = self.width * 0.9
+        self.collision_height = self.height * 0.9
             
         self.vx = 0
         self.vy = 0
@@ -29,23 +32,23 @@ class Entity(DrawableMixin, CollidableMixin):
 
     def update(self, dt: float) -> None:
         if self.tilemap is not None:
-            tl_x = self.x - self.width / 2
-            tl_y = self.y - self.height / 2
+            tl_x = self.x - self.collision_width / 2
+            tl_y = self.y - self.collision_height / 2
 
-            # Movimiento contra la capa buildings
             tl_x, tl_y, hit_wall_x, hit_wall_y = move_and_collide(
                 self.tilemap,
                 "buildings",
                 tl_x,
                 tl_y,
-                self.width,
-                self.height,
+                self.collision_width,
+                self.collision_height,
                 self.vx * dt,
                 self.vy * dt,
             )
-
-            self.x = tl_x + self.width / 2
-            self.y = tl_y + self.height / 2
+            
+            # Devolvemos el centro basándonos en la nueva posición
+            self.x = tl_x + self.collision_width / 2
+            self.y = tl_y + self.collision_height / 2
             
             if hit_wall_x or hit_wall_y:
                 if hasattr(self, "speed"):
