@@ -4,6 +4,16 @@ Notable changes on the project will be documented here
 
 Format based on [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/), version format by [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 1.0.0-alpha2 - 2026-09-13 Day 2 of development
+
+### Added
+ - Basic passenger behaviour
+ - Change tilemap rendering from Gale's default to a per-layer rendering, allowing for overheads
+ - Make base of buildings solid
+ - "Mario sunshine shadow" for when the car is behind a building
+ - Add some props
+ - Start designing the radio UI
+
 ## 1.0.0-alpha1 - 2026-09-12 Day 1 of development
 
 ### Added
