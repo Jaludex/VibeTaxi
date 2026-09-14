@@ -8,6 +8,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/), ver
 
 ### Added
  - Basic passenger behaviour
+ - passenger textures made by [vimlark](https://vimlark.itch.io/town-asset-pack-16x16) on itch.io
  - Change tilemap rendering from Gale's default to a per-layer rendering, allowing for overheads
  - Make base of buildings solid
  - "Mario sunshine shadow" for when the car is behind a building
