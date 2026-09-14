@@ -1,4 +1,4 @@
-from typing import Dict, Any
+from typing import Dict, Any, TypeVar
 import math
 import pygame
 
@@ -53,64 +53,63 @@ class PlayState(BaseState):
         for p in self.map_passengers:
             p.update(dt)
 
-        if not self.active_passenger:
-            for p in self.map_passengers:
-                if p.state == "waiting":
-                    dx = self.taxi.x - p.x
-                    dy = self.taxi.y - p.y
-                    distance = math.hypot(dx, dy)
-                    
-                    if distance <= p.radius and abs(self.taxi.speed) < 5:
-                        p.state = "entering"
-                        p.target_taxi = self.taxi
-                        p.change_animation("walk")
-                        
-                        self.active_passenger = p
-                        self.map_passengers.remove(p)
-                        break
-                        
+        if self.active_passenger:
+            self.update_active_passenger(dt)
         else:
-            if self.active_passenger.state == "entering":
-                self.active_passenger.update(dt)
-                if self.active_passenger.state == "riding":
-                    pass
-            elif self.active_passenger.state == "riding":
-                dest_x, dest_y = self.city_map.nodes[self.active_passenger.destination]
-                dx = self.taxi.x - dest_x
-                dy = self.taxi.y - dest_y
-                distance = math.hypot(dx, dy)
-                
-                # Si el taxi llega al destino y está detenido
-                if distance <= settings.PASSENGER_DELIVERY_RADIUS and abs(self.taxi.speed) < 5:
-                    self.active_passenger.x = self.taxi.x
-                    self.active_passenger.y = self.taxi.y
-                    self.active_passenger.state = "leaving"
-                    self.active_passenger.target_dest_pos = (dest_x, dest_y)
-                    self.active_passenger.change_animation("walk")
-                
-            elif self.active_passenger.state == "leaving":
-                self.active_passenger.update(dt)
-                if self.active_passenger.state == "done":
+            self.update_city_passengers(dt)
+            
+
+    def update_active_passenger(self, dt: float):
+        self.active_passenger.update(dt)
+
+        if not self.active_passenger:
+            return
+
+        if self.active_passenger.is_riding():
+            dest_x, dest_y = self.city_map.nodes[self.active_passenger.destination]
+            dx = self.taxi.x - dest_x
+            dy = self.taxi.y - dest_y
+            distance = math.hypot(dx, dy)
+            
+            if distance <= 80 and abs(self.taxi.speed) < 5:
+                def reach_destination():
                     self.active_passenger = None
 
+                self.active_passenger.state_machine.change(
+                    "walk", 
+                    target=(dest_x, dest_y), 
+                    on_arrival=reach_destination
+                )
+
+    def update_city_passengers(self, dt: float):
+        for p in self.map_passengers:
+            if p.is_waiting():
+                dx = self.taxi.x - p.x
+                dy = self.taxi.y - p.y
+                distance = math.hypot(dx, dy)
+                
+                if distance <= settings.PASSENGER_DETECTION_RADIUS and abs(self.taxi.speed) < 5:
+                    def reach_taxi():
+                        p.state_machine.change("ride", taxi=self.taxi)
+                    
+                    p.state_machine.change("walk", target=self.taxi, on_arrival=reach_taxi)
+                    self.active_passenger = p
+                    self.map_passengers.remove(p)
+                    break
+
     def render(self, surface):
-        # 1. Suelo
         self.city_map.render_layers(surface, self.camera, settings.TILED_GROUND_LAYERS)
 
-        if not self.active_passenger:
-            for p in self.map_passengers:
-                self._render_detection_circle(surface, p.x, p.y, p.radius, (255, 255, 0))
-                
         if self.active_passenger:
-            if self.active_passenger.state == "riding":
+            if self.active_passenger.is_riding():
                 dest_x, dest_y = self.city_map.nodes[self.active_passenger.destination]
                 self._render_detection_circle(surface, dest_x, dest_y, settings.PASSENGER_DELIVERY_RADIUS, (0, 255, 0))
-
-            elif self.active_passenger.state == "entering" or self.active_passenger.state == "leaving":
+            
+            if self.active_passenger.is_walking():
                 self.active_passenger.render(surface, self.camera)
         else:
             for p in self.map_passengers:
-                self._render_detection_circle(surface, p.x, p.y, p.radius, (255, 255, 0))
+                self._render_detection_circle(surface, p.x, p.y, settings.PASSENGER_DETECTION_RADIUS, (255, 255, 0))
 
         self.city_map.render_layers(surface, self.camera, settings.TILED_MIDDLE_LAYERS)
 
@@ -119,9 +118,6 @@ class PlayState(BaseState):
             
         for p in self.map_passengers:
             p.render(surface, self.camera)
-            
-        if self.active_passenger and self.active_passenger.state == "entering":
-            self.active_passenger.render(surface, self.camera)
             
         self.taxi.render(surface, self.camera)
         
