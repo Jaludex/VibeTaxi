@@ -12,11 +12,14 @@ input_handler.InputHandler.set_keyboard_action(input_handler.KEY_ESCAPE, "quit")
 input_handler.InputHandler.set_mouse_click_action(input_handler.MOUSE_BUTTON_1, "mouse_click")
 input_handler.InputHandler.set_keyboard_action(input_handler.KEY_x, "brake")
 input_handler.InputHandler.set_keyboard_action(input_handler.KEY_z, "reverse")
+input_handler.InputHandler.set_keyboard_action(input_handler.KEY_LSHIFT, "drift")
 input_handler.InputHandler.set_keyboard_action(input_handler.KEY_a, "prev-song")
 input_handler.InputHandler.set_keyboard_action(input_handler.KEY_d, "next-song")
 input_handler.InputHandler.set_keyboard_action(input_handler.KEY_w, "vol-up")
 input_handler.InputHandler.set_keyboard_action(input_handler.KEY_s, "vol-down")
 
+#DEBUG
+input_handler.InputHandler.set_keyboard_action(input_handler.KEY_TAB, "toggle_vibe")
 
 
 TITLE = "Vibe Taxi"
