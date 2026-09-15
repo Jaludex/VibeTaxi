@@ -37,21 +37,46 @@ class PlayState(BaseState):
         self.taxi.camera = self.camera
 
         self.active_passenger = None
-        
         self.map_passengers = self.city_map.generate_passengers(spawn_chance=0.4)
+        
+        self.nearby_props = []
+        self.nearby_passengers = []
 
     def update(self, dt):
         self.city_map.update(dt)
         self.taxi.update(dt)
-
         self.camera.update(dt)
         
-        for prop in self.city_map.props:
+        if self.camera:
+            row_range, col_range = self.tilemap._visible_range(self.camera)
+            
+            def is_visible(x, y, margin_pixels):
+                margin_cols = int(margin_pixels // self.tilemap.tile_width)
+                margin_rows = int(margin_pixels // self.tilemap.tile_height)
+                
+                row, col = self.tilemap.tile_at(x, y)
+                
+                return (row_range.start - margin_rows <= row < row_range.stop + margin_rows) and \
+                       (col_range.start - margin_cols <= col < col_range.stop + margin_cols)
+
+            self.nearby_props = [
+                prop for prop in self.city_map.props 
+                if is_visible(prop.x, prop.y, margin_pixels=100)
+            ]
+            self.nearby_passengers = [
+                p for p in self.map_passengers 
+                if is_visible(p.x, p.y, margin_pixels=150)
+            ]
+        else:
+            self.nearby_props = self.city_map.props[:]
+            self.nearby_passengers = self.map_passengers[:]
+
+        for prop in self.nearby_props:
             if prop.collidable and self.taxi.collides(prop):
                 prop.on_collide(self.taxi)
                 self.taxi.speed *= 0.5
         
-        for p in self.map_passengers:
+        for p in self.nearby_passengers:
             p.update(dt)
 
         if self.active_passenger:
@@ -59,7 +84,6 @@ class PlayState(BaseState):
         else:
             self.update_city_passengers(dt)
             
-
     def update_active_passenger(self, dt: float):
         self.active_passenger.update(dt)
 
@@ -111,15 +135,16 @@ class PlayState(BaseState):
             if self.active_passenger.is_walking():
                 render_active_passenger = True
         else:
-            for p in self.map_passengers:
-                self._render_detection_circle(surface, p.x, p.y, settings.PASSENGER_DETECTION_RADIUS, (255, 255, 0))
+            for p in self.nearby_passengers:
+                if p.is_waiting():
+                    self._render_detection_circle(surface, p.x, p.y, settings.PASSENGER_DETECTION_RADIUS, (255, 255, 0))
 
         self.city_map.render_layers(surface, self.camera, settings.TILED_MIDDLE_LAYERS)
 
-        for prop in self.city_map.props:
+        for prop in self.nearby_props:
             prop.render(surface, self.camera)
             
-        for p in self.map_passengers:
+        for p in self.nearby_passengers:
             p.render(surface, self.camera)
 
         if render_active_passenger:
