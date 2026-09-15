@@ -4,6 +4,12 @@ Notable changes on the project will be documented here
 
 Format based on [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/), version format by [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 1.0.0-alpha3 - 2026-09-14 Day 3 of development
+
+### Added
+ - Design half of the city
+ - Add initial radio system with free from copyright music
+
 ## 1.0.0-alpha2 - 2026-09-13 Day 2 of development
 
 ### Added
