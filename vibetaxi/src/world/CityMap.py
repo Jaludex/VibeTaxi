@@ -25,7 +25,7 @@ class CityMap:
             center_x = obj.x + obj.width / 2
             center_y = obj.y + obj.height / 2
             
-            node_name = obj.name if obj.name else f"node_{len(self.nodes)}"
+            node_name = obj.name if obj.name and obj.name not in self.nodes.keys() else f"node_{len(self.nodes)}"
             self.nodes[node_name] = (center_x, center_y)
 
     def _load_props(self) -> None:
