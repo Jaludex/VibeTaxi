@@ -1,4 +1,5 @@
-from typing import Dict, Any
+from typing import Dict, Any, TypeVar
+import math
 import pygame
 
 from gale.camera import Camera
@@ -34,15 +35,19 @@ class PlayState(BaseState):
             self.camera.update(0)
 
         self.taxi.camera = self.camera
-        
         #radio
         self.radio =  enter_params.get("radio")
         if self.radio is None:
             self.radio = Radio(80, 296)
+            
+        self.active_passenger = None
+        
+        self.map_passengers = self.city_map.generate_passengers(spawn_chance=0.4)
 
-    def update(self, dt: float) -> None:
-        self.taxi.update(dt)
+    def update(self, dt):
         self.city_map.update(dt)
+        self.taxi.update(dt)
+
         self.camera.update(dt)
         self.radio.update(dt)
         
@@ -50,20 +55,91 @@ class PlayState(BaseState):
             if prop.collidable and self.taxi.collides(prop):
                 prop.on_collide(self.taxi)
                 self.taxi.speed *= 0.5
+        
+        for p in self.map_passengers:
+            p.update(dt)
+
+        if self.active_passenger:
+            self.update_active_passenger(dt)
+        else:
+            self.update_city_passengers(dt)
+            
+
+    def update_active_passenger(self, dt: float):
+        self.active_passenger.update(dt)
+
+        if not self.active_passenger:
+            return
+
+        if self.active_passenger.is_riding():
+            dest_x, dest_y = self.city_map.nodes[self.active_passenger.destination]
+            dx = self.taxi.x - dest_x
+            dy = self.taxi.y - dest_y
+            distance = math.hypot(dx, dy)
+            
+            if distance <= 80 and abs(self.taxi.speed) < 5:
+                def reach_destination():
+                    self.active_passenger = None
+
+                self.active_passenger.state_machine.change(
+                    "walk", 
+                    target=(dest_x, dest_y), 
+                    on_arrival=reach_destination
+                )
+
+    def update_city_passengers(self, dt: float):
+        for p in self.map_passengers:
+            if p.is_waiting():
+                dx = self.taxi.x - p.x
+                dy = self.taxi.y - p.y
+                distance = math.hypot(dx, dy)
+                
+                if distance <= settings.PASSENGER_DETECTION_RADIUS and abs(self.taxi.speed) < 5:
+                    def reach_taxi():
+                        p.state_machine.change("ride", taxi=self.taxi)
+                    
+                    p.state_machine.change("walk", target=self.taxi, on_arrival=reach_taxi)
+                    self.active_passenger = p
+                    self.map_passengers.remove(p)
+                    break
 
     def render(self, surface):
         self.city_map.render_layers(surface, self.camera, settings.TILED_GROUND_LAYERS)
-       
-        
+
+        if self.active_passenger:
+            if self.active_passenger.is_riding():
+                dest_x, dest_y = self.city_map.nodes[self.active_passenger.destination]
+                self._render_detection_circle(surface, dest_x, dest_y, settings.PASSENGER_DELIVERY_RADIUS, (0, 255, 0))
+            
+            if self.active_passenger.is_walking():
+                self.active_passenger.render(surface, self.camera)
+        else:
+            for p in self.map_passengers:
+                self._render_detection_circle(surface, p.x, p.y, settings.PASSENGER_DETECTION_RADIUS, (255, 255, 0))
+
+        self.city_map.render_layers(surface, self.camera, settings.TILED_MIDDLE_LAYERS)
+
         for prop in self.city_map.props:
             prop.render(surface, self.camera)
+            
+        for p in self.map_passengers:
+            p.render(surface, self.camera)
+            
         self.taxi.render(surface, self.camera)
         
         self.city_map.render_layers(surface, self.camera, settings.TILED_UPPER_LAYERS)
-        
         self.city_map.render_car_silhouette_if_obstructed(surface, self.taxi, self.camera)
         self.radio.render(surface)
         
+    def _render_detection_circle(self, surface, x, y, radius, color):
+        """Método auxiliar para renderizar los aros en el suelo con la cámara."""
+        if self.camera:
+            rect = self.camera.apply(pygame.Rect(x, y, 0, 0))
+            px, py = rect.x, rect.y
+        else:
+            px, py = x, y
+        pygame.draw.circle(surface, color, (px, py), radius, width=2)
+
     def on_input(self, input_id: str, input_data: InputData) -> None:
         self.radio.on_input(input_id, input_data)
         self.taxi.on_input(input_id, input_data)

@@ -41,17 +41,25 @@ TILE_HEIGHT = VIRTUAL_HEIGHT // TILE_SIZE
 CAMERA_FOLLOW_RATE = 8.0
 
 TILED_UPPER_LAYERS = ["overheads"]
-TILED_GROUND_LAYERS = ["ground", "decoration", "buildings"]
+TILED_MIDDLE_LAYERS = ["decoration", "buildings"]
+TILED_GROUND_LAYERS = ["ground"]
+
+PASSENGER_DETECTION_RADIUS = 30
+PASSENGER_DELIVERY_RADIUS = 60
 
 TEXTURES = {
     "city_tiles": pygame.image.load(BASE_DIR / "assets" / "graphics" / "city_tileset.png"),
     "cars": pygame.image.load(BASE_DIR / "assets" / "graphics" / "cars.png"),
     "props": pygame.image.load(BASE_DIR / "assets" / "graphics" / "props.png"),
+<<<<<<< HEAD
     "radio": pygame.image.load(BASE_DIR / "assets" / "graphics" / "radio.png"),
     "button-radio": pygame.image.load(BASE_DIR / "assets" / "graphics" / "button_radio.png"),
     "button-plus": pygame.image.load(BASE_DIR / "assets" / "graphics" / "button_plus.png"),
     "button-less": pygame.image.load(BASE_DIR / "assets" / "graphics" / "button_less.png"),
     "marker": pygame.image.load(BASE_DIR / "assets" / "graphics" / "marker.png"),
+=======
+    "peds": pygame.image.load(BASE_DIR / "assets" / "graphics" / "peds.png")
+>>>>>>> 30a8d767f21492249b070e41ea840367b34d9c42
 }
 
 # TILESET = tilemap.Tileset(TEXTURES["tiles"], TILE_SIZE, TILE_SIZE)
@@ -63,8 +71,12 @@ TILEMAPS = {
 FRAMES = {
     "cars": generate_car_frames(),
     "props": frames.generate_frames(TEXTURES["props"], 16, 16),
+<<<<<<< HEAD
     "button-less": frames.generate_frames(TEXTURES["button-less"], 47, 24),
     "button-plus": frames.generate_frames(TEXTURES["button-plus"], 47, 24),
+=======
+    "peds": frames.generate_frames(TEXTURES["peds"], 16, 16)
+>>>>>>> 30a8d767f21492249b070e41ea840367b34d9c42
 }
 
 FONTS = {
