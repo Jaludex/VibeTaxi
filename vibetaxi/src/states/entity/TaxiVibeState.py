@@ -33,11 +33,10 @@ class TaxiVibeState(TaxiDriveState):
         ideal_vy = self.entity.vy
 
         if getattr(self.entity, "is_drifting", False):
-            grip = 2.0  
+            grip = 3.5  
         else:
             grip = 12.0 
 
-        # Interpolación (Lerp): Acercamos la velocidad real a la ideal suavemente
         self.slide_vx += (ideal_vx - self.slide_vx) * grip * dt
         self.slide_vy += (ideal_vy - self.slide_vy) * grip * dt
 
