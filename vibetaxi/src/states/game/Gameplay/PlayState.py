@@ -21,7 +21,8 @@ class PlayState(BaseState):
 
         self.taxi = enter_params.get("taxi")
         if self.taxi is None:
-            self.taxi = Taxi(400, 300, VEHICLE_DEFS["yellow_taxi"])
+            spawn_x, spawn_y = self.city_map.get_taxi_spawn_position()
+            self.taxi = Taxi(spawn_x, spawn_y, VEHICLE_DEFS["yellow_taxi"])
 
         self.taxi.tilemap = self.city_map.tilemap
 
@@ -100,13 +101,15 @@ class PlayState(BaseState):
     def render(self, surface):
         self.city_map.render_layers(surface, self.camera, settings.TILED_GROUND_LAYERS)
 
+        render_active_passenger = False
+
         if self.active_passenger:
             if self.active_passenger.is_riding():
                 dest_x, dest_y = self.city_map.nodes[self.active_passenger.destination]
                 self._render_detection_circle(surface, dest_x, dest_y, settings.PASSENGER_DELIVERY_RADIUS, (0, 255, 0))
             
             if self.active_passenger.is_walking():
-                self.active_passenger.render(surface, self.camera)
+                render_active_passenger = True
         else:
             for p in self.map_passengers:
                 self._render_detection_circle(surface, p.x, p.y, settings.PASSENGER_DETECTION_RADIUS, (255, 255, 0))
@@ -118,10 +121,14 @@ class PlayState(BaseState):
             
         for p in self.map_passengers:
             p.render(surface, self.camera)
+
+        if render_active_passenger:
+            self.active_passenger.render(surface, self.camera)
             
         self.taxi.render(surface, self.camera)
-        
-        self.city_map.render_layers(surface, self.camera, settings.TILED_UPPER_LAYERS)
+
+        self.city_map.render_layers(surface, self.camera, settings.TILED_UPPER_NO_SHADOW_LAYERS)
+        self.city_map.render_layers(surface, self.camera, settings.TILED_UPPER_SHADOW_LAYERS)
         self.city_map.render_car_silhouette_if_obstructed(surface, self.taxi, self.camera)
 
     def _render_detection_circle(self, surface, x, y, radius, color):

@@ -11,7 +11,6 @@ class CarDriveState(BaseEntityState):
         is_accelerating = getattr(self.entity, "is_accelerating", True)
         is_braking = getattr(self.entity, "is_braking", False)
         
-        # Dirección y ángulos unificados
         dir_sign = -1 if is_reversing else 1
         target_angle = math.atan2(dy, dx) + (math.pi if is_reversing else 0)
         
@@ -19,7 +18,6 @@ class CarDriveState(BaseEntityState):
 
         reverse_ratio = getattr(self.entity, "reverse_speed_ratio", 0.5)
         
-        # Multiplicador de giro dinámico según velocidad
         current_spd_abs = abs(self.entity.speed)
         max_spd = self.entity.max_speed * (reverse_ratio if is_reversing else 1.0)
         speed_ratio = current_spd_abs / max_spd if max_spd > 0 else 0
@@ -32,7 +30,6 @@ class CarDriveState(BaseEntityState):
             self.entity.angle += turn_amount if angle_diff > 0 else -turn_amount
         self.entity.angle = (self.entity.angle + math.pi) % (2 * math.pi) - math.pi
 
-        # Cálculo unificado de la velocidad que el auto quiere alcanzar
         target_speed = 0.0
         if not is_reversing and distance < 15:
             target_speed = 0.0
@@ -40,7 +37,6 @@ class CarDriveState(BaseEntityState):
             speed_limit = max_spd if (is_reversing or distance >= 150) else max_spd * (distance / 150.0)
             target_speed = speed_limit * dir_sign
 
-        # Acercar la velocidad actual a la velocidad objetivo de forma suave (Aceleración / Fricción)
         accel_rate = self.entity.acceleration * dt
         friction_rate = self.entity.friction * (3.0 if is_braking else 1.0) * dt
 
@@ -54,7 +50,6 @@ class CarDriveState(BaseEntityState):
         elif self.entity.speed > target_speed:
             self.entity.speed = max(self.entity.speed - rate, target_speed)
 
-        # Si se detuvo por completo sin inputs, volver a idle
         if self.entity.speed == 0 and not is_accelerating and not is_reversing:
             self.state_machine.change('idle')
             return
