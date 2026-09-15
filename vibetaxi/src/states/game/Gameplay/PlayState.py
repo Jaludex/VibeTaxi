@@ -109,13 +109,15 @@ class PlayState(BaseState):
         if self.active_passenger:
             if self.active_passenger.is_riding():
                 dest_x, dest_y = self.city_map.nodes[self.active_passenger.destination]
-                self._render_detection_circle(surface, dest_x, dest_y, settings.PASSENGER_DELIVERY_RADIUS, (0, 255, 0))
+                self._render_detection_circle(surface, dest_x, dest_y, settings.PASSENGER_DELIVERY_RADIUS, settings.COLOR_PASSENGER_DELIVERY)
             
             if self.active_passenger.is_walking():
                 self.active_passenger.render(surface, self.camera)
         else:
             for p in self.map_passengers:
-                self._render_detection_circle(surface, p.x, p.y, settings.PASSENGER_DETECTION_RADIUS, (255, 255, 0))
+                if p.is_waiting():
+                    max_detection = settings.PASSENGER_DETECTION_RADIUS
+                    self._render_detection_circle(surface, p.x, p.y, max_detection, p.trip_color)
 
         self.city_map.render_layers(surface, self.camera, settings.TILED_MIDDLE_LAYERS)
 

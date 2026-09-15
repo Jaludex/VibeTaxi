@@ -1,3 +1,4 @@
+import math
 import settings
 from gale.animation import Animation
 from gale.state import StateMachine
@@ -8,8 +9,18 @@ from src.states.entity.PassengerWalkState import PassengerWalkState
 from src.states.entity.PassengerRideState import PassengerRideState
 
 class Passenger(Entity):
-    def __init__(self, x: float, y: float, destination_node: str, definition: dict):
+    def __init__(self, x: float, y: float, destination_node: str, destination_pos: tuple, definition: dict):
         self.destination = destination_node
+        
+        dest_x, dest_y = destination_pos
+        trip_distance = math.hypot(dest_x - x, dest_y - y)
+        
+        if trip_distance < 800:
+            self.trip_color = settings.COLOR_TRIP_SHORT
+        elif trip_distance < 2000:
+            self.trip_color = settings.COLOR_TRIP_MEDIUM
+        else:
+            self.trip_color = settings.COLOR_TRIP_LONG
         
         self.animations = {}
         self.current_animation = None

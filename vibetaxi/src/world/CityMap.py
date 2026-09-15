@@ -135,11 +135,14 @@ class CityMap:
         for name, (x, y) in self.nodes.items():
             if random.random() < spawn_chance:
                 possible_destinations = [n for n in node_names if n != name]
-                destination = random.choice(possible_destinations)
+                destination_name = random.choice(possible_destinations)
+                
+                destination_pos = self.nodes[destination_name]
+                
                 ped_key = random.choice(list(PASSENGER_DEFS.keys()))
                 definition = PASSENGER_DEFS[ped_key]
                 
-                passenger = Passenger(x, y, destination, definition)
+                passenger = Passenger(x, y, destination_name, destination_pos, definition)
                 spawned_passengers.append(passenger)
                 
         return spawned_passengers

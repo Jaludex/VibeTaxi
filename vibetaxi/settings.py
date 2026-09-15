@@ -50,6 +50,12 @@ TILED_GROUND_LAYERS = ["ground"]
 PASSENGER_DETECTION_RADIUS = 30
 PASSENGER_DELIVERY_RADIUS = 60
 
+COLOR_TRIP_SHORT = (0, 255, 0)
+COLOR_TRIP_MEDIUM = (255, 255, 0)
+COLOR_TRIP_LONG = (255, 69, 0)
+
+COLOR_PASSENGER_DELIVERY = (0, 255, 0)
+
 TEXTURES = {
     "city_tiles": pygame.image.load(BASE_DIR / "assets" / "graphics" / "city_tileset.png"),
     "cars": pygame.image.load(BASE_DIR / "assets" / "graphics" / "cars.png"),
