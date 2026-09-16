@@ -3,10 +3,9 @@ import settings
 from gale.physics import BodyType, BoxShape
 
 from src.mixins.DrawableMixin import DrawableMixin
-from src.mixins.CollidableMixin import CollidableMixin
 
 
-class Entity(DrawableMixin, CollidableMixin):
+class Entity(DrawableMixin):
     def __init__(self, x: float, y: float, definition: dict = None) -> None:
         self.x = x
         self.y = y
@@ -95,8 +94,21 @@ class Entity(DrawableMixin, CollidableMixin):
         self.y = float(pos.y)
 
         if hasattr(self, "angle"):
+            # Keep body angle aligned to entity steering but avoid spinning
             self.body.angle = self.angle
             self.body.angular_velocity = 0.0
+
+    def get_collision_rect(self):
+        # Keep this helper for rendering/visibility checks (replaces CollidableMixin)
+        import pygame
+        c_width = getattr(self, "collision_width", self.width)
+        c_height = getattr(self, "collision_height", self.height)
+        return pygame.Rect(
+            round(self.x - c_width / 2),
+            round(self.y - c_height / 2),
+            c_width,
+            c_height,
+        )
 
     def update(self, dt: float) -> None:
         if self.body is not None:

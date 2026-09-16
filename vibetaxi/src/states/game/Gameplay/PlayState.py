@@ -84,11 +84,7 @@ class PlayState(BaseState):
             self.nearby_props = self.city_map.props[:]
             self.nearby_passengers = self.map_passengers[:]
 
-        for prop in self.nearby_props:
-            if prop.collidable and self.taxi.collides(prop):
-                prop.on_collide(self.taxi)
-                self.taxi.speed *= 0.5
-        
+        # Nearby props are rendered, but collision handling is delegated to Gale physics callbacks
         for p in self.nearby_passengers:
             p.update(dt)
 

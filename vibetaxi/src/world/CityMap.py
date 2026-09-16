@@ -19,6 +19,9 @@ class CityMap:
         self.tilemap = load_tiled_map(settings.TILEMAPS[map_key])
         self.physics_world = World(gravity=(0, 0))
         self.physics_world._entity_registry = []
+        # Register collision callback so physics drives game collision logic
+        self.physics_world.on_collision_begin(self._on_collision_begin)
+
         self.props: List[Prop] = []
         self._load_collisions()
         self._load_props()
@@ -37,6 +40,25 @@ class CityMap:
                 BoxShape(width=width, height=height),
             )
             body.user_data = {"kind": "collision", "object": obj}
+
+    def _on_collision_begin(self, body_a, body_b):
+        # body.user_data is set to the owning entity in Entity.set_physics
+        a = getattr(body_a, 'user_data', None)
+        b = getattr(body_b, 'user_data', None)
+
+        # If a prop hits a vehicle, notify prop to start its 5s disappearance timer
+        try:
+            from src.entity.Prop import Prop
+            from src.entity.Car import Car
+        except Exception:
+            Prop = None
+            Car = None
+
+        if Prop is not None:
+            if isinstance(a, Prop) and (isinstance(b, Car) or hasattr(b, 'speed')):
+                a.on_collide(b)
+            elif isinstance(b, Prop) and (isinstance(a, Car) or hasattr(a, 'speed')):
+                b.on_collide(a)
 
     def _load_nodes(self) -> None:
         self.nodes = {}
@@ -57,13 +79,20 @@ class CityMap:
                 center_y = obj.y - obj.height / 2
 
                 prop = Prop(center_x, center_y, definition)
-                if prop.collidable:
-                    prop.set_physics(
-                        self.physics_world,
-                        body_type=BodyType.STATIC,
-                        width=prop.width,
-                        height=prop.height,
-                    )
+                # Make props dynamic so they can be pushed by vehicles/bodies
+                prop.set_physics(
+                    self.physics_world,
+                    body_type=BodyType.DYNAMIC,
+                    width=prop.width,
+                    height=prop.height,
+                )
+                # Give props moderate damping so they don't drift forever
+                if prop.body is not None:
+                    try:
+                        prop.body.set_damping(0.5, 0.5)
+                    except Exception:
+                        pass
+
                 self.props.append(prop)
 
     def get_taxi_spawn_position(self, default: tuple = (400, 300)) -> tuple:

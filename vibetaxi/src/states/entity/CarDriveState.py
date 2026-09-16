@@ -23,7 +23,9 @@ class CarDriveState(BaseEntityState):
         speed_ratio = current_spd_abs / max_spd if max_spd > 0 else 0
         turn_mult = (current_spd_abs / 30.0) if current_spd_abs < 30 else (1.5 - 0.9 * speed_ratio)
         
-        turn_amount = self.entity.turn_speed * turn_mult * dt
+        # Reduce raw steering responsiveness so turns are less sharp and drift mechanics feel better
+        TURN_REDUCTION = 0.6
+        turn_amount = self.entity.turn_speed * turn_mult * dt * TURN_REDUCTION
         if abs(angle_diff) < turn_amount:
             self.entity.angle = target_angle
         else:
