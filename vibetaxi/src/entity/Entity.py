@@ -97,6 +97,13 @@ class Entity(DrawableMixin):
         self.x = float(pos.x)
         self.y = float(pos.y)
 
+        if getattr(self, "free_physics", False):
+            if hasattr(self, "angle"):
+                import math
+                angle_offset = getattr(self, "angle_offset", 0)
+                self.angle = self.body.angle + math.radians(angle_offset)
+            return
+
         if hasattr(self, "angle"):
             import math
             angle_offset = getattr(self, "angle_offset", 0)
@@ -168,6 +175,9 @@ class Entity(DrawableMixin):
     def update(self, dt: float) -> None:
         if self.body is not None:
             self.sync_body_to_entity()
+
+            if getattr(self, "free_physics", False):
+                return
             
             if hasattr(self, "speed") and hasattr(self, "vx") and hasattr(self, "vy"):
                 import math

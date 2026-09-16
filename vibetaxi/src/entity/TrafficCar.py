@@ -4,6 +4,8 @@ from src.entity.Car import Car
 from src.states.entity.traffic.TrafficCarDriveState import TrafficCarDriveState
 from src.states.entity.traffic.TrafficCarCrashedState import TrafficCarCrashedState
 
+from src.states.entity.traffic.TrafficCarIdleState import TrafficCarIdleState
+
 class TrafficCar(Car):
     def __init__(self, x, y, definition, traffic_system=None):
         super().__init__(x, y, definition)
@@ -12,6 +14,7 @@ class TrafficCar(Car):
         self.crashed = False
 
         self.state_machine = StateMachine({
+            'idle': lambda sm: TrafficCarIdleState(self, sm),
             'drive': lambda sm: TrafficCarDriveState(self, sm),
             'crashed': lambda sm: TrafficCarCrashedState(self, sm)
         })
@@ -26,10 +29,22 @@ class TrafficCar(Car):
         self.speed = self.max_speed * 0.5 # Start with some speed
 
     def on_collide(self, other):
-        # Crash logic
+        # Crash logic only on high speed impacts
         if not self.crashed:
-            self.crashed = True
-            self.state_machine.change('crashed')
+            my_vx = getattr(self, 'vx', 0)
+            my_vy = getattr(self, 'vy', 0)
+            other_vx = getattr(other, 'vx', 0)
+            other_vy = getattr(other, 'vy', 0)
+            
+            rel_speed = math.hypot(my_vx - other_vx, my_vy - other_vy)
+            
+            # Check absolute speed too, just in case physics/velocities desync
+            my_speed = abs(getattr(self, 'speed', 0))
+            other_speed = abs(getattr(other, 'speed', 0))
+            
+            if rel_speed >= 150 or my_speed >= 150 or other_speed >= 150:
+                self.crashed = True
+                self.state_machine.change('crashed')
 
     def update(self, dt):
         self.state_machine.update(dt)

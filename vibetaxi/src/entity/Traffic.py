@@ -61,7 +61,8 @@ class TrafficSystem:
             if self.camera:
                 cam_x, cam_y = getattr(camera, 'x', 0), getattr(camera, 'y', 0)
                 dist = math.hypot(car.x - cam_x, car.y - cam_y)
-                if dist > 800: # Far away
+                despawn_dist = getattr(settings, 'TRAFFIC_DESPAWN_DIST', 600)
+                if dist > despawn_dist: # Far away
                     self.despawn_car(car)
             elif car.crashed and car.speed < 1:
                 # Optionally despawn crashed cars if no camera logic
@@ -80,11 +81,13 @@ class TrafficSystem:
         
         if self.camera:
             cam_x, cam_y = getattr(self.camera, 'x', 0), getattr(self.camera, 'y', 0)
+            spawn_min = getattr(settings, 'TRAFFIC_SPAWN_MIN_DIST', 380)
+            spawn_max = getattr(settings, 'TRAFFIC_SPAWN_MAX_DIST', 500)
             # Filter nodes that are outside view but not too far
             def is_good_spawn(name):
                 nx, ny = self.nodes[name]["x"], self.nodes[name]["y"]
                 dist = math.hypot(nx - cam_x, ny - cam_y)
-                return 400 < dist < 700
+                return spawn_min < dist < spawn_max
                 
             filtered = [n for n in valid_nodes if is_good_spawn(n)]
             if filtered:

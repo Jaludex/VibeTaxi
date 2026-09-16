@@ -130,12 +130,16 @@ class CityMap:
                 impact_x = (a.x + b.x) / 2
                 impact_y = (a.y + b.y) / 2
                 self.add_particle_emitter(ParticleEmitter.create_sparks(impact_x, impact_y))
+                if hasattr(a, 'on_collide'): a.on_collide(b)
+                if hasattr(b, 'on_collide'): b.on_collide(a)
             elif is_a_car and is_b_static:
                 if abs(getattr(a, 'speed', 0)) > 20:
                     self.add_particle_emitter(ParticleEmitter.create_sparks(a.x, a.y))
+                if hasattr(a, 'on_collide'): a.on_collide(b)
             elif is_b_car and is_a_static:
                 if abs(getattr(b, 'speed', 0)) > 20:
                     self.add_particle_emitter(ParticleEmitter.create_sparks(b.x, b.y))
+                if hasattr(b, 'on_collide'): b.on_collide(a)
         except Exception:
             pass
 
