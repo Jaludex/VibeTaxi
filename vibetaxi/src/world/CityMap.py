@@ -129,6 +129,8 @@ class CityMap:
             if is_a_car and is_b_car:
                 impact_x = (a.x + b.x) / 2
                 impact_y = (a.y + b.y) / 2
+                a.speed *= 0.5
+                b.speed *= 0.5
                 self.add_particle_emitter(ParticleEmitter.create_sparks(impact_x, impact_y))
                 if hasattr(a, 'on_collide'): a.on_collide(b)
                 if hasattr(b, 'on_collide'): b.on_collide(a)

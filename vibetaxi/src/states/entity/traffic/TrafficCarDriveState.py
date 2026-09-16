@@ -24,9 +24,11 @@ class TrafficCarDriveState(CarDriveState):
                     self.entity.target_x, self.entity.target_y = next_pos
                     self.entity.next_node_name = next_next
                 else:
-                    self.entity.is_accelerating = False # No path forward
+                    self.state_machine.change('idle')
+                    return
             else:
-                self.entity.is_accelerating = False # End of path
+                self.state_machine.change('idle')
+                return
 
         # Call the parent update which handles the physics, steering, etc.
         super().update(dt)
