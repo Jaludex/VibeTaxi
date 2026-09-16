@@ -82,7 +82,8 @@ class CarDriveState(BaseEntityState):
                 self.entity.body.apply_force(force.x, force.y)
 
                 # keep orientation locked to steering and prevent angular spin
-                self.entity.body.angle = self.entity.angle
+                angle_offset = getattr(self.entity, "angle_offset", 0)
+                self.entity.body.angle = self.entity.angle - math.radians(angle_offset)
                 self.entity.body.angular_velocity = 0.0
 
                 # sync entity pos to body
@@ -91,8 +92,9 @@ class CarDriveState(BaseEntityState):
                 self.entity.y = float(pos.y)
             except Exception:
                 # fallback: directly set velocity
+                angle_offset = getattr(self.entity, "angle_offset", 0)
                 self.entity.body.velocity = (self.entity.vx, self.entity.vy)
-                self.entity.body.angle = self.entity.angle
+                self.entity.body.angle = self.entity.angle - math.radians(angle_offset)
                 self.entity.body.angular_velocity = 0.0
                 self.entity.x = self.entity.body.position.x
                 self.entity.y = self.entity.body.position.y
