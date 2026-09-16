@@ -25,7 +25,7 @@ class CityMap:
             center_x = obj.x + obj.width / 2
             center_y = obj.y + obj.height / 2
             
-            node_name = obj.name if obj.name else f"node_{len(self.nodes)}"
+            node_name = obj.name if obj.name and obj.name not in self.nodes.keys() else f"node_{len(self.nodes)}"
             self.nodes[node_name] = (center_x, center_y)
 
     def _load_props(self) -> None:
@@ -39,6 +39,15 @@ class CityMap:
                 
                 prop = Prop(center_x, center_y, definition)
                 self.props.append(prop)
+
+    def get_taxi_spawn_position(self, default: tuple = (400, 300)) -> tuple:
+        spawner_layer = self.tilemap.object_layers.get("taxi-spawns", [])
+        if spawner_layer:
+            obj = spawner_layer[0]
+            center_x = obj.x + getattr(obj, "width", 0) / 2
+            center_y = obj.y + getattr(obj, "height", 0) / 2
+            return (center_x, center_y)
+        return default
 
     def get_rect(self) -> pygame.Rect:
         return pygame.Rect(0, 0, self.tilemap.pixel_width, self.tilemap.pixel_height)
@@ -86,7 +95,7 @@ class CityMap:
         max_row = min(self.tilemap.rows - 1, int((rect.bottom - 1) // self.tilemap.tile_height))
         max_col = min(self.tilemap.cols - 1, int((rect.right - 1) // self.tilemap.tile_width))
 
-        for name in settings.TILED_UPPER_LAYERS:
+        for name in settings.TILED_UPPER_SHADOW_LAYERS:
             if name not in self.tilemap.layer_names():
                 continue
             grid = self.tilemap.get_layer(name)

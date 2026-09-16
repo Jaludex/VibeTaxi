@@ -22,8 +22,8 @@ class Entity(DrawableMixin, CollidableMixin):
             self.height = 0
             self.width = 0
 
-        self.collision_width = self.width * 0.9
-        self.collision_height = self.height * 0.9
+        self.collision_width = self.width
+        self.collision_height = self.height
             
         self.vx = 0
         self.vy = 0

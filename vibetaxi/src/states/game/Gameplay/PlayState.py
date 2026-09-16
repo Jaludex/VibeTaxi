@@ -22,7 +22,8 @@ class PlayState(BaseState):
 
         self.taxi = enter_params.get("taxi")
         if self.taxi is None:
-            self.taxi = Taxi(400, 300, VEHICLE_DEFS["yellow_taxi"])
+            spawn_x, spawn_y = self.city_map.get_taxi_spawn_position()
+            self.taxi = Taxi(spawn_x, spawn_y, VEHICLE_DEFS["yellow_taxi"])
 
         self.taxi.tilemap = self.city_map.tilemap
 
@@ -41,22 +42,47 @@ class PlayState(BaseState):
             self.radio = Radio(80, 296)
             
         self.active_passenger = None
-        
         self.map_passengers = self.city_map.generate_passengers(spawn_chance=0.4)
+        
+        self.nearby_props = []
+        self.nearby_passengers = []
 
     def update(self, dt):
         self.city_map.update(dt)
         self.taxi.update(dt)
-
         self.camera.update(dt)
         self.radio.update(dt)
         
-        for prop in self.city_map.props:
+        if self.camera:
+            row_range, col_range = self.tilemap._visible_range(self.camera)
+            
+            def is_visible(x, y, margin_pixels):
+                margin_cols = int(margin_pixels // self.tilemap.tile_width)
+                margin_rows = int(margin_pixels // self.tilemap.tile_height)
+                
+                row, col = self.tilemap.tile_at(x, y)
+                
+                return (row_range.start - margin_rows <= row < row_range.stop + margin_rows) and \
+                       (col_range.start - margin_cols <= col < col_range.stop + margin_cols)
+
+            self.nearby_props = [
+                prop for prop in self.city_map.props 
+                if is_visible(prop.x, prop.y, margin_pixels=100)
+            ]
+            self.nearby_passengers = [
+                p for p in self.map_passengers 
+                if is_visible(p.x, p.y, margin_pixels=150)
+            ]
+        else:
+            self.nearby_props = self.city_map.props[:]
+            self.nearby_passengers = self.map_passengers[:]
+
+        for prop in self.nearby_props:
             if prop.collidable and self.taxi.collides(prop):
                 prop.on_collide(self.taxi)
                 self.taxi.speed *= 0.5
         
-        for p in self.map_passengers:
+        for p in self.nearby_passengers:
             p.update(dt)
 
         if self.active_passenger:
@@ -64,7 +90,6 @@ class PlayState(BaseState):
         else:
             self.update_city_passengers(dt)
             
-
     def update_active_passenger(self, dt: float):
         self.active_passenger.update(dt)
 
@@ -106,30 +131,35 @@ class PlayState(BaseState):
     def render(self, surface):
         self.city_map.render_layers(surface, self.camera, settings.TILED_GROUND_LAYERS)
 
+        render_active_passenger = False
+
         if self.active_passenger:
             if self.active_passenger.is_riding():
                 dest_x, dest_y = self.city_map.nodes[self.active_passenger.destination]
                 self._render_detection_circle(surface, dest_x, dest_y, settings.PASSENGER_DELIVERY_RADIUS, settings.COLOR_PASSENGER_DELIVERY)
             
             if self.active_passenger.is_walking():
-                self.active_passenger.render(surface, self.camera)
+                render_active_passenger = True
         else:
-            for p in self.map_passengers:
+            for p in self.nearby_passengers:
                 if p.is_waiting():
-                    max_detection = settings.PASSENGER_DETECTION_RADIUS
-                    self._render_detection_circle(surface, p.x, p.y, max_detection, p.trip_color)
+                    self._render_detection_circle(surface, p.x, p.y, settings.PASSENGER_DETECTION_RADIUS, (255, 255, 0))
 
         self.city_map.render_layers(surface, self.camera, settings.TILED_MIDDLE_LAYERS)
 
-        for prop in self.city_map.props:
+        for prop in self.nearby_props:
             prop.render(surface, self.camera)
             
-        for p in self.map_passengers:
+        for p in self.nearby_passengers:
             p.render(surface, self.camera)
+
+        if render_active_passenger:
+            self.active_passenger.render(surface, self.camera)
             
         self.taxi.render(surface, self.camera)
-        
-        self.city_map.render_layers(surface, self.camera, settings.TILED_UPPER_LAYERS)
+
+        self.city_map.render_layers(surface, self.camera, settings.TILED_UPPER_NO_SHADOW_LAYERS)
+        self.city_map.render_layers(surface, self.camera, settings.TILED_UPPER_SHADOW_LAYERS)
         self.city_map.render_car_silhouette_if_obstructed(surface, self.taxi, self.camera)
         self.radio.render(surface)
         

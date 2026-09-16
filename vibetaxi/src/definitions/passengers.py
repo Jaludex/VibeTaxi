@@ -37,3 +37,4 @@ PASSENGER_DEFS: Dict[str, Dict[str, Any]] = {
         },
     },
 }
+

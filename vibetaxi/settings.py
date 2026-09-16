@@ -43,8 +43,9 @@ TILE_HEIGHT = VIRTUAL_HEIGHT // TILE_SIZE
 
 CAMERA_FOLLOW_RATE = 8.0
 
-TILED_UPPER_LAYERS = ["overheads"]
-TILED_MIDDLE_LAYERS = ["decoration", "buildings"]
+TILED_UPPER_SHADOW_LAYERS = ["overheads"]
+TILED_UPPER_NO_SHADOW_LAYERS = ["decoration-high"]
+TILED_MIDDLE_LAYERS = ["decoration-low", "buildings"]
 TILED_GROUND_LAYERS = ["ground"]
 
 PASSENGER_DETECTION_RADIUS = 30

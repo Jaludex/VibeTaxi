@@ -43,4 +43,22 @@ PROPS_DEF = {
         "collidable": True,
         "on_collide": destroy_prop
     },
+    4: {
+        "texture": "props",
+        "frame": 4,
+        "collidable": True,
+        "on_collide": destroy_prop
+    },
+    7: {
+        "texture": "props",
+        "frame": 7,
+        "collidable": True,
+        "on_collide": destroy_prop
+    },
+    36: {
+        "texture": "props",
+        "frame": 36,
+        "collidable": True,
+        "on_collide": destroy_prop
+    },
 }
