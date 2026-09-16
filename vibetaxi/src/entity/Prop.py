@@ -22,6 +22,10 @@ class Prop(Entity):
         if self._removal_scheduled:
             return
 
+        damage_amount = self.def_data.get("damage", 0)
+        if damage_amount > 0 and hasattr(vehicle, 'damage'):
+            vehicle.damage(damage_amount)
+
         # If a custom on_collide function is provided in the definitions, call it now
         try:
             if self._on_collide_def is not None:

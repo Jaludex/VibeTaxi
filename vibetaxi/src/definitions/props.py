@@ -57,12 +57,14 @@ PROPS_DEF = {
         "texture": "props",
         "frame": 6,
         "collidable": True,
+        "damage": 5,
         "on_collide": destroy_prop
     },
     40: {
         "texture": "props",
         "frame": 40,
         "collidable": True,
+        "damage": 15,
         "on_collide": emit_particles_and_destroy(
             [(0, 150, 255, 150), (100, 200, 255, 120)],
             emission_duration=2.0,
@@ -72,24 +74,28 @@ PROPS_DEF = {
         "texture": "props",
         "frame": 19,
         "collidable": True,
+        "damage": 10,
         "on_collide": emit_particles_and_destroy([(255, 255, 255, 255), (200, 200, 200, 255)])
     },
     4: {
         "texture": "props",
         "frame": 4,
         "collidable": True,
+        "damage": 5,
         "on_collide": destroy_prop
     },
     7: {
         "texture": "props",
         "frame": 7,
         "collidable": True,
+        "damage": 8,
         "on_collide": emit_particles_and_destroy([(255, 165, 0, 255), (255, 140, 0, 255)])
     },
     36: {
         "texture": "props",
         "frame": 36,
         "collidable": True,
+        "damage": 10,
         "on_collide": emit_particles_and_destroy([(255, 255, 255, 255), (200, 200, 200, 255)])
     },
 }

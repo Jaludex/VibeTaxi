@@ -59,12 +59,16 @@ class ParticleEmitter:
         else:
             self._is_emitting = False
 
-    def _spawn_burst(self, count: int) -> None:
-        ps = ParticleSystem(self.x, self.y, n=count)
+    def _spawn_burst(self, count: int, x: float = None, y: float = None, colors: List[Any] = None) -> None:
+        sx = x if x is not None else self.x
+        sy = y if y is not None else self.y
+        scolors = colors if colors is not None else self.colors
+        
+        ps = ParticleSystem(sx, sy, n=count)
         ps.set_life_time(self.lifetime_min, self.lifetime_max)
         ps.set_linear_acceleration(-self.accel, -self.accel, self.accel, self.accel)
         ps.set_area_spread(self.spread, self.spread)
-        ps.set_colors(self.colors)
+        ps.set_colors(scolors)
         ps.generate()
         self.systems.append(ps)
 
@@ -78,8 +82,11 @@ class ParticleEmitter:
             self._timer_item.remove()
             self._timer_item = None
         self._is_emitting = False
+        self.is_permanent = False
 
     def is_finished(self) -> bool:
+        if getattr(self, 'is_permanent', False):
+            return False
         return not self._is_emitting and len(self.systems) == 0
 
     def update(self, dt: float) -> None:

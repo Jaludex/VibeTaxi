@@ -203,6 +203,18 @@ class PlayState(BaseState):
 
         self.radio.render(surface)
         
+        if getattr(self.taxi, 'is_crashed', False):
+            from gale.text import render_text
+            render_text(
+                surface,
+                "GAME OVER - TAXI DESTROYED",
+                settings.FONTS["minecraft"],
+                settings.VIRTUAL_WIDTH // 2,
+                settings.VIRTUAL_HEIGHT // 2,
+                (255, 50, 50),
+                center=True
+            )
+        
     def _render_detection_circle(self, surface, x, y, radius, color):
         """Método auxiliar para renderizar los aros en el suelo con la cámara."""
         if self.camera:

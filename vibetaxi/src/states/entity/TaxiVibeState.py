@@ -22,6 +22,11 @@ class TaxiVibeState(TaxiDriveState):
         self.entity.is_drifting = False
         self._last_wl = None
         self._last_wr = None
+        
+        if hasattr(self, "_drift_smoke_emitter") and self._drift_smoke_emitter:
+            self._drift_smoke_emitter.is_permanent = False
+        if hasattr(self, "_skid_mark_emitter") and self._skid_mark_emitter:
+            self._skid_mark_emitter.is_permanent = False
 
     def update(self, dt):
         if getattr(self.entity, "is_drifting", False):
@@ -87,14 +92,25 @@ class TaxiVibeState(TaxiDriveState):
 
         from src.ParticleEmitter import ParticleEmitter
 
+        # Inicializar emisores únicos si no existen
+        if not hasattr(self, "_drift_smoke_emitter") or not self._drift_smoke_emitter:
+            self._drift_smoke_emitter = ParticleEmitter.create_drift_smoke(0, 0, count=0)
+            self._drift_smoke_emitter.is_permanent = True
+            city_map.add_particle_emitter(self._drift_smoke_emitter)
+            
+        if not hasattr(self, "_skid_mark_emitter") or not self._skid_mark_emitter:
+            self._skid_mark_emitter = ParticleEmitter.create_skid_mark(0, 0)
+            self._skid_mark_emitter.is_permanent = True
+            city_map.add_particle_emitter(self._skid_mark_emitter)
+
         # 1. Partículas de humo saliendo de las llantas traseras
         if not hasattr(self, "_smoke_timer"):
             self._smoke_timer = 0.0
         self._smoke_timer += dt
         if self._smoke_timer >= 0.06:
             self._smoke_timer = 0.0
-            city_map.add_particle_emitter(ParticleEmitter.create_drift_smoke(wl_x, wl_y))
-            city_map.add_particle_emitter(ParticleEmitter.create_drift_smoke(wr_x, wr_y))
+            self._drift_smoke_emitter._spawn_burst(2, wl_x, wl_y)
+            self._drift_smoke_emitter._spawn_burst(2, wr_x, wr_y)
 
         # 2. Partículas estáticas como huellas/marcas de neumáticos en el suelo
         last_wl = getattr(self, "_last_wl", None)
@@ -110,8 +126,8 @@ class TaxiVibeState(TaxiDriveState):
                 spawn_skid = True
 
         if spawn_skid:
-            city_map.add_particle_emitter(ParticleEmitter.create_skid_mark(wl_x, wl_y))
-            city_map.add_particle_emitter(ParticleEmitter.create_skid_mark(wr_x, wr_y))
+            self._skid_mark_emitter._spawn_burst(1, wl_x, wl_y)
+            self._skid_mark_emitter._spawn_burst(1, wr_x, wr_y)
             self._last_wl = (wl_x, wl_y)
             self._last_wr = (wr_x, wr_y)
 

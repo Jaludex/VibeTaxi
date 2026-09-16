@@ -149,16 +149,31 @@ class CityMap:
                 self.add_particle_emitter(ParticleEmitter.create_sparks(impact_x, impact_y))
                 if hasattr(a, 'on_collide'): a.on_collide(b)
                 if hasattr(b, 'on_collide'): b.on_collide(a)
-                play_crash_sound("crash_car", 0.3)
+                
+                is_a_taxi = type(a).__name__ == "Taxi"
+                is_b_taxi = type(b).__name__ == "Taxi"
+                
+                if is_a_taxi or is_b_taxi:
+                    play_crash_sound("crash_car", 0.3)
+                else:
+                    play_crash_sound("crash_car", 0.09)
+                    
+                if is_a_taxi: a.damage(10)
+                if is_b_taxi: b.damage(10)
+
             elif is_a_car and is_b_static:
                 if abs(getattr(a, 'speed', 0)) > 20:
                     self.add_particle_emitter(ParticleEmitter.create_sparks(a.x, a.y))
                     play_crash_sound("crash_wall", 0.3)
+                    if type(a).__name__ == "Taxi":
+                        a.damage(15)
                 if hasattr(a, 'on_collide'): a.on_collide(b)
             elif is_b_car and is_a_static:
                 if abs(getattr(b, 'speed', 0)) > 20:
                     self.add_particle_emitter(ParticleEmitter.create_sparks(b.x, b.y))
                     play_crash_sound("crash_wall", 0.3)
+                    if type(b).__name__ == "Taxi":
+                        b.damage(15)
                 if hasattr(b, 'on_collide'): b.on_collide(a)
         except Exception:
             pass
