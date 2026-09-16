@@ -1,9 +1,10 @@
 import settings
 
-from gale.tilemap import move_and_collide
+from gale.physics import BodyType, BoxShape
 
 from src.mixins.DrawableMixin import DrawableMixin
 from src.mixins.CollidableMixin import CollidableMixin
+
 
 class Entity(DrawableMixin, CollidableMixin):
     def __init__(self, x: float, y: float, definition: dict = None) -> None:
@@ -24,39 +25,92 @@ class Entity(DrawableMixin, CollidableMixin):
 
         self.collision_width = self.width
         self.collision_height = self.height
-            
+
         self.vx = 0
         self.vy = 0
-        
+
         self.tilemap = None
+        self.world = None
+        self.body = None
+        self.physics_enabled = False
+
+    def set_physics(
+        self,
+        world,
+        *,
+        body_type: int = BodyType.DYNAMIC,
+        shape=None,
+        width: float = None,
+        height: float = None,
+        offset=(0, 0),
+        is_sensor: bool = False,
+    ):
+        if world is None:
+            return None
+
+        self.world = world
+        self.physics_enabled = True
+
+        if shape is None:
+            default_width = width if width is not None else self.width
+            default_height = height if height is not None else self.height
+            if default_width > 0 and default_height > 0:
+                shape = BoxShape(
+                    width=default_width,
+                    height=default_height,
+                    offset=offset,
+                    is_sensor=is_sensor,
+                )
+
+        if shape is None:
+            return None
+
+        if self.body is not None:
+            self.body.destroy()
+
+        if body_type == BodyType.STATIC:
+            self.body = world.create_static_body(self.x, self.y, shape)
+        elif body_type == BodyType.KINEMATIC:
+            self.body = world.create_kinematic_body(self.x, self.y, shape)
+        else:
+            self.body = world.create_dynamic_body(self.x, self.y, shape)
+
+        self.body.user_data = self
+        self.body.position = (self.x, self.y)
+        self.body.angle = getattr(self, "angle", 0.0)
+        self.body.angular_velocity = 0.0
+
+        registry = getattr(world, "_entity_registry", None)
+        if registry is not None and self not in registry:
+            registry.append(self)
+
+        return self.body
+
+    def sync_body_to_entity(self) -> None:
+        if self.body is None:
+            return
+
+        pos = self.body.position
+        self.x = float(pos.x)
+        self.y = float(pos.y)
+
+        if hasattr(self, "angle"):
+            self.body.angle = self.angle
+            self.body.angular_velocity = 0.0
 
     def update(self, dt: float) -> None:
-        if self.tilemap is not None:
-            tl_x = self.x - self.collision_width / 2
-            tl_y = self.y - self.collision_height / 2
+        if self.body is not None:
+            self.sync_body_to_entity()
+            if hasattr(self, "angle"):
+                self.body.angle = self.angle
+                self.body.angular_velocity = 0.0
+            if hasattr(self, "vx") and hasattr(self, "vy"):
+                self.body.velocity = (self.vx, self.vy)
+            return
 
-            tl_x, tl_y, hit_wall_x, hit_wall_y = move_and_collide(
-                self.tilemap,
-                "buildings",
-                tl_x,
-                tl_y,
-                self.collision_width,
-                self.collision_height,
-                self.vx * dt,
-                self.vy * dt,
-            )
-            
-            # Devolvemos el centro basándonos en la nueva posición
-            self.x = tl_x + self.collision_width / 2
-            self.y = tl_y + self.collision_height / 2
-            
-            if hit_wall_x or hit_wall_y:
-                if hasattr(self, "speed"):
-                    self.speed *= 0.5
-        else:
-            self.x += self.vx * dt
-            self.y += self.vy * dt
-            
+        self.x += self.vx * dt
+        self.y += self.vy * dt
+
         if self.tilemap is not None:
             half_w = self.width / 2
             half_h = self.height / 2

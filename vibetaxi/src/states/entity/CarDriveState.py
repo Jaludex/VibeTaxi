@@ -56,3 +56,10 @@ class CarDriveState(BaseEntityState):
 
         self.entity.vx = math.cos(self.entity.angle) * self.entity.speed
         self.entity.vy = math.sin(self.entity.angle) * self.entity.speed
+
+        if self.entity.body is not None:
+            self.entity.body.velocity = (self.entity.vx, self.entity.vy)
+            self.entity.body.angular_velocity = 0.0
+            self.entity.body.angle = self.entity.angle
+            self.entity.x = self.entity.body.position.x
+            self.entity.y = self.entity.body.position.y

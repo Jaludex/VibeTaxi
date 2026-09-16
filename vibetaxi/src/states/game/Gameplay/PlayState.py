@@ -4,6 +4,7 @@ import pygame
 
 from gale.camera import Camera
 from gale.input_handler import InputData
+from gale.physics import BodyType
 from gale.state import BaseState
 
 import settings
@@ -26,6 +27,12 @@ class PlayState(BaseState):
             self.taxi = Taxi(spawn_x, spawn_y, VEHICLE_DEFS["yellow_taxi"])
 
         self.taxi.tilemap = self.city_map.tilemap
+        self.taxi.set_physics(
+            self.city_map.physics_world,
+            body_type=BodyType.DYNAMIC,
+            width=self.taxi.width,
+            height=self.taxi.height,
+        )
 
         self.camera = enter_params.get("camera")
         if self.camera is None:
@@ -48,8 +55,8 @@ class PlayState(BaseState):
         self.nearby_passengers = []
 
     def update(self, dt):
-        self.city_map.update(dt)
         self.taxi.update(dt)
+        self.city_map.update(dt)
         self.camera.update(dt)
         self.radio.update(dt)
         

@@ -3,6 +3,7 @@ import math
 import random
 from typing import Any, List
 
+from gale.physics import BodyType, BoxShape, World
 from gale.tilemap import load_tiled_map
 
 import settings
@@ -12,12 +13,30 @@ from src.entity.Passenger import Passenger
 from src.definitions.props import PROPS_DEF
 from src.definitions.passengers import PASSENGER_DEFS
 
+
 class CityMap:
     def __init__(self, map_key: str = "city") -> None:
         self.tilemap = load_tiled_map(settings.TILEMAPS[map_key])
+        self.physics_world = World(gravity=(0, 0))
+        self.physics_world._entity_registry = []
         self.props: List[Prop] = []
+        self._load_collisions()
         self._load_props()
         self._load_nodes()
+
+    def _load_collisions(self) -> None:
+        for obj in self.tilemap.object_layers.get("collisions", []):
+            width = getattr(obj, "width", 0)
+            height = getattr(obj, "height", 0)
+            if width <= 0 or height <= 0:
+                continue
+
+            body = self.physics_world.create_static_body(
+                obj.x + width / 2,
+                obj.y + height / 2,
+                BoxShape(width=width, height=height),
+            )
+            body.user_data = {"kind": "collision", "object": obj}
 
     def _load_nodes(self) -> None:
         self.nodes = {}
@@ -31,13 +50,20 @@ class CityMap:
     def _load_props(self) -> None:
         for obj in self.tilemap.object_layers.get("props", []):
             tile_index = obj.properties.get("tile_index")
-            
+
             if tile_index in PROPS_DEF:
                 definition = PROPS_DEF[tile_index]
                 center_x = obj.x + obj.width / 2
                 center_y = obj.y - obj.height / 2
-                
+
                 prop = Prop(center_x, center_y, definition)
+                if prop.collidable:
+                    prop.set_physics(
+                        self.physics_world,
+                        body_type=BodyType.STATIC,
+                        width=prop.width,
+                        height=prop.height,
+                    )
                 self.props.append(prop)
 
     def get_taxi_spawn_position(self, default: tuple = (400, 300)) -> tuple:
@@ -53,7 +79,9 @@ class CityMap:
         return pygame.Rect(0, 0, self.tilemap.pixel_width, self.tilemap.pixel_height)
 
     def update(self, dt: float) -> None:
-        pass
+        self.physics_world.update(dt)
+        for entity in getattr(self.physics_world, "_entity_registry", []):
+            entity.sync_body_to_entity()
 
     def render_layers(self, surface: pygame.Surface, camera: Any = None, layer_names: list = None) -> None:
         target_layers = layer_names or []
