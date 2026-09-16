@@ -164,6 +164,14 @@ class PlayState(BaseState):
         self.city_map.render_layers(surface, self.camera, settings.TILED_UPPER_NO_SHADOW_LAYERS)
         self.city_map.render_layers(surface, self.camera, settings.TILED_UPPER_SHADOW_LAYERS)
         self.city_map.render_car_silhouette_if_obstructed(surface, self.taxi, self.camera)
+
+        # Physics debug overlay
+        try:
+            if settings.PHYSICS_DEBUG:
+                self.city_map.render_debug(surface, self.camera)
+        except Exception:
+            pass
+
         self.radio.render(surface)
         
     def _render_detection_circle(self, surface, x, y, radius, color):

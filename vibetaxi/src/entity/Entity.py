@@ -99,7 +99,7 @@ class Entity(DrawableMixin):
             self.body.angular_velocity = 0.0
 
     def get_collision_rect(self):
-        # Keep this helper for rendering/visibility checks (replaces CollidableMixin)
+        # Axis-aligned bounding box fallback (keeps compatibility)
         import pygame
         c_width = getattr(self, "collision_width", self.width)
         c_height = getattr(self, "collision_height", self.height)
@@ -109,6 +109,60 @@ class Entity(DrawableMixin):
             c_width,
             c_height,
         )
+
+    def get_collision_polygon(self):
+        # Returns list of 4 points for the oriented collision rectangle using
+        # the same center and rotation used for rendering to ensure alignment.
+        import pygame
+        hw = getattr(self, 'collision_width', self.width) / 2.0
+        hh = getattr(self, 'collision_height', self.height) / 2.0
+
+        # corners local coordinates (clockwise)
+        corners = [(-hw, -hh), (hw, -hh), (hw, hh), (-hw, hh)]
+
+        center_x, center_y, degrees = self.get_render_center_and_degrees()
+
+        poly = []
+        for lx, ly in corners:
+            v = pygame.math.Vector2(lx, ly)
+            # rotate using same sign used for pivot math in Drawable: rotate(-degrees)
+            rv = v.rotate(-degrees)
+            poly.append((center_x + rv.x, center_y + rv.y))
+
+        return poly
+
+    def get_render_center_and_degrees(self):
+        # Returns (center_x, center_y, degrees) matching Drawable.render logic
+        import math
+        import pygame
+        center_x, center_y = self.x, self.y
+        angle = getattr(self, 'angle', 0.0)
+        angle_offset = getattr(self, 'angle_offset', 0)
+        degrees = math.degrees(-angle) + angle_offset
+
+        pivot_x = getattr(self, 'pivot_x', 0)
+        pivot_y = getattr(self, 'pivot_y', 0)
+        if pivot_x != 0 or pivot_y != 0:
+            offset = pygame.math.Vector2(pivot_x, pivot_y)
+            # same rotation used in Drawable: rotated_offset = offset.rotate(-degrees)
+            rotated_offset = offset.rotate(-degrees)
+            center_x = (self.x + pivot_x) - rotated_offset.x
+            center_y = (self.y + pivot_y) - rotated_offset.y
+
+        return center_x, center_y, degrees
+
+    def align_body_to_render_center(self):
+        # Move the physics body so its position equals the rendered center
+        if self.body is None:
+            return
+        try:
+            cx, cy, _ = self.get_render_center_and_degrees()
+            self.body.position = (cx, cy)
+            # Keep entity coords in sync
+            self.x = float(cx)
+            self.y = float(cy)
+        except Exception:
+            pass
 
     def update(self, dt: float) -> None:
         if self.body is not None:

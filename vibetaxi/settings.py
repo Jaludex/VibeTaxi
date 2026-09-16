@@ -112,6 +112,9 @@ MUSIC_ELECTRONIC = {
 MUSIC_CHANNELS = 0
 
 
+PHYSICS_DEBUG = True
+
+
 def play_music(name: str) -> None:
     stop_music(name)
     MUSIC_CHANNELS[name] = SOUNDS[name].play(loops=-1)

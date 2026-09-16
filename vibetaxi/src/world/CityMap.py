@@ -17,7 +17,8 @@ from src.definitions.passengers import PASSENGER_DEFS
 class CityMap:
     def __init__(self, map_key: str = "city") -> None:
         self.tilemap = load_tiled_map(settings.TILEMAPS[map_key])
-        self.physics_world = World(gravity=(0, 0))
+        # Use a smaller fixed timestep for more precise collision resolution
+        self.physics_world = World(gravity=(0, 0), fixed_timestep=1/120)
         self.physics_world._entity_registry = []
         # Register collision callback so physics drives game collision logic
         self.physics_world.on_collision_begin(self._on_collision_begin)
@@ -34,10 +35,12 @@ class CityMap:
             if width <= 0 or height <= 0:
                 continue
 
+            # Tiled's object y is the top edge; center is y - height/2 (same convention as props)
+            # Tiled object coordinates are top-left; convert to center for the Body
             body = self.physics_world.create_static_body(
                 obj.x + width / 2,
                 obj.y + height / 2,
-                BoxShape(width=width, height=height),
+                BoxShape(width=width, height=height, friction=1.0),
             )
             body.user_data = {"kind": "collision", "object": obj}
 
@@ -46,7 +49,6 @@ class CityMap:
         a = getattr(body_a, 'user_data', None)
         b = getattr(body_b, 'user_data', None)
 
-        # If a prop hits a vehicle, notify prop to start its 5s disappearance timer
         try:
             from src.entity.Prop import Prop
             from src.entity.Car import Car
@@ -54,11 +56,65 @@ class CityMap:
             Prop = None
             Car = None
 
-        if Prop is not None:
+        # Helper to increase friction on a body temporarily
+        def increase_friction(gale_body, friction=2.0, linear_damping=3.0):
+            try:
+                pm_body = getattr(gale_body, '_pm_body', None)
+                if pm_body is not None:
+                    for s in pm_body.shapes:
+                        try:
+                            s.friction = friction
+                        except Exception:
+                            pass
+                try:
+                    gale_body.set_damping(linear_damping, 0.5)
+                except Exception:
+                    pass
+            except Exception:
+                pass
+
+        # If a is a Prop and b is a Car-like, notify prop and penalize vehicle speed
+        if Prop is not None and Car is not None:
             if isinstance(a, Prop) and (isinstance(b, Car) or hasattr(b, 'speed')):
+                # Increase friction/damping so prop doesn't fly
+                if getattr(a, 'body', None) is not None:
+                    increase_friction(a.body, friction=2.0, linear_damping=3.0)
+                # Penalize vehicle speed
+                try:
+                    if hasattr(b, 'speed'):
+                        b.speed *= 0.5
+                except Exception:
+                    pass
                 a.on_collide(b)
             elif isinstance(b, Prop) and (isinstance(a, Car) or hasattr(a, 'speed')):
+                if getattr(b, 'body', None) is not None:
+                    increase_friction(b.body, friction=2.0, linear_damping=3.0)
+                try:
+                    if hasattr(a, 'speed'):
+                        a.speed *= 0.5
+                except Exception:
+                    pass
                 b.on_collide(a)
+        else:
+            # Fallback: if user_data types not mapped but entity-like
+            if hasattr(a, 'on_collide') and hasattr(b, 'speed'):
+                try:
+                    b.speed *= 0.5
+                except Exception:
+                    pass
+                try:
+                    a.on_collide(b)
+                except Exception:
+                    pass
+            if hasattr(b, 'on_collide') and hasattr(a, 'speed'):
+                try:
+                    a.speed *= 0.5
+                except Exception:
+                    pass
+                try:
+                    b.on_collide(a)
+                except Exception:
+                    pass
 
     def _load_nodes(self) -> None:
         self.nodes = {}
@@ -80,16 +136,17 @@ class CityMap:
 
                 prop = Prop(center_x, center_y, definition)
                 # Make props dynamic so they can be pushed by vehicles/bodies
+                from gale.physics import BoxShape as GPBoxShape
+                shape = GPBoxShape(width=prop.width, height=prop.height, friction=0.9)
                 prop.set_physics(
                     self.physics_world,
                     body_type=BodyType.DYNAMIC,
-                    width=prop.width,
-                    height=prop.height,
+                    shape=shape,
                 )
                 # Give props moderate damping so they don't drift forever
                 if prop.body is not None:
                     try:
-                        prop.body.set_damping(0.5, 0.5)
+                        prop.body.set_damping(1.5, 0.5)
                     except Exception:
                         pass
 
@@ -110,7 +167,110 @@ class CityMap:
     def update(self, dt: float) -> None:
         self.physics_world.update(dt)
         for entity in getattr(self.physics_world, "_entity_registry", []):
+            # sync body -> entity, and update any timers
             entity.sync_body_to_entity()
+
+    def render_debug(self, surface, camera=None):
+        import pygame
+        if not getattr(__import__('settings'), 'PHYSICS_DEBUG', False):
+            return
+
+        # Draw collision rects for bodies registered in the physics world
+        for entity in getattr(self.physics_world, '_entity_registry', []):
+            if getattr(entity, 'active', True) is False:
+                continue
+            try:
+                # Prefer oriented polygon when available
+                if hasattr(entity, 'get_collision_polygon'):
+                    poly = entity.get_collision_polygon()
+                    if camera is not None:
+                        poly = [camera.apply(pygame.Rect(x, y, 0, 0)).topleft for x, y in poly]
+                        # camera.apply returns a rect, top-left is position
+                        poly = [(p[0], p[1]) for p in poly]
+                    pygame.draw.polygon(surface, (255, 0, 0), poly, width=1)
+                else:
+                    rect = entity.get_collision_rect()
+                    if camera is not None:
+                        rect = camera.apply(rect)
+                    pygame.draw.rect(surface, (255, 0, 0), rect, width=1)
+
+                # draw center
+                cx, cy = int(entity.x), int(entity.y)
+                if camera is not None:
+                    tmp = camera.apply(pygame.Rect(cx, cy, 0, 0))
+                    cx, cy = tmp.x, tmp.y
+                pygame.draw.circle(surface, (0, 255, 0), (cx, cy), 2)
+            except Exception:
+                pass
+
+        # Also draw the raw collision objects from the Tiled layer for reference
+        try:
+            coll_objs = self.tilemap.object_layers.get('collisions', [])
+            for obj in coll_objs:
+                try:
+                    ox = obj.x
+                    oy = obj.y
+                    ow = getattr(obj, 'width', 0)
+                    oh = getattr(obj, 'height', 0)
+                    if ow <= 0 or oh <= 0:
+                        continue
+
+                    rect = pygame.Rect(ox, oy, ow, oh)
+                    if camera is not None:
+                        rect = camera.apply(rect)
+                        # camera.apply returns a rect
+                    # semi-transparent fill
+                    try:
+                        s = pygame.Surface((rect.width, rect.height), pygame.SRCALPHA)
+                        s.fill((255, 0, 0, 40))
+                        surface.blit(s, (rect.x, rect.y))
+                    except Exception:
+                        # fallback: draw light border
+                        pass
+
+                    pygame.draw.rect(surface, (255, 100, 100), rect, width=1)
+                except Exception:
+                    pass
+
+            # Draw node objects (spawn/waypoints) with their names
+            nodes = self.tilemap.object_layers.get('nodes', [])
+            font = getattr(__import__('settings'), 'FONTS', {}).get('minecraft')
+            for obj in nodes:
+                try:
+                    ox = obj.x
+                    oy = obj.y
+                    ow = getattr(obj, 'width', 0)
+                    oh = getattr(obj, 'height', 0)
+                    if ow <= 0 or oh <= 0:
+                        # draw small rect centered on point
+                        ow = oh = 16
+                        ox = ox - ow/2
+                        oy = oy - oh/2
+
+                    rect = pygame.Rect(ox, oy, ow, oh)
+                    if camera is not None:
+                        rect = camera.apply(rect)
+
+                    # fill and border
+                    try:
+                        s = pygame.Surface((rect.width, rect.height), pygame.SRCALPHA)
+                        s.fill((0, 0, 255, 40))
+                        surface.blit(s, (rect.x, rect.y))
+                    except Exception:
+                        pass
+                    pygame.draw.rect(surface, (0, 120, 255), rect, width=1)
+
+                    # draw name
+                    name = getattr(obj, 'name', None) or ''
+                    if name and font is not None:
+                        text_surf = font.render(name, False, (255, 255, 255))
+                        tx = rect.x + rect.width/2 - text_surf.get_width()/2
+                        ty = rect.y - text_surf.get_height() - 2
+                        surface.blit(text_surf, (tx, ty))
+                except Exception:
+                    pass
+        except Exception:
+            pass
 
     def render_layers(self, surface: pygame.Surface, camera: Any = None, layer_names: list = None) -> None:
         target_layers = layer_names or []

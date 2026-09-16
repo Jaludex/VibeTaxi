@@ -1,4 +1,5 @@
 import math
+import pygame
 from src.states.entity.BaseEntityState import BaseEntityState
 
 class CarDriveState(BaseEntityState):
@@ -60,8 +61,38 @@ class CarDriveState(BaseEntityState):
         self.entity.vy = math.sin(self.entity.angle) * self.entity.speed
 
         if self.entity.body is not None:
-            self.entity.body.velocity = (self.entity.vx, self.entity.vy)
-            self.entity.body.angular_velocity = 0.0
-            self.entity.body.angle = self.entity.angle
-            self.entity.x = self.entity.body.position.x
-            self.entity.y = self.entity.body.position.y
+            try:
+                desired = pygame.math.Vector2(self.entity.vx, self.entity.vy)
+                current = pygame.math.Vector2(self.entity.body.velocity)
+                delta = desired - current
+
+                pm = getattr(self.entity.body, '_pm_body', None)
+                mass = getattr(pm, 'mass', 1.0) if pm is not None else 1.0
+
+                # compute required acceleration (attempt to reach target within ~0.2s scaled by dt)
+                accel_needed = delta / max(dt, 1e-6)
+                force = accel_needed * mass * 0.5
+
+                # cap force
+                max_force = abs(self.entity.acceleration) * mass * 2.0
+                if hasattr(force, 'length') and force.length() > max_force:
+                    force = force.normalize() * max_force
+
+                # apply force in world coords
+                self.entity.body.apply_force(force.x, force.y)
+
+                # keep orientation locked to steering and prevent angular spin
+                self.entity.body.angle = self.entity.angle
+                self.entity.body.angular_velocity = 0.0
+
+                # sync entity pos to body
+                pos = self.entity.body.position
+                self.entity.x = float(pos.x)
+                self.entity.y = float(pos.y)
+            except Exception:
+                # fallback: directly set velocity
+                self.entity.body.velocity = (self.entity.vx, self.entity.vy)
+                self.entity.body.angle = self.entity.angle
+                self.entity.body.angular_velocity = 0.0
+                self.entity.x = self.entity.body.position.x
+                self.entity.y = self.entity.body.position.y

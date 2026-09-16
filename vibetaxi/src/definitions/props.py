@@ -18,10 +18,20 @@ def destroy_prop(prop, vehicle):
     )
 
 def fade_out(prop):
+    def finish():
+        # mark inactive and destroy physics body to remove collisions
+        try:
+            if getattr(prop, 'body', None) is not None:
+                prop.body.destroy()
+                prop.body = None
+        except Exception:
+            pass
+        setattr(prop, "active", False)
+
     Timer.tween(
         1.0,
         [(prop, {"alpha": 0})],
-        on_finish=lambda: setattr(prop, "active", False) # 3. Eliminación
+        on_finish=finish
     )
 
 PROPS_DEF = {
