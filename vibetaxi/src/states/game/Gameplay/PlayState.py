@@ -102,6 +102,9 @@ class PlayState(BaseState):
         if not self.active_passenger:
             return
 
+        if self.active_passenger.is_walking():
+            self.taxi.is_accelerating = False
+
         if self.active_passenger.is_riding():
             dest_x, dest_y = self.city_map.nodes[self.active_passenger.destination]
             dx = self.taxi.x - dest_x
