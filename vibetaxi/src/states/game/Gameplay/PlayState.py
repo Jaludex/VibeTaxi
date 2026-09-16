@@ -60,7 +60,7 @@ class PlayState(BaseState):
 
     def update(self, dt):
         self.taxi.update(dt)
-        self.city_map.update(dt)
+        self.city_map.update(dt, self.camera)
         self.camera.update(dt)
         self.radio.update(dt)
         
@@ -165,6 +165,7 @@ class PlayState(BaseState):
         if render_active_passenger:
             self.active_passenger.render(surface, self.camera)
             
+        self.city_map.render_traffic(surface, self.camera)
         self.taxi.render(surface, self.camera)
         for emitter in self.city_map.particle_emitters:
             if not getattr(emitter, "is_ground", False):

@@ -12,6 +12,7 @@ from src.entity.Prop import Prop
 from src.entity.Passenger import Passenger
 from src.definitions.props import PROPS_DEF
 from src.definitions.passengers import PASSENGER_DEFS
+from src.entity.Traffic import TrafficSystem
 
 
 class CityMap:
@@ -27,6 +28,7 @@ class CityMap:
         self._load_collisions()
         self._load_props()
         self._load_nodes()
+        self.traffic_system = TrafficSystem(self)
 
     def _load_collisions(self) -> None:
         for obj in self.tilemap.object_layers.get("collisions", []):
@@ -193,13 +195,14 @@ class CityMap:
         for entity in getattr(self.physics_world, "_entity_registry", []):
             entity.sync_body_to_entity()
 
-    def update(self, dt: float) -> None:
+    def update(self, dt: float, camera: Any = None) -> None:
         for prop in self.props:
             if hasattr(prop, 'update'):
                 prop.update(dt)
         for emitter in self.particle_emitters:
             emitter.update(dt)
         self.particle_emitters = [e for e in self.particle_emitters if not e.is_finished()]
+        self.traffic_system.update(dt, camera)
 
 
     def render_debug(self, surface, camera=None):
@@ -404,3 +407,5 @@ class CityMap:
                 spawned_passengers.append(passenger)
                 
         return spawned_passengers
+    def render_traffic(self, surface: pygame.Surface, camera: Any = None) -> None:
+        self.traffic_system.render(surface, camera)

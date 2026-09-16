@@ -57,6 +57,9 @@ COLOR_TRIP_LONG = (255, 69, 0)
 
 COLOR_PASSENGER_DELIVERY = (0, 255, 0)
 
+TRAFFIC_SPAWN_INTERVAL = 0.7
+TRAFFIC_MAX_CARS = 20
+
 TEXTURES = {
     "city_tiles": pygame.image.load(BASE_DIR / "assets" / "graphics" / "city_tileset.png"),
     "cars": pygame.image.load(BASE_DIR / "assets" / "graphics" / "cars.png"),
