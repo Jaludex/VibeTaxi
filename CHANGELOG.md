@@ -4,6 +4,19 @@ Notable changes on the project will be documented here
 
 Format based on [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/), version format by [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 1.0.0-alpha4 - 2026-09-15 Day 4 of development
+
+### Added
+ - Change all entity physics to Gale.Physics in order to allow for more freedom
+ - Add Traffic Cars to the city
+ - Add Particle Emitter, a manager for Gale.ParticleSystem disconnecting the particle behaivour from the entity that produces them
+ - Add Particles for a lots of effecs
+ - Initial Vibe Mode, allowing for drifting
+ - Debug physics renders
+
+### Deprecated
+ -CollidableMixinClass
+
 ## 1.0.0-alpha3 - 2026-09-14 Day 3 of development
 
 ### Added
