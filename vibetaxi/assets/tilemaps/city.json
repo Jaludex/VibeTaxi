@@ -1798,6 +1798,29 @@
         }, 
         {
          "draworder":"topdown",
+         "id":11,
+         "name":"collisions",
+         "objects":[
+                {
+                 "height":84,
+                 "id":341,
+                 "name":"",
+                 "opacity":1,
+                 "rotation":0,
+                 "type":"",
+                 "visible":true,
+                 "width":124,
+                 "x":762,
+                 "y":134
+                }],
+         "opacity":1,
+         "type":"objectgroup",
+         "visible":true,
+         "x":0,
+         "y":0
+        }, 
+        {
+         "draworder":"topdown",
          "id":6,
          "name":"props",
          "objects":[
@@ -5546,8 +5569,8 @@
          "x":0,
          "y":0
         }],
- "nextlayerid":11,
- "nextobjectid":341,
+ "nextlayerid":12,
+ "nextobjectid":342,
  "orientation":"orthogonal",
  "renderorder":"right-down",
  "tiledversion":"1.12.2",
