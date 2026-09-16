@@ -17,8 +17,7 @@ from src.definitions.passengers import PASSENGER_DEFS
 class CityMap:
     def __init__(self, map_key: str = "city") -> None:
         self.tilemap = load_tiled_map(settings.TILEMAPS[map_key])
-        # Use a smaller fixed timestep for more precise collision resolution
-        self.physics_world = World(gravity=(0, 0), fixed_timestep=1/120)
+        self.physics_world = World(gravity=(0, 0))
         self.physics_world._entity_registry = []
         # Register collision callback so physics drives game collision logic
         self.physics_world.on_collision_begin(self._on_collision_begin)
@@ -164,11 +163,13 @@ class CityMap:
     def get_rect(self) -> pygame.Rect:
         return pygame.Rect(0, 0, self.tilemap.pixel_width, self.tilemap.pixel_height)
 
-    def update(self, dt: float) -> None:
-        self.physics_world.update(dt)
+    def fixed_update(self) -> None:
+        self.physics_world.fixed_update()
         for entity in getattr(self.physics_world, "_entity_registry", []):
-            # sync body -> entity, and update any timers
             entity.sync_body_to_entity()
+
+    def update(self, dt: float) -> None:
+        pass
 
     def render_debug(self, surface, camera=None):
         import pygame

@@ -54,6 +54,9 @@ class PlayState(BaseState):
         self.nearby_props = []
         self.nearby_passengers = []
 
+    def fixed_update(self) -> None:
+        self.city_map.fixed_update()
+
     def update(self, dt):
         self.taxi.update(dt)
         self.city_map.update(dt)
@@ -84,7 +87,6 @@ class PlayState(BaseState):
             self.nearby_props = self.city_map.props[:]
             self.nearby_passengers = self.map_passengers[:]
 
-        # Nearby props are rendered, but collision handling is delegated to Gale physics callbacks
         for p in self.nearby_passengers:
             p.update(dt)
 

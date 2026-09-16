@@ -76,7 +76,11 @@ class Entity(DrawableMixin):
 
         self.body.user_data = self
         self.body.position = (self.x, self.y)
-        self.body.angle = getattr(self, "angle", 0.0)
+        
+        import math
+        angle_offset = getattr(self, "angle_offset", 0)
+        self.body.angle = getattr(self, "angle", 0.0) - math.radians(angle_offset)
+        
         self.body.angular_velocity = 0.0
 
         registry = getattr(world, "_entity_registry", None)
@@ -94,8 +98,9 @@ class Entity(DrawableMixin):
         self.y = float(pos.y)
 
         if hasattr(self, "angle"):
-            # Keep body angle aligned to entity steering but avoid spinning
-            self.body.angle = self.angle
+            import math
+            angle_offset = getattr(self, "angle_offset", 0)
+            self.body.angle = self.angle - math.radians(angle_offset)
             self.body.angular_velocity = 0.0
 
     def get_collision_rect(self):
@@ -132,7 +137,6 @@ class Entity(DrawableMixin):
         return poly
 
     def get_render_center_and_degrees(self):
-        # Returns (center_x, center_y, degrees) matching Drawable.render logic
         import math
         import pygame
         center_x, center_y = self.x, self.y
@@ -144,7 +148,6 @@ class Entity(DrawableMixin):
         pivot_y = getattr(self, 'pivot_y', 0)
         if pivot_x != 0 or pivot_y != 0:
             offset = pygame.math.Vector2(pivot_x, pivot_y)
-            # same rotation used in Drawable: rotated_offset = offset.rotate(-degrees)
             rotated_offset = offset.rotate(-degrees)
             center_x = (self.x + pivot_x) - rotated_offset.x
             center_y = (self.y + pivot_y) - rotated_offset.y
@@ -152,13 +155,11 @@ class Entity(DrawableMixin):
         return center_x, center_y, degrees
 
     def align_body_to_render_center(self):
-        # Move the physics body so its position equals the rendered center
         if self.body is None:
             return
         try:
             cx, cy, _ = self.get_render_center_and_degrees()
             self.body.position = (cx, cy)
-            # Keep entity coords in sync
             self.x = float(cx)
             self.y = float(cy)
         except Exception:
@@ -167,11 +168,27 @@ class Entity(DrawableMixin):
     def update(self, dt: float) -> None:
         if self.body is not None:
             self.sync_body_to_entity()
+            
+            if hasattr(self, "speed") and hasattr(self, "vx") and hasattr(self, "vy"):
+                import math
+                import pygame
+                desired_vel = pygame.math.Vector2(self.vx, self.vy)
+                actual_vel = pygame.math.Vector2(self.body.velocity.x, self.body.velocity.y)
+                
+                if actual_vel.length() < desired_vel.length() - 20:
+                    self.vx = actual_vel.x
+                    self.vy = actual_vel.y
+                    self.speed = math.copysign(actual_vel.length(), self.speed)
+            
             if hasattr(self, "angle"):
-                self.body.angle = self.angle
+                import math
+                angle_offset = getattr(self, "angle_offset", 0)
+                self.body.angle = self.angle - math.radians(angle_offset)
                 self.body.angular_velocity = 0.0
+            
             if hasattr(self, "vx") and hasattr(self, "vy"):
                 self.body.velocity = (self.vx, self.vy)
+                
             return
 
         self.x += self.vx * dt

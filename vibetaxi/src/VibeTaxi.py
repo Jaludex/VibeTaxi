@@ -12,6 +12,12 @@ class VibeTaxi(Game):
         self.state_stack = StateStack()
         self.state_stack.push(TitleScreenState(self.state_stack), )
 
+    def fixed_update(self) -> None:
+        state = self.state_stack.states[-1]
+        fixed_update = getattr(state, "fixed_update", None)
+        if fixed_update is not None:
+            fixed_update()
+
     def update(self, dt: float) -> None:
         self.state_stack.update(dt)
 
