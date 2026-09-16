@@ -63,6 +63,16 @@ class PlayState(BaseState):
                 self.soundscape_channel.set_volume(0.5)
         except Exception as e:
             print("Error loading soundscape:", e)
+            
+        try:
+            engine_start = settings.SOUNDS.get("engine_start")
+            if engine_start:
+                ch = engine_start.play()
+                if ch: ch.set_volume(0.4)
+        except Exception as e:
+            pass
+            
+        self.taxi.init_sounds()
 
     def fixed_update(self) -> None:
         self.city_map.fixed_update()
@@ -231,4 +241,6 @@ class PlayState(BaseState):
     def exit(self) -> None:
         if hasattr(self, 'soundscape_channel') and self.soundscape_channel:
             self.soundscape_channel.stop()
+        if hasattr(self, 'taxi') and self.taxi:
+            self.taxi.stop_sounds()
         pygame.mixer.music.stop()

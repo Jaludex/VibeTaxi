@@ -99,7 +99,10 @@ class CityMap:
                 except Exception:
                     pass
                 a.on_collide(b)
-                play_crash_sound("crash_solid", 0.2)
+                if type(b).__name__ == "Taxi":
+                    play_crash_sound("crash_solid", 0.2)
+                else:
+                    play_crash_sound("crash_solid", 0.06)
             elif isinstance(b, Prop) and (isinstance(a, Car) or hasattr(a, 'speed')):
                 if getattr(b, 'body', None) is not None:
                     increase_friction(b.body, friction=2.0, linear_damping=3.0)
@@ -109,7 +112,10 @@ class CityMap:
                 except Exception:
                     pass
                 b.on_collide(a)
-                play_crash_sound("crash_solid", 0.2)
+                if type(a).__name__ == "Taxi":
+                    play_crash_sound("crash_solid", 0.2)
+                else:
+                    play_crash_sound("crash_solid", 0.06)
         else:
             # Fallback: if user_data types not mapped but entity-like
             if hasattr(a, 'on_collide') and hasattr(b, 'speed'):
@@ -121,7 +127,10 @@ class CityMap:
                     a.on_collide(b)
                 except Exception:
                     pass
-                play_crash_sound("crash_solid", 0.2)
+                if type(b).__name__ == "Taxi":
+                    play_crash_sound("crash_solid", 0.2)
+                else:
+                    play_crash_sound("crash_solid", 0.06)
             elif hasattr(b, 'on_collide') and hasattr(a, 'speed'):
                 try:
                     a.speed *= 0.5
@@ -131,7 +140,10 @@ class CityMap:
                     b.on_collide(a)
                 except Exception:
                     pass
-                play_crash_sound("crash_solid", 0.2)
+                if type(a).__name__ == "Taxi":
+                    play_crash_sound("crash_solid", 0.2)
+                else:
+                    play_crash_sound("crash_solid", 0.06)
 
         # Check car collisions with static obstacles or other cars
         try:
@@ -164,16 +176,20 @@ class CityMap:
             elif is_a_car and is_b_static:
                 if abs(getattr(a, 'speed', 0)) > 20:
                     self.add_particle_emitter(ParticleEmitter.create_sparks(a.x, a.y))
-                    play_crash_sound("crash_wall", 0.3)
                     if type(a).__name__ == "Taxi":
+                        play_crash_sound("crash_wall", 0.3)
                         a.damage(15)
+                    else:
+                        play_crash_sound("crash_wall", 0.09)
                 if hasattr(a, 'on_collide'): a.on_collide(b)
             elif is_b_car and is_a_static:
                 if abs(getattr(b, 'speed', 0)) > 20:
                     self.add_particle_emitter(ParticleEmitter.create_sparks(b.x, b.y))
-                    play_crash_sound("crash_wall", 0.3)
                     if type(b).__name__ == "Taxi":
+                        play_crash_sound("crash_wall", 0.3)
                         b.damage(15)
+                    else:
+                        play_crash_sound("crash_wall", 0.09)
                 if hasattr(b, 'on_collide'): b.on_collide(a)
         except Exception:
             pass

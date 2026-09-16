@@ -97,6 +97,12 @@ SOUNDS = {
     "crash_mail": pygame.mixer.Sound(BASE_DIR / "assets" / "sounds" / "crash_sounds" / "crash_mail.wav"),
     "crash_solid": pygame.mixer.Sound(BASE_DIR / "assets" / "sounds" / "crash_sounds" / "crash_solid.wav"),
     "crash_wall": pygame.mixer.Sound(BASE_DIR / "assets" / "sounds" / "crash_sounds" / "crash_wall.wav"),
+    "engine_start": pygame.mixer.Sound(BASE_DIR / "assets" / "sounds" / "car_sounds" / "engine_start.wav"),
+    "drifting": pygame.mixer.Sound(BASE_DIR / "assets" / "sounds" / "car_sounds" / "drifting.wav"),
+    "idle_normal": pygame.mixer.Sound(BASE_DIR / "assets" / "sounds" / "car_sounds" / "idle-normal.wav"),
+    "idle_damaged": pygame.mixer.Sound(BASE_DIR / "assets" / "sounds" / "car_sounds" / "idle-damaged.wav"),
+    "engine1": pygame.mixer.Sound(BASE_DIR / "assets" / "sounds" / "car_sounds" / "engine1.wav"),
+    "engine2": pygame.mixer.Sound(BASE_DIR / "assets" / "sounds" / "car_sounds" / "engine2.wav"),
 }
 
 CANT_MUSIC_CHANNELS = 5

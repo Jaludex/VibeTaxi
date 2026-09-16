@@ -85,6 +85,71 @@ class Taxi(Car):
                 
                 self.engine_smoke_emitter._spawn_burst(bursts, front_x, front_y, colors)
 
+        # Update engine sounds
+        if hasattr(self, 'engine_channels') and self.engine_channels:
+            speed_ratio = abs(getattr(self, 'speed', 0)) / max(1, getattr(self, 'max_speed', 1))
+            speed_ratio = min(1.0, max(0.0, speed_ratio))
+            
+            base_vol = 0.2 # Maximum general volume
+            
+            if self.is_crashed:
+                for ch in self.engine_channels.values():
+                    if ch: ch.set_volume(0.0)
+            else:
+                is_damaged = self.health <= 40
+                idle_key = "idle_damaged" if is_damaged else "idle_normal"
+                other_idle_key = "idle_normal" if is_damaged else "idle_damaged"
+                
+                v_idle = 0.0
+                v_eng1 = 0.0
+                v_eng2 = 0.0
+                
+                if speed_ratio < 0.3:
+                    t = speed_ratio / 0.3
+                    v_idle = 1.0 - t
+                    v_eng1 = t
+                elif speed_ratio < 0.8:
+                    v_eng1 = 1.0
+                else:
+                    t = (speed_ratio - 0.8) / 0.2
+                    v_eng1 = 1.0 - t
+                    v_eng2 = t
+                    
+                if self.engine_channels.get(idle_key):
+                    self.engine_channels[idle_key].set_volume(v_idle * base_vol)
+                if self.engine_channels.get(other_idle_key):
+                    self.engine_channels[other_idle_key].set_volume(0.0)
+                    
+                if self.engine_channels.get("engine1"):
+                    self.engine_channels["engine1"].set_volume(v_eng1 * base_vol)
+                if self.engine_channels.get("engine2"):
+                    self.engine_channels["engine2"].set_volume(v_eng2 * base_vol)
+                    
+                if getattr(self, "is_drifting", False) and abs(getattr(self, 'speed', 0)) > 30:
+                    if self.engine_channels.get("drifting"):
+                        self.engine_channels["drifting"].set_volume(0.2)
+                else:
+                    if self.engine_channels.get("drifting"):
+                        self.engine_channels["drifting"].set_volume(0.0)
+
+    def init_sounds(self):
+        import settings
+        self.engine_channels = {}
+        for key in ["idle_normal", "idle_damaged", "engine1", "engine2", "drifting"]:
+            sound = settings.SOUNDS.get(key)
+            if sound:
+                channel = sound.play(loops=-1)
+                if channel:
+                    channel.set_volume(0.0)
+                    self.engine_channels[key] = channel
+
+    def stop_sounds(self):
+        if hasattr(self, 'engine_channels') and self.engine_channels:
+            for ch in self.engine_channels.values():
+                if ch:
+                    ch.stop()
+            self.engine_channels = {}
+
     def on_input(self, input_id: str, input_data: Any) -> None:
         if input_id == "toggle_vibe" and input_data.pressed:
             if isinstance(self.state_machine.current, TaxiVibeState):
