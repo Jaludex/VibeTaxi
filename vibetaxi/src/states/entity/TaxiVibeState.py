@@ -20,6 +20,8 @@ class TaxiVibeState(TaxiDriveState):
         self.entity.max_speed = self.original_max_speed
         self.entity.turn_speed = self.original_turn_speed
         self.entity.is_drifting = False
+        self._last_wl = None
+        self._last_wr = None
 
     def update(self, dt):
         if getattr(self.entity, "is_drifting", False):
@@ -52,6 +54,67 @@ class TaxiVibeState(TaxiDriveState):
 
         self.entity.vx = self.slide_vx
         self.entity.vy = self.slide_vy
+
+        self._handle_drift_particles(dt)
+
+    def _handle_drift_particles(self, dt: float) -> None:
+        if not getattr(self.entity, "is_drifting", False):
+            self._last_wl = None
+            self._last_wr = None
+            return
+
+        current_speed = math.hypot(self.slide_vx, self.slide_vy)
+        if current_speed < 30:
+            self._last_wl = None
+            self._last_wr = None
+            return
+
+        city_map = getattr(self.entity, "city_map", None)
+        if city_map is None:
+            return
+
+        cos_a = math.cos(self.entity.angle)
+        sin_a = math.sin(self.entity.angle)
+        right_x = -sin_a
+        right_y = cos_a
+
+        # Posiciones de los extremos traseros (ruedas traseras)
+        x, y = self.entity.x, self.entity.y
+        wl_x = x - 10 * cos_a - 5 * right_x
+        wl_y = y - 10 * sin_a - 5 * right_y
+        wr_x = x - 10 * cos_a + 5 * right_x
+        wr_y = y - 10 * sin_a + 5 * right_y
+
+        from src.ParticleEmitter import ParticleEmitter
+
+        # 1. Partículas de humo saliendo de las llantas traseras
+        if not hasattr(self, "_smoke_timer"):
+            self._smoke_timer = 0.0
+        self._smoke_timer += dt
+        if self._smoke_timer >= 0.06:
+            self._smoke_timer = 0.0
+            city_map.add_particle_emitter(ParticleEmitter.create_drift_smoke(wl_x, wl_y))
+            city_map.add_particle_emitter(ParticleEmitter.create_drift_smoke(wr_x, wr_y))
+
+        # 2. Partículas estáticas como huellas/marcas de neumáticos en el suelo
+        last_wl = getattr(self, "_last_wl", None)
+        last_wr = getattr(self, "_last_wr", None)
+
+        spawn_skid = False
+        if last_wl is None or last_wr is None:
+            spawn_skid = True
+        else:
+            dist_l = math.hypot(wl_x - last_wl[0], wl_y - last_wl[1])
+            dist_r = math.hypot(wr_x - last_wr[0], wr_y - last_wr[1])
+            if dist_l >= 4.0 or dist_r >= 4.0:
+                spawn_skid = True
+
+        if spawn_skid:
+            city_map.add_particle_emitter(ParticleEmitter.create_skid_mark(wl_x, wl_y))
+            city_map.add_particle_emitter(ParticleEmitter.create_skid_mark(wr_x, wr_y))
+            self._last_wl = (wl_x, wl_y)
+            self._last_wr = (wr_x, wr_y)
+
 
     def on_input(self, input_id, input_data):
         super().on_input(input_id, input_data)

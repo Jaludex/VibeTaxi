@@ -39,8 +39,31 @@ class Prop(Entity):
             self.align_body_to_render_center()
         except Exception:
             pass
+    def update(self, dt: float) -> None:
+        super().update(dt)
+        if hasattr(self, 'particle_system') and self.particle_system:
+            self.particle_system.update(dt)
+
     def render(self, surface, camera=None):
         # Skip rendering once inactive
-        if not getattr(self, 'active', True):
-            return
-        super().render(surface, camera)
+        if getattr(self, 'active', True):
+            super().render(surface, camera)
+            
+        if hasattr(self, 'particle_system') and self.particle_system:
+            if hasattr(self.particle_system, 'render'):
+                try:
+                    self.particle_system.render(surface, camera)
+                    return
+                except TypeError:
+                    pass
+            if camera:
+                import pygame
+                for p in self.particle_system.particles:
+                    if self.particle_system.timer < p.life_time:
+                        rect = camera.apply(pygame.Rect(int(p.x), int(p.y), 4, 4))
+                        s = pygame.Surface((4, 4), pygame.SRCALPHA)
+                        color = (p.color[0], p.color[1], p.color[2], p.color[3])
+                        pygame.draw.circle(s, color, (2, 2), 2)
+                        surface.blit(s, rect)
+            else:
+                self.particle_system.render(surface)

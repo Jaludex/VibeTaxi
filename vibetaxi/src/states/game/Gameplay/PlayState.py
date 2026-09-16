@@ -27,6 +27,7 @@ class PlayState(BaseState):
             self.taxi = Taxi(spawn_x, spawn_y, VEHICLE_DEFS["yellow_taxi"])
 
         self.taxi.tilemap = self.city_map.tilemap
+        self.taxi.city_map = self.city_map
         self.taxi.set_physics(
             self.city_map.physics_world,
             body_type=BodyType.DYNAMIC,
@@ -135,6 +136,9 @@ class PlayState(BaseState):
 
     def render(self, surface):
         self.city_map.render_layers(surface, self.camera, settings.TILED_GROUND_LAYERS)
+        for emitter in self.city_map.particle_emitters:
+            if getattr(emitter, "is_ground", False):
+                emitter.render(surface, self.camera)
 
         render_active_passenger = False
 
@@ -162,6 +166,10 @@ class PlayState(BaseState):
             self.active_passenger.render(surface, self.camera)
             
         self.taxi.render(surface, self.camera)
+        for emitter in self.city_map.particle_emitters:
+            if not getattr(emitter, "is_ground", False):
+                emitter.render(surface, self.camera)
+
 
         self.city_map.render_layers(surface, self.camera, settings.TILED_UPPER_NO_SHADOW_LAYERS)
         self.city_map.render_layers(surface, self.camera, settings.TILED_UPPER_SHADOW_LAYERS)

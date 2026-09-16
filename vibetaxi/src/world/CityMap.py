@@ -23,6 +23,7 @@ class CityMap:
         self.physics_world.on_collision_begin(self._on_collision_begin)
 
         self.props: List[Prop] = []
+        self.particle_emitters: List[Any] = []
         self._load_collisions()
         self._load_props()
         self._load_nodes()
@@ -115,6 +116,30 @@ class CityMap:
                 except Exception:
                     pass
 
+        # Check car collisions with static obstacles or other cars
+        try:
+            from src.ParticleEmitter import ParticleEmitter
+            is_a_car = Car is not None and (isinstance(a, Car) or hasattr(a, 'speed'))
+            is_b_car = Car is not None and (isinstance(b, Car) or hasattr(b, 'speed'))
+            is_a_static = isinstance(a, dict) and a.get("kind") == "collision"
+            is_b_static = isinstance(b, dict) and b.get("kind") == "collision"
+
+            if is_a_car and is_b_car:
+                impact_x = (a.x + b.x) / 2
+                impact_y = (a.y + b.y) / 2
+                self.add_particle_emitter(ParticleEmitter.create_sparks(impact_x, impact_y))
+            elif is_a_car and is_b_static:
+                if abs(getattr(a, 'speed', 0)) > 20:
+                    self.add_particle_emitter(ParticleEmitter.create_sparks(a.x, a.y))
+            elif is_b_car and is_a_static:
+                if abs(getattr(b, 'speed', 0)) > 20:
+                    self.add_particle_emitter(ParticleEmitter.create_sparks(b.x, b.y))
+        except Exception:
+            pass
+
+    def add_particle_emitter(self, emitter) -> None:
+        self.particle_emitters.append(emitter)
+
     def _load_nodes(self) -> None:
         self.nodes = {}
         for obj in self.tilemap.object_layers.get("nodes", []):
@@ -169,7 +194,13 @@ class CityMap:
             entity.sync_body_to_entity()
 
     def update(self, dt: float) -> None:
-        pass
+        for prop in self.props:
+            if hasattr(prop, 'update'):
+                prop.update(dt)
+        for emitter in self.particle_emitters:
+            emitter.update(dt)
+        self.particle_emitters = [e for e in self.particle_emitters if not e.is_finished()]
+
 
     def render_debug(self, surface, camera=None):
         import pygame
