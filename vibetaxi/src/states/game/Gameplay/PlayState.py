@@ -55,6 +55,15 @@ class PlayState(BaseState):
         self.nearby_props = []
         self.nearby_passengers = []
 
+        self.soundscape_channel = None
+        try:
+            soundscape = pygame.mixer.Sound(settings.BASE_DIR / "assets" / "music" / "city_soundscape.mp3")
+            self.soundscape_channel = soundscape.play(loops=-1)
+            if self.soundscape_channel:
+                self.soundscape_channel.set_volume(0.5)
+        except Exception as e:
+            print("Error loading soundscape:", e)
+
     def fixed_update(self) -> None:
         self.city_map.fixed_update()
 
@@ -63,6 +72,12 @@ class PlayState(BaseState):
         self.city_map.update(dt, self.camera)
         self.camera.update(dt)
         self.radio.update(dt)
+        
+        if self.soundscape_channel:
+            if self.radio.ind_song == 0:
+                self.soundscape_channel.set_volume(0.5)
+            else:
+                self.soundscape_channel.set_volume(0.1)
         
         if self.camera:
             row_range, col_range = self.tilemap._visible_range(self.camera)
@@ -200,3 +215,8 @@ class PlayState(BaseState):
     def on_input(self, input_id: str, input_data: InputData) -> None:
         self.radio.on_input(input_id, input_data)
         self.taxi.on_input(input_id, input_data)
+
+    def exit(self) -> None:
+        if hasattr(self, 'soundscape_channel') and self.soundscape_channel:
+            self.soundscape_channel.stop()
+        pygame.mixer.music.stop()

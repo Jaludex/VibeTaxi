@@ -21,6 +21,7 @@ input_handler.InputHandler.set_keyboard_action(input_handler.KEY_s, "vol-down")
 #DEBUG
 input_handler.InputHandler.set_keyboard_action(input_handler.KEY_TAB, "toggle_vibe")
 
+RADIO_FADEOUT_TIME = 2.0
 
 TITLE = "Vibe Taxi"
 
@@ -92,27 +93,13 @@ FONTS = {
 }
 
 SOUNDS = {
-
+    "crash_car": pygame.mixer.Sound(BASE_DIR / "assets" / "sounds" / "crash_sounds" / "crash_car.wav"),
+    "crash_mail": pygame.mixer.Sound(BASE_DIR / "assets" / "sounds" / "crash_sounds" / "crash_mail.wav"),
+    "crash_solid": pygame.mixer.Sound(BASE_DIR / "assets" / "sounds" / "crash_sounds" / "crash_solid.wav"),
+    "crash_wall": pygame.mixer.Sound(BASE_DIR / "assets" / "sounds" / "crash_sounds" / "crash_wall.wav"),
 }
 
-CANT_MUSIC_CHANNELS = 4
-
-MUSIC_ROCK = {
-    "rock-1": str(BASE_DIR / "assets" / "music" / "bombinsound-rock-music.mp3"),
-    "rock-2": str(BASE_DIR / "assets" / "music" / "jonasblakewood-rock.mp3"),
-}
-
-MUSIC_POP = {
-    "pop-1": str(BASE_DIR / "assets" / "music" / "happinessinmusic-pop-music.mp3"),
-}
-
-MUSIC_HIPHOP = {
-    "hiphop-1": str(BASE_DIR / "assets" / "music" / "kontraa-nba--hiphop-music.mp3"),
-}
-MUSIC_ELECTRONIC = {
-    "electronic-1": str(BASE_DIR / "assets" / "music" / "mondamusic-electronic-music.mp3"),
-}
-MUSIC_CHANNELS = 0
+CANT_MUSIC_CHANNELS = 5
 
 
 PHYSICS_DEBUG = True
