@@ -124,6 +124,9 @@ SOUNDS = {
     "win": pygame.mixer.Sound(BASE_DIR / "assets" / "sounds" / "misc" / "victory.wav"),
     "honk": pygame.mixer.Sound(BASE_DIR / "assets" / "sounds" / "car_sounds" / "car_honk.wav"),
     "money": pygame.mixer.Sound(BASE_DIR / "assets" / "sounds" / "misc" / "gain_money.wav"),
+    "fix": pygame.mixer.Sound(BASE_DIR / "assets" / "sounds" / "misc" / "fix.wav"),
+    "press": pygame.mixer.Sound(BASE_DIR / "assets" / "sounds" / "misc" / "press.wav"),
+    "game_over": pygame.mixer.Sound(BASE_DIR / "assets" / "sounds" / "misc" / "game_over.wav"),
 }
 
 MUSIC = {

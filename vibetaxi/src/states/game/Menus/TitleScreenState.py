@@ -151,6 +151,7 @@ class TitleScreenState(BaseState):
     def on_input(self, input_id, input_data):
         if input_id == "mouse_click" and input_data.pressed:
             if not getattr(self, "mode_selection_triggered", False):
+                settings.SOUNDS["press"].play()
                 self.mode_selection_triggered = True
                 self._cancel_pan_timers()
                 from src.states.game.Menus.ModeSelectionState import ModeSelectionState

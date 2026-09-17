@@ -16,6 +16,12 @@ class OpeningState(BaseState):
             "subtext": "Presents...",
             "icon": None,
             "hold_time": 1.5,
+        },
+        {
+            "text": "A game made with <3",
+            "subtext": "and lots of coffee",
+            "icon": None,
+            "hold_time": 1.5,
         }
         ]
         

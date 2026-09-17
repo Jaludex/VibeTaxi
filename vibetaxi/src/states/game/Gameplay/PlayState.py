@@ -60,7 +60,7 @@ class PlayState(BaseState):
             self.radio = Radio(80, 296)
             
         self.active_passenger = None
-        self.map_passengers = self.city_map.generate_passengers(spawn_chance=0.4)
+        self.map_passengers = self.city_map.generate_passengers(spawn_chance=0.5)
         
         self.nearby_props = []
         self.nearby_passengers = []
@@ -129,20 +129,7 @@ class PlayState(BaseState):
             pygame.mixer.stop()
             pygame.mixer.music.stop()
             
-            from src.game_rules.WorkdayStrategy import WorkdayStrategy
-            if self.taxi.health > 0 and isinstance(self.game_rule_strategy, WorkdayStrategy):
-                # End of day
-                from src.states.game.Gameplay.EndOfDayState import EndOfDayState
-                self.state_machine.push(EndOfDayState(
-                    self.state_machine,
-                    money=self.game_rule_strategy.money,
-                    health=self.taxi.health,
-                    max_health=self.taxi.max_health,
-                    day=self.game_rule_strategy.day
-                ))
-            else:
-                from src.states.game.Gameplay.GameOverState import GameOverState
-                self.state_machine.push(GameOverState(self.state_machine))
+            self.game_rule_strategy.on_game_over(self.state_machine, self.taxi)
             return
         
         self.arrow_time = getattr(self, 'arrow_time', 0.0) + dt
@@ -405,16 +392,23 @@ class PlayState(BaseState):
             
             text_layer = pygame.Surface((settings.VIRTUAL_WIDTH, settings.VIRTUAL_HEIGHT), pygame.SRCALPHA)
             
-            render_text(
-                text_layer,
-                getattr(self, "start_text", ""),
-                settings.FONTS["big"],
-                settings.VIRTUAL_WIDTH / 2,
-                settings.VIRTUAL_HEIGHT / 2,
-                (255, 255, 255),
-                center=True,
-                shadowed=True
-            )
+            lines = getattr(self, "start_text", "").split('\n')
+            center_y = settings.VIRTUAL_HEIGHT / 2
+            # Adjust starting y so the whole block is centered
+            total_height = len(lines) * settings.FONTS["big"].get_linesize()
+            start_y = center_y - total_height / 2 + settings.FONTS["big"].get_height() / 2
+            
+            for i, line in enumerate(lines):
+                render_text(
+                    text_layer,
+                    line,
+                    settings.FONTS["big"],
+                    settings.VIRTUAL_WIDTH / 2,
+                    start_y + i * settings.FONTS["big"].get_linesize(),
+                    (255, 255, 255),
+                    center=True,
+                    shadowed=True
+                )
             
             text_layer.set_alpha(int(text_alpha))
             surface.blit(text_layer, (0, 0))

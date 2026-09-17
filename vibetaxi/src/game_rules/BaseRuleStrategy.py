@@ -81,3 +81,6 @@ class BaseRuleStrategy:
             
             text_layer.set_alpha(int(self.popup_alpha))
             surface.blit(text_layer, (0, 0))
+
+    def on_game_over(self, state_machine, taxi):
+        pass

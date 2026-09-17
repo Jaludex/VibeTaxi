@@ -73,7 +73,7 @@ class EndOfDayState(BaseState):
         container.add_child(day_label)
 
         money_theme = Theme(font=settings.FONTS["minecraft"], text_color=pygame.Color(100, 255, 100))
-        self.money_label = Label(0, 30, f"Money Earned: ${self.money:.2f}", theme=money_theme)
+        self.money_label = Label(0, 30, f"Money Left: ${self.money:.2f}", theme=money_theme)
         self.money_label.x = panel.x + (panel.width - self.money_label.width) // 2
         self.money_label.y = panel.y + 30
         container.add_child(self.money_label)
@@ -191,12 +191,12 @@ class EndOfDayState(BaseState):
 
     def _on_repair(self):
         if self.health < self.max_health and self.money >= settings.REPAIR_COST:
-            if "buy" in settings.SOUNDS: settings.SOUNDS["buy"].play()
+            if "fix" in settings.SOUNDS: settings.SOUNDS["fix"].play()
             self.money -= settings.REPAIR_COST
             self.health = self.max_health
             
             # Update UI
-            self.money_label.text = f"Money Earned: ${self.money:.2f}"
+            self.money_label.text = f"Money Left: ${self.money:.2f}"
             self.health_bar.value = self.health
             self.health_bar.theme.accent_color = self._get_health_color(self.health, self.max_health)
             self._update_repair_button()
@@ -204,14 +204,14 @@ class EndOfDayState(BaseState):
             if "error" in settings.SOUNDS: settings.SOUNDS["error"].play()
 
     def _on_exit(self):
-        if "select" in settings.SOUNDS: settings.SOUNDS["select"].play()
+        settings.SOUNDS["press"].play()
         from src.states.game.Menus.TitleScreenState import TitleScreenState
         while len(self.state_machine.states) > 0:
             self.state_machine.pop()
         self.state_machine.push(TitleScreenState(self.state_machine))
 
     def _on_continue(self):
-        if "select" in settings.SOUNDS: settings.SOUNDS["select"].play()
+        settings.SOUNDS["press"].play()
         self.ui = None # Disable UI interactions
         Timer.tween(
             1.0,

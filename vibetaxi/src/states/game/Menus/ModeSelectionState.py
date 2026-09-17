@@ -98,12 +98,14 @@ class ModeSelectionState(BaseState):
             
     def select_mode(self, mode):
         if self.is_exiting: return
+        settings.SOUNDS["press"].play()
         self.selected_mode = mode
         self.is_exiting = True
         Timer.tween(0.8, [(self, {"fade_alpha": 255.0})], ease_function_name="in_cubic", on_finish=self.start_game)
             
     def on_close_click(self):
         if self.is_exiting: return
+        settings.SOUNDS["press"].play()
         self.is_exiting = True
         # Window.close() sets visible to False, we want to animate it out while visible!
         self.window.visible = True

@@ -12,7 +12,7 @@ from gale.ui.container import Container
 from src.states.game.Menus.TitleScreenState import TitleScreenState
 
 class GameOverState(BaseState):
-    def __init__(self, state_machine: Any) -> None:
+    def __init__(self, state_machine: Any, reason: Optional[str] = None) -> None:
         super().__init__(state_machine)
         self.fade_alpha = 0.0
         self.panel_y = -200
@@ -20,20 +20,20 @@ class GameOverState(BaseState):
         self.is_exiting = False
         
         self.panel = Panel(
-            settings.VIRTUAL_WIDTH / 2 - 100, 
+            settings.VIRTUAL_WIDTH / 2 - 150, 
             self.panel_y, 
-            200, 100
+            300, 100
         )
         self.label_title = Label(
             settings.VIRTUAL_WIDTH / 2, 
             self.panel_y + 30, 
-            "¡Perdiste!", 
+            "GAME OVER", 
             center=True
         )
         self.label_prompt = Label(
             settings.VIRTUAL_WIDTH / 2, 
             self.panel_y + 70, 
-            "Haz clic para salir", 
+            reason if reason else "Click to exit", 
             center=True
         )
         
@@ -50,6 +50,7 @@ class GameOverState(BaseState):
         )
         
     def enter(self, enter_params: Optional[Dict[str, Any]] = None):
+        settings.SOUNDS["game_over"].play()
         self.fade_alpha = 0.0
         self.exit_alpha = 0.0
         self.panel_y = -200
@@ -68,6 +69,7 @@ class GameOverState(BaseState):
         if self.is_exiting:
             return
         self.is_exiting = True
+        settings.SOUNDS["press"].play()
         Timer.tween(1.0, [(self, {"exit_alpha": 255.0})], on_finish=self.return_to_title)
         
     def return_to_title(self):

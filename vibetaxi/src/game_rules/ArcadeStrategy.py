@@ -38,3 +38,7 @@ class ArcadeStrategy(BaseRuleStrategy):
         render_text(surface, f"Score: {self.passengers_delivered}", big_font, x, y + 45, (255, 200, 50), shadowed=True)
         
         self._render_popup_text(surface)
+
+    def on_game_over(self, state_machine, taxi):
+        from src.states.game.Gameplay.GameOverState import GameOverState
+        state_machine.push(GameOverState(state_machine))

@@ -1890,7 +1890,7 @@
                         {
                          "name":"next",
                          "type":"string",
-                         "value":"street_9"
+                         "value":"street_10"
                         }],
                  "rotation":0,
                  "type":"",
@@ -1898,19 +1898,6 @@
                  "width":0,
                  "x":266,
                  "y":477.5
-                }, 
-                {
-                 "height":0,
-                 "id":483,
-                 "name":"street_9",
-                 "opacity":1,
-                 "point":true,
-                 "rotation":0,
-                 "type":"",
-                 "visible":true,
-                 "width":0,
-                 "x":174,
-                 "y":479.5
                 }, 
                 {
                  "height":0,
@@ -1960,7 +1947,7 @@
                         {
                          "name":"next",
                          "type":"string",
-                         "value":"street_"
+                         "value":"street_14"
                         }],
                  "rotation":0,
                  "type":"",
@@ -1968,25 +1955,6 @@
                  "width":0,
                  "x":81.5,
                  "y":755.5
-                }, 
-                {
-                 "height":0,
-                 "id":487,
-                 "name":"street_13",
-                 "opacity":1,
-                 "point":true,
-                 "properties":[
-                        {
-                         "name":"next",
-                         "type":"string",
-                         "value":"street_14"
-                        }],
-                 "rotation":0,
-                 "type":"",
-                 "visible":true,
-                 "width":0,
-                 "x":94,
-                 "y":856
                 }, 
                 {
                  "height":0,
@@ -2036,33 +2004,14 @@
                         {
                          "name":"next",
                          "type":"string",
-                         "value":"street_17"
-                        }],
-                 "rotation":0,
-                 "type":"",
-                 "visible":true,
-                 "width":0,
-                 "x":660,
-                 "y":974
-                }, 
-                {
-                 "height":0,
-                 "id":492,
-                 "name":"street_17",
-                 "opacity":1,
-                 "point":true,
-                 "properties":[
-                        {
-                         "name":"next",
-                         "type":"string",
                          "value":"street_18"
                         }],
                  "rotation":0,
                  "type":"",
                  "visible":true,
                  "width":0,
-                 "x":701.5,
-                 "y":987
+                 "x":691.333333333333,
+                 "y":977.333333333333
                 }, 
                 {
                  "height":0,
@@ -2131,95 +2080,19 @@
                         {
                          "name":"next",
                          "type":"string",
-                         "value":"street_23"
-                        }],
-                 "rotation":0,
-                 "type":"",
-                 "visible":true,
-                 "width":0,
-                 "x":714,
-                 "y":1677.5
-                }, 
-                {
-                 "height":0,
-                 "id":497,
-                 "name":"street_22",
-                 "opacity":1,
-                 "point":true,
-                 "properties":[
-                        {
-                         "name":"next",
-                         "type":"string",
-                         "value":"street_26"
-                        }],
-                 "rotation":0,
-                 "type":"",
-                 "visible":true,
-                 "width":0,
-                 "x":773.5,
-                 "y":1678
-                }, 
-                {
-                 "height":0,
-                 "id":498,
-                 "name":"street_23",
-                 "opacity":1,
-                 "point":true,
-                 "properties":[
-                        {
-                         "name":"next",
-                         "type":"string",
-                         "value":"street_24"
-                        }],
-                 "rotation":0,
-                 "type":"",
-                 "visible":true,
-                 "width":0,
-                 "x":748.5,
-                 "y":1758
-                }, 
-                {
-                 "height":0,
-                 "id":499,
-                 "name":"street_24",
-                 "opacity":1,
-                 "point":true,
-                 "properties":[
-                        {
-                         "name":"next",
-                         "type":"string",
-                         "value":"street_25"
-                        }],
-                 "rotation":0,
-                 "type":"",
-                 "visible":true,
-                 "width":0,
-                 "x":823.5,
-                 "y":1769
-                }, 
-                {
-                 "height":0,
-                 "id":500,
-                 "name":"street_25",
-                 "opacity":1,
-                 "point":true,
-                 "properties":[
-                        {
-                         "name":"next",
-                         "type":"string",
                          "value":"street_28"
                         }],
                  "rotation":0,
                  "type":"",
                  "visible":true,
                  "width":0,
-                 "x":906.5,
-                 "y":1758.5
+                 "x":718,
+                 "y":1761.5
                 }, 
                 {
                  "height":0,
-                 "id":501,
-                 "name":"street_26",
+                 "id":497,
+                 "name":"street_22",
                  "opacity":1,
                  "point":true,
                  "properties":[
@@ -2232,8 +2105,8 @@
                  "type":"",
                  "visible":true,
                  "width":0,
-                 "x":822.5,
-                 "y":1720.5
+                 "x":773.5,
+                 "y":1684.66666666667
                 }, 
                 {
                  "height":0,
@@ -2270,8 +2143,8 @@
                  "type":"",
                  "visible":true,
                  "width":0,
-                 "x":932,
-                 "y":1690.5
+                 "x":928.666666666667,
+                 "y":1763.16666666667
                 }, 
                 {
                  "height":0,
@@ -2283,7 +2156,7 @@
                         {
                          "name":"next",
                          "type":"string",
-                         "value":"street_31"
+                         "value":"street_316"
                         }],
                  "rotation":0,
                  "type":"",
@@ -2302,7 +2175,7 @@
                         {
                          "name":"next",
                          "type":"string",
-                         "value":"street_32,street_86"
+                         "value":"street_32,street_6"
                         }],
                  "rotation":0,
                  "type":"",
@@ -4658,7 +4531,7 @@
                         {
                          "name":"next",
                          "type":"string",
-                         "value":"street_156"
+                         "value":"street_157"
                         }],
                  "rotation":0,
                  "type":"",
@@ -4666,25 +4539,6 @@
                  "width":0,
                  "x":186,
                  "y":911
-                }, 
-                {
-                 "height":0,
-                 "id":645,
-                 "name":"street_156",
-                 "opacity":1,
-                 "point":true,
-                 "properties":[
-                        {
-                         "name":"next",
-                         "type":"string",
-                         "value":"street_157"
-                        }],
-                 "rotation":0,
-                 "type":"",
-                 "visible":true,
-                 "width":0,
-                 "x":145.5,
-                 "y":878
                 }, 
                 {
                  "height":0,
@@ -4753,7 +4607,7 @@
                         {
                          "name":"next",
                          "type":"string",
-                         "value":"street_150,street_7"
+                         "value":"street_149,street_7"
                         }],
                  "rotation":0,
                  "type":"",
