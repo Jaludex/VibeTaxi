@@ -88,6 +88,16 @@ class PlayState(BaseState):
         self.danger_color = (255, 0, 0)
         from gale.timer import Timer
         self.danger_timer = Timer.every(0.5, self._toggle_danger_color)
+        
+        # Fade in overlay and text
+        self.fade_overlay_alpha = 255.0
+        self.day_text_alpha = 0.0
+        self.start_text = self.game_rule_strategy.get_start_text()
+        
+        def fade_out_text():
+            Timer.tween(1.0, [(self, {"day_text_alpha": 0.0})])
+            
+        Timer.tween(1.0, [(self, {"day_text_alpha": 255.0, "fade_overlay_alpha": 0.0})], on_finish=lambda: Timer.after(2.0, fade_out_text))
 
     def _toggle_danger_color(self):
         if self.danger_color == (255, 0, 0):
@@ -376,6 +386,32 @@ class PlayState(BaseState):
             )
             
         self.game_rule_strategy.render_ui(surface, settings.FONTS["minecraft"], 20, 20)
+        
+        fade_alpha = getattr(self, "fade_overlay_alpha", 0)
+        if fade_alpha > 0:
+            fade_surf = pygame.Surface((settings.VIRTUAL_WIDTH, settings.VIRTUAL_HEIGHT), pygame.SRCALPHA)
+            fade_surf.fill((0, 0, 0, int(fade_alpha)))
+            surface.blit(fade_surf, (0, 0))
+            
+        text_alpha = getattr(self, "day_text_alpha", 0)
+        if text_alpha > 0:
+            from gale.text import render_text
+            
+            text_layer = pygame.Surface((settings.VIRTUAL_WIDTH, settings.VIRTUAL_HEIGHT), pygame.SRCALPHA)
+            
+            render_text(
+                text_layer,
+                getattr(self, "start_text", ""),
+                settings.FONTS["big"],
+                settings.VIRTUAL_WIDTH / 2,
+                settings.VIRTUAL_HEIGHT / 2,
+                (255, 255, 255),
+                center=True,
+                shadowed=True
+            )
+            
+            text_layer.set_alpha(int(text_alpha))
+            surface.blit(text_layer, (0, 0))
         
     def _render_detection_circle(self, surface, x, y, radius, color):
         if self.camera:

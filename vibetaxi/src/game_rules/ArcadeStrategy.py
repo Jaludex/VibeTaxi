@@ -15,6 +15,9 @@ class ArcadeStrategy(BaseRuleStrategy):
             self.time_remaining = 0
             self.game_over = True
 
+    def get_start_text(self) -> str:
+        return "Go get them!"
+
     def on_passenger_delivered(self, distance: float):
         self.passengers_delivered += 1
         

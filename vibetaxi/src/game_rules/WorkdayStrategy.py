@@ -16,6 +16,9 @@ class WorkdayStrategy(BaseRuleStrategy):
             self.time_remaining = 0
             self.game_over = True
 
+    def get_start_text(self) -> str:
+        return f"Day {self.day}"
+
     def on_passenger_delivered(self, distance: float):
         # Base gain decays depending on the day
         base_gain = max(2.0, 10.0 - (self.day - 1) * 1.5)
