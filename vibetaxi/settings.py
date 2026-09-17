@@ -58,6 +58,13 @@ COLOR_TRIP_LONG = (255, 69, 0)
 
 COLOR_PASSENGER_DELIVERY = (0, 255, 0)
 
+VIBE_COLORS = {
+    "rock": (255, 50, 50),
+    "pop": (255, 105, 180),
+    "hiphop": (255, 200, 0),
+    "electronic": (50, 255, 255)
+}
+
 TRAFFIC_SPAWN_INTERVAL = 0.2
 TRAFFIC_MAX_CARS = 20
 
@@ -75,7 +82,8 @@ TEXTURES = {
     "button-plus": pygame.image.load(BASE_DIR / "assets" / "graphics" / "button_plus.png"),
     "button-less": pygame.image.load(BASE_DIR / "assets" / "graphics" / "button_less.png"),
     "marker": pygame.image.load(BASE_DIR / "assets" / "graphics" / "marker.png"),
-    "peds": pygame.image.load(BASE_DIR / "assets" / "graphics" / "peds.png")
+    "peds": pygame.image.load(BASE_DIR / "assets" / "graphics" / "peds.png"),
+    "arrow": pygame.image.load(BASE_DIR / "assets" / "graphics" / "arrow.png")
 }
 
 # TILESET = tilemap.Tileset(TEXTURES["tiles"], TILE_SIZE, TILE_SIZE)

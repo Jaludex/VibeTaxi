@@ -6,6 +6,7 @@ from gale.camera import Camera
 from gale.input_handler import InputData
 from gale.physics import BodyType
 from gale.state import BaseState
+from gale.timer import Timer
 
 import settings
 from src.world.CityMap import CityMap
@@ -73,6 +74,18 @@ class PlayState(BaseState):
             pass
             
         self.taxi.init_sounds()
+        self.exited = False
+        self._start_arrow_tween()
+
+    def _start_arrow_tween(self):
+        self.arrow_offset_y = 0
+        def move_down():
+            if not getattr(self, "exited", False):
+                Timer.tween(0.5, [(self, {"arrow_offset_y": 10})], on_finish=move_up)
+        def move_up():
+            if not getattr(self, "exited", False):
+                Timer.tween(0.5, [(self, {"arrow_offset_y": 0})], on_finish=move_down)
+        move_down()
 
     def fixed_update(self) -> None:
         self.city_map.fixed_update()
@@ -211,8 +224,22 @@ class PlayState(BaseState):
         except Exception:
             pass
 
+        # Vibe filter
+        if getattr(self.taxi, "state_machine", None):
+            if type(self.taxi.state_machine.current).__name__ == "TaxiVibeState":
+                genre = self.radio.get_current_genre()
+                if genre and genre in settings.VIBE_COLORS:
+                    color = settings.VIBE_COLORS[genre]
+                    filter_surf = pygame.Surface((settings.VIRTUAL_WIDTH, settings.VIRTUAL_HEIGHT), pygame.SRCALPHA)
+                    filter_surf.fill((*color, 40))
+                    surface.blit(filter_surf, (0, 0))
+
         self.radio.render(surface)
         
+        if self.active_passenger and self.active_passenger.is_riding():
+            dest_x, dest_y = self.city_map.nodes[self.active_passenger.destination]
+            self._render_arrow(surface, dest_x, dest_y)
+            
         if getattr(self.taxi, 'is_crashed', False):
             from gale.text import render_text
             render_text(
@@ -234,11 +261,54 @@ class PlayState(BaseState):
             px, py = x, y
         pygame.draw.circle(surface, color, (px, py), radius, width=2)
 
+    def _render_arrow(self, surface, dest_x, dest_y):
+        arrow_tex = settings.TEXTURES.get("arrow")
+        if not arrow_tex: return
+        
+        cam_x, cam_y = self.camera.offset
+        cam_w, cam_h = settings.VIRTUAL_WIDTH, settings.VIRTUAL_HEIGHT
+        
+        center_x = self.camera.x
+        center_y = self.camera.y
+        
+        margin = 20
+        if (cam_x + margin <= dest_x <= cam_x + cam_w - margin) and \
+           (cam_y + margin <= dest_y <= cam_y + cam_h - margin):
+            rotated_arrow = pygame.transform.rotate(arrow_tex, -90)
+            rect = rotated_arrow.get_rect(center=(dest_x - cam_x, dest_y - cam_y - 40 + getattr(self, "arrow_offset_y", 0)))
+            surface.blit(rotated_arrow, rect.topleft)
+        else:
+            import math
+            dx = dest_x - center_x
+            dy = dest_y - center_y
+            angle = math.atan2(dy, dx)
+            
+            rotated_arrow = pygame.transform.rotate(arrow_tex, -math.degrees(angle))
+            
+            half_w = cam_w / 2 - 30
+            half_h = cam_h / 2 - 30
+            
+            r_x = float('inf')
+            if math.cos(angle) != 0:
+                r_x = abs(half_w / math.cos(angle))
+            r_y = float('inf')
+            if math.sin(angle) != 0:
+                r_y = abs(half_h / math.sin(angle))
+                
+            r = min(r_x, r_y)
+            
+            screen_pos_x = (cam_w / 2) + r * math.cos(angle)
+            screen_pos_y = (cam_h / 2) + r * math.sin(angle)
+            
+            rect = rotated_arrow.get_rect(center=(screen_pos_x, screen_pos_y))
+            surface.blit(rotated_arrow, rect.topleft)
+
     def on_input(self, input_id: str, input_data: InputData) -> None:
         self.radio.on_input(input_id, input_data)
         self.taxi.on_input(input_id, input_data)
 
     def exit(self) -> None:
+        self.exited = True
         if hasattr(self, 'soundscape_channel') and self.soundscape_channel:
             self.soundscape_channel.stop()
         if hasattr(self, 'taxi') and self.taxi:
