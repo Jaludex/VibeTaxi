@@ -142,6 +142,30 @@ class PlayState(BaseState):
         else:
             self.update_city_passengers(dt)
             
+        # Vibe transitions
+        is_vibe = type(self.taxi.state_machine.current).__name__ == "TaxiVibeState"
+        was_vibe = getattr(self, "was_vibe", False)
+        
+        if not hasattr(self, "vibe_alpha"):
+            self.vibe_alpha = 0.0
+            self.vibe_color = None
+            
+        if is_vibe:
+            genre = self.radio.get_current_genre()
+            if genre and genre in settings.VIBE_COLORS:
+                self.vibe_color = settings.VIBE_COLORS[genre]
+            
+        if is_vibe and not was_vibe:
+            settings.SOUNDS["into_vibe"].play()
+            from gale.timer import Timer
+            Timer.tween(0.5, [(self, {"vibe_alpha": 40.0})])
+        elif not is_vibe and was_vibe:
+            settings.SOUNDS["out_vibe"].play()
+            from gale.timer import Timer
+            Timer.tween(0.5, [(self, {"vibe_alpha": 0.0})])
+            
+        self.was_vibe = is_vibe
+            
     def update_active_passenger(self, dt: float):
         self.active_passenger.update(dt)
 
@@ -258,14 +282,12 @@ class PlayState(BaseState):
             pass
 
         # Vibe filter
-        if getattr(self.taxi, "state_machine", None):
-            if type(self.taxi.state_machine.current).__name__ == "TaxiVibeState":
-                genre = self.radio.get_current_genre()
-                if genre and genre in settings.VIBE_COLORS:
-                    color = settings.VIBE_COLORS[genre]
-                    filter_surf = pygame.Surface((settings.VIRTUAL_WIDTH, settings.VIRTUAL_HEIGHT), pygame.SRCALPHA)
-                    filter_surf.fill((*color, 40))
-                    surface.blit(filter_surf, (0, 0))
+        vibe_alpha = getattr(self, "vibe_alpha", 0.0)
+        vibe_color = getattr(self, "vibe_color", None)
+        if vibe_alpha > 0 and vibe_color:
+            filter_surf = pygame.Surface((settings.VIRTUAL_WIDTH, settings.VIRTUAL_HEIGHT), pygame.SRCALPHA)
+            filter_surf.fill((*vibe_color, int(vibe_alpha)))
+            surface.blit(filter_surf, (0, 0))
 
         self.radio.render(surface)
         

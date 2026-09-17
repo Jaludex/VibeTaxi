@@ -18,7 +18,6 @@ input_handler.InputHandler.set_keyboard_action(input_handler.KEY_d, "next-song")
 input_handler.InputHandler.set_keyboard_action(input_handler.KEY_w, "vol-up")
 input_handler.InputHandler.set_keyboard_action(input_handler.KEY_s, "vol-down")
 
-#DEBUG
 
 
 RADIO_FADEOUT_TIME = 2.0
@@ -114,6 +113,8 @@ SOUNDS = {
     "idle_damaged": pygame.mixer.Sound(BASE_DIR / "assets" / "sounds" / "car_sounds" / "idle-damaged.wav"),
     "engine1": pygame.mixer.Sound(BASE_DIR / "assets" / "sounds" / "car_sounds" / "engine1.wav"),
     "engine2": pygame.mixer.Sound(BASE_DIR / "assets" / "sounds" / "car_sounds" / "engine2.wav"),
+    "into_vibe": pygame.mixer.Sound(BASE_DIR / "assets" / "sounds" / "misc" / "into_vibe.wav"),
+    "out_vibe": pygame.mixer.Sound(BASE_DIR / "assets" / "sounds" / "misc" / "out_vibe.wav"),
 }
 
 MUSIC = {

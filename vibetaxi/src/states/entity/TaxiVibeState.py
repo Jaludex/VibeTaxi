@@ -7,8 +7,10 @@ class TaxiVibeState(TaxiDriveState):
         # 1. Guardamos valores originales
         self.original_max_speed = self.entity.max_speed
         self.original_turn_speed = self.entity.turn_speed
+        self.original_acceleration = self.entity.acceleration
 
-        self.entity.max_speed *= 1.4  
+        self.entity.max_speed *= 1.85  
+        self.entity.acceleration *= 1.5
         self.entity.is_drifting = False
 
         self.slide_vx = self.entity.vx
@@ -19,6 +21,7 @@ class TaxiVibeState(TaxiDriveState):
     def exit(self):
         self.entity.max_speed = self.original_max_speed
         self.entity.turn_speed = self.original_turn_speed
+        self.entity.acceleration = self.original_acceleration
         self.entity.is_drifting = False
         self._last_wl = None
         self._last_wr = None
