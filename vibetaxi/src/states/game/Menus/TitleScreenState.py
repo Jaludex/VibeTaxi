@@ -157,14 +157,18 @@ class TitleScreenState(BaseState):
         if not getattr(self, "mode_selection_triggered", False):
             settings.SOUNDS["press"].play()
             self.mode_selection_triggered = True
-            self._cancel_pan_timers()
-            save_data = settings.SAVE_MANAGER.load("workday_save")
             
-            from src.game_rules.WorkdayStrategy import WorkdayStrategy
-            strategy = WorkdayStrategy.load_dict(save_data)
-            
-            self.state_machine.pop() # TitleScreenState
-            self.state_machine.push(PlayState(self.state_machine), game_rule_strategy=strategy, taxi_health=save_data.get("health"))
+            def proceed():
+                self._cancel_pan_timers()
+                save_data = settings.SAVE_MANAGER.load("workday_save")
+                
+                from src.game_rules.WorkdayStrategy import WorkdayStrategy
+                strategy = WorkdayStrategy.load_dict(save_data)
+                
+                self.state_machine.pop() # TitleScreenState
+                self.state_machine.push(PlayState(self.state_machine), game_rule_strategy=strategy, taxi_health=save_data.get("health"))
+
+            Timer.tween(0.8, [(self, {"fade_alpha": 255.0})], ease_function_name="in_cubic", on_finish=proceed)
 
     def _on_records(self):
         if not getattr(self, "mode_selection_triggered", False):
