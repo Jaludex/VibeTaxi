@@ -7,54 +7,61 @@ from gale.timer import Timer
 from gale.ui.button import Button
 from gale.ui.container import Container
 from gale.ui.label import Label
+from gale.ui.text_box import TextBox
 from gale.ui.manager import UIManager
 from gale.ui.panel import Panel
 
 class MessageBoxState(BaseState):
-    def __init__(self, state_machine: Any, title: str, message: str, on_close: Callable) -> None:
+    def __init__(self, state_machine: Any, title: str, message: str, on_close: Callable = None) -> None:
         super().__init__(state_machine)
         self.fade_alpha = 0.0
+        self.panel_width = 320
+        self.panel_height = 110
         self.panel_y = -200
-        self.target_y = settings.VIRTUAL_HEIGHT / 2 - 50
+        self.target_y = settings.VIRTUAL_HEIGHT / 2 - self.panel_height / 2
         self.is_exiting = False
         
         self.on_close_callback = on_close
         
-        from src.themes import BUTTON_THEME, PANEL_THEME, LABEL_THEME
+        from src.themes import BUTTON_THEME, PANEL_THEME, LABEL_THEME, TEXTBOX_THEME
+        panel_x = settings.VIRTUAL_WIDTH / 2 - self.panel_width / 2
         self.panel = Panel(
-            settings.VIRTUAL_WIDTH / 2 - 150, 
+            panel_x, 
             self.panel_y, 
-            300, 100,
+            self.panel_width, self.panel_height,
             theme=PANEL_THEME
         )
         
         self.label_title = Label(
             settings.VIRTUAL_WIDTH / 2, 
-            self.panel_y + 20, 
+            self.panel_y + 12, 
             title, 
             theme=LABEL_THEME,
             center=True
         )
         
-        self.label_msg = Label(
-            settings.VIRTUAL_WIDTH / 2, 
-            self.panel_y + 45, 
+        self.text_box = TextBox(
+            panel_x + 15, 
+            self.panel_y + 28, 
+            self.panel_width - 30, 
+            44, 
             message, 
-            theme=LABEL_THEME,
-            center=True
+            lines_per_page=4,
+            on_close=self._on_ok,
+            theme=TEXTBOX_THEME
         )
         
         self.btn_ok = Button(
-            settings.VIRTUAL_WIDTH / 2 - 50, 
-            self.panel_y + 70, 
-            100, 25, 
+            settings.VIRTUAL_WIDTH / 2 - 45, 
+            self.panel_y + 76, 
+            90, 24, 
             "OK", 
-            on_click=self._on_ok,
+            on_click=self._on_button_click,
             theme=BUTTON_THEME
         )
         
         self.container = Container(0, 0, settings.VIRTUAL_WIDTH, settings.VIRTUAL_HEIGHT, children=[
-            self.panel, self.label_title, self.label_msg, self.btn_ok
+            self.panel, self.label_title, self.text_box, self.btn_ok
         ])
         
         self.ui = UIManager(
@@ -76,10 +83,16 @@ class MessageBoxState(BaseState):
         
     def update_ui_y(self):
         self.panel.y = self.panel_y
-        self.label_title.y = self.panel_y + 20
-        self.label_msg.y = self.panel_y + 45
-        self.btn_ok.y = self.panel_y + 70
+        self.label_title.y = self.panel_y + 12
+        self.text_box.y = self.panel_y + 28
+        self.btn_ok.y = self.panel_y + 76
         
+    def _on_button_click(self):
+        if self.text_box.has_next_page:
+            self.text_box.next_page()
+        else:
+            self._on_ok()
+
     def _on_ok(self):
         if self.is_exiting: return
         self.is_exiting = True
@@ -87,7 +100,7 @@ class MessageBoxState(BaseState):
         
         def on_finish():
             self.state_machine.pop()
-            if self.on_close_callback:
+            if self.on_close_callback is not None:
                 self.on_close_callback()
             
         Timer.tween(0.3, [(self, {"fade_alpha": 0.0})])
@@ -95,6 +108,10 @@ class MessageBoxState(BaseState):
 
     def update(self, dt: float):
         self.update_ui_y()
+        if self.text_box.has_next_page:
+            self.btn_ok.text = "Next"
+        else:
+            self.btn_ok.text = "OK"
         self.ui.update(dt)
 
     def on_input(self, input_id, input_data):

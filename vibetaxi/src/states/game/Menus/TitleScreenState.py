@@ -29,6 +29,7 @@ class TitleScreenState(BaseState):
         
         self.fade_alpha = 255.0
         self._scene_alpha = 255.0
+        self.input_cooldown = 0.35
 
         self.city_map = CityMap("city")
         self.city_map.muted = True
@@ -240,6 +241,8 @@ class TitleScreenState(BaseState):
             self.city_map.fixed_update()
 
     def update(self, dt: float):
+        if getattr(self, "input_cooldown", 0.0) > 0:
+            self.input_cooldown -= dt
         if self.city_map and self.camera:
             self.city_map.update(dt, self.camera)
             self.camera.update(dt)
@@ -248,6 +251,8 @@ class TitleScreenState(BaseState):
             self.ui.update(dt)
 
     def on_input(self, input_id, input_data):
+        if getattr(self, "input_cooldown", 0.0) > 0:
+            return
         if hasattr(self, 'ui') and self.ui:
             self.ui.on_input(input_id, input_data)
 

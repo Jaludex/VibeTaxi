@@ -112,7 +112,8 @@ TEXTURES = {
 }
 
 TILEMAPS = {
-    "city": str(BASE_DIR / "assets" / "tilemaps" / "city.json")
+    "city": str(BASE_DIR / "assets" / "tilemaps" / "city.json"),
+    "tutorial": str(BASE_DIR / "assets" / "tilemaps" / "tutorial.json")
 }
 
 FRAMES = {

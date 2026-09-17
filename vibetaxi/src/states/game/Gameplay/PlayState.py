@@ -126,7 +126,7 @@ class PlayState(BaseState):
             new_passengers = self.city_map.generate_passengers(spawn_chance=0.3)
             self.map_passengers.extend(new_passengers)
             
-        if getattr(self.game_rule_strategy, "invincible", False):
+        if getattr(self.game_rule_strategy, "always_vibe", False):
             from src.states.entity.TaxiVibeState import TaxiVibeState
             if not isinstance(self.taxi.state_machine.current, TaxiVibeState) and self.taxi.health > 0:
                 self.taxi.state_machine.change("vibe")
@@ -236,7 +236,7 @@ class PlayState(BaseState):
                 self.active_passenger.satisfaction = max(0.0, self.active_passenger.satisfaction - 15.0 * dt)
                 
             from src.states.entity.TaxiVibeState import TaxiVibeState
-            if not getattr(self.game_rule_strategy, "invincible", False):
+            if not getattr(self.game_rule_strategy, "always_vibe", False):
                 if self.active_passenger.satisfaction >= 100.0:
                     if not isinstance(self.taxi.state_machine.current, TaxiVibeState):
                         self.taxi.state_machine.change("vibe")
@@ -260,7 +260,7 @@ class PlayState(BaseState):
                     
                     # Exit vibe if we were in it, unless in Zen mode
                     from src.states.entity.TaxiVibeState import TaxiVibeState
-                    if not getattr(self.game_rule_strategy, "invincible", False):
+                    if not getattr(self.game_rule_strategy, "always_vibe", False):
                         if isinstance(self.taxi.state_machine.current, TaxiVibeState):
                             self.taxi.state_machine.change("drive")
 
@@ -291,9 +291,10 @@ class PlayState(BaseState):
                     self.active_passenger = p
                     self.map_passengers.remove(p)
                     
-                    import random
-                    genres = ["rock", "pop", "hiphop", "electronic", "jazz", None]
-                    p.preferred_genre = random.choice(genres)
+                    if not hasattr(p, "preferred_genre"):
+                        import random
+                        genres = ["rock", "pop", "hiphop", "electronic", "jazz", None]
+                        p.preferred_genre = random.choice(genres)
                     p.satisfaction = 10.0
                     p.pickup_x = p.x
                     p.pickup_y = p.y
