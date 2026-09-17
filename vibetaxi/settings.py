@@ -61,6 +61,11 @@ COLOR_PASSENGER_DELIVERY = (0, 255, 0)
 TRAFFIC_SPAWN_INTERVAL = 0.2
 TRAFFIC_MAX_CARS = 20
 
+CANT_MUSIC_CHANNELS = 5
+
+
+PHYSICS_DEBUG = True
+
 TEXTURES = {
     "city_tiles": pygame.image.load(BASE_DIR / "assets" / "graphics" / "city_tileset.png"),
     "cars": pygame.image.load(BASE_DIR / "assets" / "graphics" / "cars.png"),
@@ -104,35 +109,3 @@ SOUNDS = {
     "engine1": pygame.mixer.Sound(BASE_DIR / "assets" / "sounds" / "car_sounds" / "engine1.wav"),
     "engine2": pygame.mixer.Sound(BASE_DIR / "assets" / "sounds" / "car_sounds" / "engine2.wav"),
 }
-
-CANT_MUSIC_CHANNELS = 5
-
-
-PHYSICS_DEBUG = True
-
-
-def play_music(name: str) -> None:
-    stop_music(name)
-    MUSIC_CHANNELS[name] = SOUNDS[name].play(loops=-1)
-
-
-def stop_music(name: str) -> None:
-    channel = MUSIC_CHANNELS.get(name)
-
-    if channel is not None:
-        channel.stop()
-        MUSIC_CHANNELS[name] = None
-
-
-def pause_music(name: str) -> None:
-    channel = MUSIC_CHANNELS.get(name)
-
-    if channel is not None:
-        channel.pause()
-
-
-def resume_music(name: str) -> None:
-    channel = MUSIC_CHANNELS.get(name)
-
-    if channel is not None:
-        channel.unpause()

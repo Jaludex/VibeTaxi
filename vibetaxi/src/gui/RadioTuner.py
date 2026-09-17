@@ -49,6 +49,9 @@ class Radio:
     def get_current_song(self) -> str:
         return self.songs[self.ind_song]
 
+    def get_current_genre(self) -> str:
+        return self.stations[self.ind_song].get("genre")
+
     def render(self, surface):
         if self.alpha <= 0:
             return
