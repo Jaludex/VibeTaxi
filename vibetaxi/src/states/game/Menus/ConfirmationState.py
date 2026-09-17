@@ -73,6 +73,12 @@ class ConfirmationState(BaseState):
         self.is_exiting = False
         self.update_ui_y()
         
+        for state in self.state_machine.states:
+            if hasattr(state, "pause_audio"):
+                state.pause_audio()
+            if hasattr(state, "reset_inputs"):
+                state.reset_inputs()
+        
         Timer.tween(0.3, [(self, {"fade_alpha": 180.0})])
         Timer.tween(0.5, [(self, {"panel_y": self.target_y})], ease_function_name="out_cubic")
         
@@ -97,6 +103,11 @@ class ConfirmationState(BaseState):
     def _exit_to_callback(self, callback):
         def on_finish():
             self.state_machine.pop()
+            for state in self.state_machine.states:
+                if hasattr(state, "resume_audio"):
+                    state.resume_audio()
+                if hasattr(state, "reset_inputs"):
+                    state.reset_inputs()
             callback()
             
         Timer.tween(0.3, [(self, {"fade_alpha": 0.0})])

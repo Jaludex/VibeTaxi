@@ -71,8 +71,11 @@ class PauseState(BaseState):
         self.is_exiting = False
         self.update_ui_y()
         
-        pygame.mixer.music.pause()
-        # Pause game sounds?
+        for state in self.state_machine.states:
+            if hasattr(state, "pause_audio"):
+                state.pause_audio()
+            if hasattr(state, "reset_inputs"):
+                state.reset_inputs()
         
         Timer.tween(0.3, [(self, {"fade_alpha": 128.0})])
         Timer.tween(0.5, [(self, {"panel_y": self.target_y})], ease_function_name="out_cubic")
@@ -89,8 +92,12 @@ class PauseState(BaseState):
         self.is_exiting = True
         
         def resume_game():
-            pygame.mixer.music.unpause()
             self.state_machine.pop()
+            for state in self.state_machine.states:
+                if hasattr(state, "resume_audio"):
+                    state.resume_audio()
+                if hasattr(state, "reset_inputs"):
+                    state.reset_inputs()
             
         Timer.tween(0.3, [(self, {"fade_alpha": 0.0})])
         Timer.tween(0.5, [(self, {"panel_y": -200})], ease_function_name="in_cubic", on_finish=resume_game)
