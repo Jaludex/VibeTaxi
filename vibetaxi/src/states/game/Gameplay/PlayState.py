@@ -80,6 +80,16 @@ class PlayState(BaseState):
             
         self.taxi.init_sounds()
         self.exited = False
+        
+        self.danger_color = (255, 0, 0)
+        from gale.timer import Timer
+        self.danger_timer = Timer.every(0.5, self._toggle_danger_color)
+
+    def _toggle_danger_color(self):
+        if self.danger_color == (255, 0, 0):
+            self.danger_color = (255, 255, 0)
+        else:
+            self.danger_color = (255, 0, 0)
 
     def fixed_update(self) -> None:
         self.city_map.fixed_update()
@@ -325,6 +335,18 @@ class PlayState(BaseState):
                 (255, 50, 50),
                 center=True
             )
+        elif self.taxi.health < self.taxi.max_health * 0.15:
+            from gale.text import render_text
+            render_text(
+                surface,
+                "Danger!",
+                settings.FONTS["big"],
+                settings.VIRTUAL_WIDTH // 2,
+                settings.VIRTUAL_HEIGHT // 4,
+                self.danger_color,
+                center=True,
+                shadowed=True
+            )
             
         self.game_rule_strategy.render_ui(surface, settings.FONTS["minecraft"], 20, 20)
         
@@ -404,6 +426,8 @@ class PlayState(BaseState):
 
     def exit(self) -> None:
         self.exited = True
+        if hasattr(self, 'danger_timer') and self.danger_timer:
+            self.danger_timer.remove()
         if hasattr(self, 'soundscape_channel') and self.soundscape_channel:
             self.soundscape_channel.stop()
         if hasattr(self, 'taxi') and self.taxi:
