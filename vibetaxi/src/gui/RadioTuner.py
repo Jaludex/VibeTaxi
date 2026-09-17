@@ -34,6 +34,15 @@ class Radio:
         self._plus_timer = None
         self._less_timer = None
 
+        from gale.command import CommandBindings
+        from src import commands
+
+        self.command_bindings = CommandBindings()
+        self.command_bindings.bind("vol-up", press=commands.RADIO_VOL_UP)
+        self.command_bindings.bind("vol-down", press=commands.RADIO_VOL_DOWN)
+        self.command_bindings.bind("next-song", press=commands.RADIO_NEXT_STATION)
+        self.command_bindings.bind("prev-song", press=commands.RADIO_PREV_STATION)
+
     def update(self, dt: float):
         pass
         
@@ -62,7 +71,7 @@ class Radio:
             f"{self.songs[self.ind_song]}",
             settings.FONTS["minecraft"],
             self.x + 240,
-            self.y + 5,
+            self.y + 8,
             (0, 0, 0),
             center=True
         )
@@ -89,38 +98,42 @@ class Radio:
             self._alpha_tween.remove()
         self._alpha_tween = Timer.tween(1.0, [(self, {"alpha": 0.0})])
 
+    def _trigger_ui_activity(self):
+        if self._fade_out_timer:
+            self._fade_out_timer.remove()
+        if self._alpha_tween:
+            self._alpha_tween.remove()
+        
+        self.alpha = 255.0
+        self._fade_out_timer = Timer.after(settings.RADIO_FADEOUT_TIME, self._start_fade_out)
+
+    def volume_up(self):
+        self._trigger_ui_activity()
+        self.volumen = min(100, self.volumen + 10)
+        self.estado_plus = 1
+        if self._plus_timer:
+            self._plus_timer.remove()
+        self._plus_timer = Timer.after(self.tiempo_animacion, lambda: setattr(self, 'estado_plus', 0))
+        pygame.mixer.music.set_volume(self.volumen / 100.0)
+
+    def volume_down(self):
+        self._trigger_ui_activity()
+        self.volumen = max(0, self.volumen - 10)
+        self.estado_less = 1
+        if self._less_timer:
+            self._less_timer.remove()
+        self._less_timer = Timer.after(self.tiempo_animacion, lambda: setattr(self, 'estado_less', 0))
+        pygame.mixer.music.set_volume(self.volumen / 100.0)
+
+    def next_station(self):
+        self._trigger_ui_activity()
+        self.ind_song = (self.ind_song + 1) % len(self.stations)
+        self.change_station()
+
+    def prev_station(self):
+        self._trigger_ui_activity()
+        self.ind_song = (self.ind_song - 1) % len(self.stations)
+        self.change_station()
+
     def on_input(self, input_id: str, input_data: InputData):
-        if input_data.pressed:
-            if input_id in ("vol-up", "vol-down", "next-song", "prev-song"):
-                if self._fade_out_timer:
-                    self._fade_out_timer.remove()
-                if self._alpha_tween:
-                    self._alpha_tween.remove()
-                
-                self.alpha = 255.0
-                
-                self._fade_out_timer = Timer.after(settings.RADIO_FADEOUT_TIME, self._start_fade_out)
-                
-            if input_id == "vol-up":
-                self.volumen = min(100, self.volumen + 10)
-                self.estado_plus = 1
-                if self._plus_timer:
-                    self._plus_timer.remove()
-                self._plus_timer = Timer.after(self.tiempo_animacion, lambda: setattr(self, 'estado_plus', 0))
-                pygame.mixer.music.set_volume(self.volumen / 100.0)
-                
-            elif input_id == "vol-down":
-                self.volumen = max(0, self.volumen - 10)
-                self.estado_less = 1
-                if self._less_timer:
-                    self._less_timer.remove()
-                self._less_timer = Timer.after(self.tiempo_animacion, lambda: setattr(self, 'estado_less', 0))
-                pygame.mixer.music.set_volume(self.volumen / 100.0)
-                
-            elif input_id == "next-song":
-                self.ind_song = (self.ind_song + 1) % len(self.stations)
-                self.change_station()
-                
-            elif input_id == "prev-song":
-                self.ind_song = (self.ind_song - 1) % len(self.stations)
-                self.change_station()
+        self.command_bindings.dispatch(self, input_id, input_data)

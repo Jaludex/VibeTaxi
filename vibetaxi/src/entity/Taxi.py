@@ -23,6 +23,16 @@ class Taxi(Car):
             'vibe': lambda sm: TaxiVibeState(self, sm),
             'crashed': lambda sm: CarCrashedState(self, sm)
         })
+        
+        from gale.command import CommandBindings
+        from src import commands
+        
+        self.command_bindings = CommandBindings()
+        self.command_bindings.bind("mouse_click", press=commands.ACCELERATE, release=commands.STOP_ACCELERATE)
+        self.command_bindings.bind("brake", press=commands.BRAKE, release=commands.STOP_BRAKE)
+        self.command_bindings.bind("reverse", press=commands.REVERSE, release=commands.STOP_REVERSE)
+        self.command_bindings.bind("drift", press=commands.DRIFT, release=commands.STOP_DRIFT)
+        
         self.state_machine.change('idle')
 
     def damage(self, amount):
@@ -160,5 +170,5 @@ class Taxi(Car):
                 self.state_machine.change('vibe')
                 print("Enter Vibe")
 
-        if self.state_machine.current:
-            self.state_machine.current.on_input(input_id, input_data)
+        if not self.is_crashed:
+            self.command_bindings.dispatch(self, input_id, input_data)

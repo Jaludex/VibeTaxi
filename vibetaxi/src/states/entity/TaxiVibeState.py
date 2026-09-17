@@ -130,14 +130,3 @@ class TaxiVibeState(TaxiDriveState):
             self._skid_mark_emitter._spawn_burst(1, wr_x, wr_y)
             self._last_wl = (wl_x, wl_y)
             self._last_wr = (wr_x, wr_y)
-
-
-    def on_input(self, input_id, input_data):
-        super().on_input(input_id, input_data)
-
-        # Input del derrape
-        if input_id == "drift":
-            if input_data.pressed:
-                commands.DRIFT.execute(self.entity)
-            else:
-                commands.STOP_DRIFT.execute(self.entity)
