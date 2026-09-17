@@ -12,12 +12,13 @@ from gale.ui.container import Container
 from src.states.game.Menus.TitleScreenState import TitleScreenState
 
 class GameOverState(BaseState):
-    def __init__(self, state_machine: Any, reason: Optional[str] = None) -> None:
+    def __init__(self, state_machine: Any, reason: Optional[str] = None, record_data: Optional[Dict] = None) -> None:
         super().__init__(state_machine)
         self.fade_alpha = 0.0
         self.panel_y = -200
         self.target_y = settings.VIRTUAL_HEIGHT / 2 - 50
         self.is_exiting = False
+        self.record_data = record_data
         
         self.panel = Panel(
             settings.VIRTUAL_WIDTH / 2 - 150, 
@@ -70,13 +71,29 @@ class GameOverState(BaseState):
             return
         self.is_exiting = True
         settings.SOUNDS["press"].play()
-        Timer.tween(1.0, [(self, {"exit_alpha": 255.0})], on_finish=self.return_to_title)
+        Timer.tween(1.0, [(self, {"exit_alpha": 255.0})], on_finish=self.handle_next_state)
         
-    def return_to_title(self):
-        # Pop all states properly to ensure exit() is called
-        while len(self.state_machine.states) > 0:
-            self.state_machine.pop()
-        self.state_machine.push(TitleScreenState(self.state_machine))
+    def handle_next_state(self):
+        if self.record_data:
+            from src.states.game.Gameplay.NewRecordState import NewRecordState
+            
+            def go_to_title():
+                while len(self.state_machine.states) > 0:
+                    self.state_machine.pop()
+                self.state_machine.push(TitleScreenState(self.state_machine))
+                
+            self.state_machine.push(NewRecordState(
+                self.state_machine,
+                self.record_data["mode"],
+                self.record_data["score"],
+                self.record_data["records"],
+                go_to_title
+            ))
+        else:
+            # Pop all states properly to ensure exit() is called
+            while len(self.state_machine.states) > 0:
+                self.state_machine.pop()
+            self.state_machine.push(TitleScreenState(self.state_machine))
 
     def update(self, dt: float):
         self.update_ui_y()

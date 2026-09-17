@@ -468,6 +468,12 @@ class PlayState(BaseState):
         if getattr(self, "game_over_triggered", False):
             return
             
+        if input_id == "pause" and input_data.pressed:
+            if "pause" in settings.SOUNDS: settings.SOUNDS["pause"].play()
+            from src.states.game.Gameplay.PauseState import PauseState
+            self.state_machine.push(PauseState(self.state_machine))
+            return
+            
         self.radio.on_input(input_id, input_data)
         self.taxi.on_input(input_id, input_data)
 

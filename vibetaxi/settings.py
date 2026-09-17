@@ -1,11 +1,13 @@
 import pathlib
 
 import pygame
+import os
 
 from gale import frames
 from gale import input_handler
 from gale import tilemap
 
+from gale.save import SaveManager
 from src.frame_tools import generate_car_frames
 
 input_handler.InputHandler.set_keyboard_action(input_handler.KEY_ESCAPE, "quit")
@@ -18,6 +20,26 @@ input_handler.InputHandler.set_keyboard_action(input_handler.KEY_a, "prev-song")
 input_handler.InputHandler.set_keyboard_action(input_handler.KEY_d, "next-song")
 input_handler.InputHandler.set_keyboard_action(input_handler.KEY_w, "vol-up")
 input_handler.InputHandler.set_keyboard_action(input_handler.KEY_s, "vol-down")
+input_handler.InputHandler.set_keyboard_action(input_handler.KEY_p, "pause")
+
+import string
+# Map all printable keys for TextInput, without overwriting existing game controls
+existing_keys = {
+    input_handler.KEY_a, input_handler.KEY_d, input_handler.KEY_w, input_handler.KEY_s,
+    input_handler.KEY_p, input_handler.KEY_x, input_handler.KEY_z, input_handler.KEY_LSHIFT,
+    input_handler.KEY_ESCAPE
+}
+
+for char in string.ascii_lowercase + string.digits:
+    key_const = getattr(pygame, f"K_{char}", None)
+    if key_const is not None and key_const not in existing_keys:
+        input_handler.InputHandler.set_keyboard_action(key_const, "keyboard")
+
+# Special keys for TextInput
+for key_name in ["SPACE", "BACKSPACE", "RETURN", "KP_ENTER", "DELETE", "LEFT", "RIGHT"]:
+    key_const = getattr(pygame, f"K_{key_name}", None)
+    if key_const is not None and key_const not in existing_keys:
+        input_handler.InputHandler.set_keyboard_action(key_const, "keyboard")
 
 
 
@@ -127,9 +149,13 @@ SOUNDS = {
     "fix": pygame.mixer.Sound(BASE_DIR / "assets" / "sounds" / "misc" / "fix.wav"),
     "press": pygame.mixer.Sound(BASE_DIR / "assets" / "sounds" / "misc" / "press.wav"),
     "game_over": pygame.mixer.Sound(BASE_DIR / "assets" / "sounds" / "misc" / "game_over.wav"),
+    "pause": pygame.mixer.Sound(BASE_DIR / "assets" / "sounds" / "misc" / "pause.wav"),
+    "unpause": pygame.mixer.Sound(BASE_DIR / "assets" / "sounds" / "misc" / "unpause.wav"),
 }
 
 MUSIC = {
     "menu": str(BASE_DIR / "assets" / "music" / "menu.ogg"),
 }
 REPAIR_COST = 40.0
+
+SAVE_MANAGER = SaveManager(save_dir=BASE_DIR / 'saves')

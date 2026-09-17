@@ -17,12 +17,14 @@ from src.game_rules.WorkdayStrategy import WorkdayStrategy
 from src.definitions.vehicles import VEHICLE_DEFS
 
 class EndOfDayState(BaseState):
-    def __init__(self, state_machine, money, health, max_health, day):
+    def __init__(self, state_machine: Any, money: float, health: float, max_health: float, day: int, is_loaded_run: bool = False) -> None:
         super().__init__(state_machine)
         self.money = money
         self.health = health
         self.max_health = max_health
         self.day = day
+        self.is_loaded_run = is_loaded_run
+        
         self.alpha = 0
         self.ui = None
 
@@ -155,7 +157,7 @@ class EndOfDayState(BaseState):
             start_x + btn_width + btn_spacing, panel.y + panel_height - 40,
             btn_width, 25,
             "Save & Exit",
-            on_click=self._on_exit,
+            on_click=self._on_save_exit,
             theme=btn_theme
         )
         container.add_child(btn_save)
@@ -210,6 +212,18 @@ class EndOfDayState(BaseState):
             self.state_machine.pop()
         self.state_machine.push(TitleScreenState(self.state_machine))
 
+    def _on_save_exit(self):
+        settings.SOUNDS["press"].play()
+        settings.SAVE_MANAGER.save("workday_save", {
+            "money": self.money,
+            "health": self.health,
+            "day": self.day + 1
+        })
+        from src.states.game.Menus.TitleScreenState import TitleScreenState
+        while len(self.state_machine.states) > 0:
+            self.state_machine.pop()
+        self.state_machine.push(TitleScreenState(self.state_machine))
+
     def _on_continue(self):
         settings.SOUNDS["press"].play()
         self.ui = None # Disable UI interactions
@@ -229,7 +243,7 @@ class EndOfDayState(BaseState):
         from src.states.game.Gameplay.PlayState import PlayState
         self.state_machine.push(
             PlayState(self.state_machine),
-            game_rule_strategy=WorkdayStrategy(money=self.money, day=self.day + 1),
+            game_rule_strategy=WorkdayStrategy(money=self.money, day=self.day + 1, is_loaded_run=self.is_loaded_run),
             taxi_health=self.health
         )
 

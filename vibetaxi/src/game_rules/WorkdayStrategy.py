@@ -1,12 +1,29 @@
 from src.game_rules.BaseRuleStrategy import BaseRuleStrategy
 
 class WorkdayStrategy(BaseRuleStrategy):
-    def __init__(self, time_limit: float = 120.0, money: float = 0.0, day: int = 1):
+    def __init__(self, time_limit: float = 120.0, money: float = 0.0, day: int = 1, is_loaded_run: bool = False):
         super().__init__()
         self.time_remaining = time_limit
         self.money = money
         self.day = day
+        self.is_loaded_run = is_loaded_run
         self.fee = 80.0 + (self.day - 1) * 15.0
+
+    def to_dict(self) -> dict:
+        return {
+            "time_limit": self.time_remaining,
+            "money": self.money,
+            "day": self.day
+        }
+
+    @classmethod
+    def load_dict(cls, data: dict):
+        return cls(
+            time_limit=data.get("time_limit", 120.0),
+            money=data.get("money", 0.0),
+            day=data.get("day", 1),
+            is_loaded_run=True
+        )
 
     def update(self, dt: float):
         if self.game_over:
@@ -42,23 +59,40 @@ class WorkdayStrategy(BaseRuleStrategy):
         self._render_popup_text(surface)
 
     def on_game_over(self, state_machine, taxi):
-        if taxi.health <= 0:
+        import settings
+        has_records = settings.SAVE_MANAGER.exists("records")
+        records = settings.SAVE_MANAGER.load("records") if has_records else {"workday": [], "arcade": []}
+        
+        def delete_save_if_loaded():
+            if getattr(self, "is_loaded_run", False) and settings.SAVE_MANAGER.exists("workday_save"):
+                settings.SAVE_MANAGER.delete("workday_save")
+
+        def get_record_data(score):
+            if score > 0 and (len(records["workday"]) < 10 or score > records["workday"][-1]["score"]):
+                return {"mode": "workday", "score": score, "records": records}
+            return None
+
+        def show_game_over(reason=None):
+            delete_save_if_loaded()
             from src.states.game.Gameplay.GameOverState import GameOverState
-            state_machine.push(GameOverState(state_machine))
+            state_machine.push(GameOverState(state_machine, reason=reason, record_data=get_record_data(self.day)))
+
+        def show_end_of_day():
+            from src.states.game.Gameplay.EndOfDayState import EndOfDayState
+            state_machine.push(EndOfDayState(
+                state_machine,
+                money=self.money,
+                health=taxi.health,
+                max_health=taxi.max_health,
+                day=self.day,
+                is_loaded_run=self.is_loaded_run
+            ))
+
+        if taxi.health <= 0:
+            show_game_over()
         else:
             if self.money >= self.fee:
                 self.money -= self.fee
-                from src.states.game.Gameplay.EndOfDayState import EndOfDayState
-                state_machine.push(EndOfDayState(
-                    state_machine,
-                    money=self.money,
-                    health=taxi.health,
-                    max_health=taxi.max_health,
-                    day=self.day
-                ))
+                show_end_of_day()
             else:
-                from src.states.game.Gameplay.GameOverState import GameOverState
-                state_machine.push(GameOverState(
-                    state_machine,
-                    reason=f"You couldn't pay today's fee: ${self.fee:.2f}"
-                ))
+                show_game_over(reason=f"You couldn't pay today's fee: ${self.fee:.2f}")

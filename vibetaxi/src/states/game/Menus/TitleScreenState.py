@@ -20,8 +20,6 @@ class TitleScreenState(BaseState):
     
 
     def enter(self, enter_params: Optional[Dict[str, Any]] = None):
-        self.show_prompt: bool = True
-
         self._pan_phase = self.PHASE_FADE_IN
         self._scene_alpha: float = 255.0
         self._pan_timer = None
@@ -53,7 +51,7 @@ class TitleScreenState(BaseState):
         self.camera.x, self.camera.y = pos
         self.camera.update(0)
 
-        self._blink_timer = Timer.every(0.6, self._toggle_prompt)
+        self._setup_ui()
 
         self.music_volume = 0.0
         menu_music = settings.MUSIC.get("menu")
@@ -65,6 +63,114 @@ class TitleScreenState(BaseState):
         self._fade_tween = Timer.tween(1.0, [(self, {"fade_alpha": 0.0, "music_volume": 0.5})])
 
         self._start_scene_fade_in()
+
+    def _setup_ui(self):
+        from gale.ui.manager import UIManager
+        from gale.ui.button import Button
+        from gale.ui.theme import Theme
+        from gale.ui.container import Container
+
+        container = Container(0, 0, settings.VIRTUAL_WIDTH, settings.VIRTUAL_HEIGHT)
+        
+        btn_theme = Theme(
+            font=settings.FONTS["minecraft"],
+            background_color=pygame.Color(100, 60, 90),
+            hover_color=pygame.Color(150, 90, 120),
+            text_color=pygame.Color(255, 255, 255),
+            border_color=pygame.Color(255, 255, 255),
+            border_width=1
+        )
+        disabled_theme = Theme(
+            font=settings.FONTS["minecraft"],
+            background_color=pygame.Color(60, 40, 50),
+            hover_color=pygame.Color(60, 40, 50),
+            text_color=pygame.Color(150, 150, 150),
+            border_color=pygame.Color(150, 150, 150),
+            border_width=1
+        )
+
+        center_y = settings.VIRTUAL_HEIGHT / 2 + 30
+        
+        btn_new_game = Button(
+            settings.VIRTUAL_WIDTH / 2 - 160, center_y,
+            150, 30,
+            "New Game",
+            on_click=self._on_new_game,
+            theme=btn_theme
+        )
+        container.add_child(btn_new_game)
+        
+        has_save = settings.SAVE_MANAGER.exists("workday_save")
+        if has_save:
+            save_data = settings.SAVE_MANAGER.load("workday_save")
+            day = save_data.get("day", 1)
+            btn_resume = Button(
+                settings.VIRTUAL_WIDTH / 2 + 10, center_y,
+                150, 30,
+                f"Resume Work. Day: {day}",
+                on_click=self._on_resume,
+                theme=btn_theme
+            )
+        else:
+            btn_resume = Button(
+                settings.VIRTUAL_WIDTH / 2 + 10, center_y,
+                150, 30,
+                "Resume Work",
+                on_click=lambda: None,
+                theme=disabled_theme
+            )
+            btn_resume.enabled = False
+        
+        container.add_child(btn_resume)
+        
+        # Records button
+        has_records = settings.SAVE_MANAGER.exists("records")
+        if has_records:
+            records = settings.SAVE_MANAGER.load("records")
+            if len(records.get("workday", [])) > 0 or len(records.get("arcade", [])) > 0:
+                btn_records = Button(
+                    settings.VIRTUAL_WIDTH / 2 - 50, center_y + 40,
+                    100, 30,
+                    "Records",
+                    on_click=self._on_records,
+                    theme=btn_theme
+                )
+                container.add_child(btn_records)
+        
+        self.ui = UIManager(
+            container,
+            virtual_width=settings.VIRTUAL_WIDTH,
+            window_width=settings.WINDOW_WIDTH,
+            virtual_height=settings.VIRTUAL_HEIGHT,
+            window_height=settings.WINDOW_HEIGHT
+        )
+
+    def _on_new_game(self):
+        if not getattr(self, "mode_selection_triggered", False):
+            settings.SOUNDS["press"].play()
+            self.mode_selection_triggered = True
+            self._cancel_pan_timers()
+            from src.states.game.Menus.ModeSelectionState import ModeSelectionState
+            self.state_machine.push(ModeSelectionState(self.state_machine))
+
+    def _on_resume(self):
+        if not getattr(self, "mode_selection_triggered", False):
+            settings.SOUNDS["press"].play()
+            self.mode_selection_triggered = True
+            self._cancel_pan_timers()
+            save_data = settings.SAVE_MANAGER.load("workday_save")
+            
+            from src.game_rules.WorkdayStrategy import WorkdayStrategy
+            strategy = WorkdayStrategy.load_dict(save_data)
+            
+            self.state_machine.pop() # TitleScreenState
+            self.state_machine.push(PlayState(self.state_machine), game_rule_strategy=strategy, taxi_health=save_data.get("health"))
+
+    def _on_records(self):
+        if not getattr(self, "mode_selection_triggered", False):
+            settings.SOUNDS["press"].play()
+            from src.states.game.Menus.RecordsState import RecordsState
+            self.state_machine.push(RecordsState(self.state_machine))
 
     def _pick_random_position(self):
         """Pick a random node position far from the current camera."""
@@ -126,13 +232,10 @@ class TitleScreenState(BaseState):
             self._pan_timer = None
 
     def _toggle_prompt(self) -> None:
-        self.show_prompt = not self.show_prompt
+        pass
 
     def exit(self):
         self._cancel_pan_timers()
-        if self._blink_timer:
-            self._blink_timer.remove()
-            self._blink_timer = None
         if getattr(self, '_fade_tween', None):
             self._fade_tween.remove()
             self._fade_tween = None
@@ -147,15 +250,12 @@ class TitleScreenState(BaseState):
             self.city_map.update(dt, self.camera)
             self.camera.update(dt)
         pygame.mixer.music.set_volume(getattr(self, 'music_volume', 0.5))
+        if hasattr(self, 'ui') and self.ui:
+            self.ui.update(dt)
 
     def on_input(self, input_id, input_data):
-        if input_id == "mouse_click" and input_data.pressed:
-            if not getattr(self, "mode_selection_triggered", False):
-                settings.SOUNDS["press"].play()
-                self.mode_selection_triggered = True
-                self._cancel_pan_timers()
-                from src.states.game.Menus.ModeSelectionState import ModeSelectionState
-                self.state_machine.push(ModeSelectionState(self.state_machine))
+        if hasattr(self, 'ui') and self.ui:
+            self.ui.on_input(input_id, input_data)
 
     def render(self, surface: pygame.Surface):
         surface.fill((20, 20, 30))
@@ -185,23 +285,14 @@ class TitleScreenState(BaseState):
             "Vibe Taxi",
             settings.FONTS["big"],
             settings.VIRTUAL_WIDTH / 2,
-            settings.VIRTUAL_HEIGHT / 2 - 20,
+            settings.VIRTUAL_HEIGHT / 2 - 40,
             (255, 220, 50),
             center=True,
             shadowed=True
         )
 
-        # Prompt
-        if self.show_prompt:
-            render_text(
-                surface,
-                "Haz clic para comenzar",
-                settings.FONTS["minecraft"],
-                settings.VIRTUAL_WIDTH / 2,
-                settings.VIRTUAL_HEIGHT / 2 + 30,
-                (255, 255, 255),
-                center=True
-            )
+        if hasattr(self, 'ui') and self.ui:
+            self.ui.render(surface)
 
         # Entry fade (from OpeningState transition)
         if self.fade_alpha > 0:
