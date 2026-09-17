@@ -96,9 +96,14 @@ class PlayState(BaseState):
             self.danger_color = (255, 0, 0)
 
     def fixed_update(self) -> None:
+        if getattr(self, "game_over_triggered", False):
+            return
         self.city_map.fixed_update()
 
     def update(self, dt):
+        if getattr(self, "game_over_triggered", False):
+            return
+            
         self.taxi.update(dt)
         self.city_map.update(dt, self.camera)
         self.camera.update(dt)
@@ -108,6 +113,11 @@ class PlayState(BaseState):
         
         if (self.taxi.health <= 0 or self.game_rule_strategy.game_over) and not getattr(self, "game_over_triggered", False):
             self.game_over_triggered = True
+            
+            # Stop all PlayState sounds completely
+            import pygame
+            pygame.mixer.stop()
+            pygame.mixer.music.stop()
             
             from src.game_rules.WorkdayStrategy import WorkdayStrategy
             if self.taxi.health > 0 and isinstance(self.game_rule_strategy, WorkdayStrategy):
@@ -399,8 +409,9 @@ class PlayState(BaseState):
             
             rotated_arrow = pygame.transform.rotate(arrow_tex, -math.degrees(angle))
             
-            half_w = cam_w / 2 - 30
-            half_h = cam_h / 2 - 30
+            # Reduced margin from edge to avoid overlapping with UI elements like the timer
+            half_w = cam_w / 2 - 10
+            half_h = cam_h / 2 - 10
             
             r_x = float('inf')
             if math.cos(angle) != 0:
@@ -418,6 +429,9 @@ class PlayState(BaseState):
             surface.blit(rotated_arrow, rect.topleft)
 
     def on_input(self, input_id: str, input_data: InputData) -> None:
+        if getattr(self, "game_over_triggered", False):
+            return
+            
         self.radio.on_input(input_id, input_data)
         self.taxi.on_input(input_id, input_data)
 

@@ -36,6 +36,15 @@ class EndOfDayState(BaseState):
             on_finish=self._setup_ui
         )
 
+    def _get_health_color(self, health, max_health):
+        pct = health / max_health
+        if pct <= 0.2:
+            return pygame.Color(255, 0, 0)
+        elif pct <= 0.5:
+            return pygame.Color(255, 255, 0)
+        else:
+            return pygame.Color(0, 255, 0)
+
     def _setup_ui(self):
         container = Container(0, 0, settings.VIRTUAL_WIDTH, settings.VIRTUAL_HEIGHT)
         
@@ -46,7 +55,7 @@ class EndOfDayState(BaseState):
         )
         
         panel_width = 300
-        panel_height = 200
+        panel_height = 160
         panel = Panel(
             (settings.VIRTUAL_WIDTH - panel_width) // 2,
             (settings.VIRTUAL_HEIGHT - panel_height) // 2,
@@ -66,7 +75,7 @@ class EndOfDayState(BaseState):
         money_theme = Theme(font=settings.FONTS["minecraft"], text_color=pygame.Color(100, 255, 100))
         self.money_label = Label(0, 30, f"Money Earned: ${self.money:.2f}", theme=money_theme)
         self.money_label.x = panel.x + (panel.width - self.money_label.width) // 2
-        self.money_label.y = panel.y + 35
+        self.money_label.y = panel.y + 30
         container.add_child(self.money_label)
 
         # Left side: Repair button
@@ -81,8 +90,8 @@ class EndOfDayState(BaseState):
         
         self.repair_button = Button(
             panel.x + 20,
-            panel.y + 80,
-            100, 30,
+            panel.y + 65,
+            110, 30,
             f"Repair - ${settings.REPAIR_COST}",
             on_click=self._on_repair,
             theme=repair_theme
@@ -92,20 +101,26 @@ class EndOfDayState(BaseState):
 
         # Right side: Taxi and Progress Bar
         self.taxi_frame = settings.FRAMES["cars"][VEHICLE_DEFS["yellow_taxi"]["frame"]]
-        self.taxi_image = pygame.Surface((self.taxi_frame.width, self.taxi_frame.height), pygame.SRCALPHA)
-        self.taxi_image.blit(settings.TEXTURES["cars"], (0, 0), self.taxi_frame)
-        self.taxi_x = panel.x + 180
+        base_taxi_image = pygame.Surface((self.taxi_frame.width, self.taxi_frame.height), pygame.SRCALPHA)
+        base_taxi_image.blit(settings.TEXTURES["cars"], (0, 0), self.taxi_frame)
+        
+        # Rotate 90 degrees to be horizontal
+        self.taxi_image = pygame.transform.rotate(base_taxi_image, -90)
+        taxi_w = self.taxi_image.get_width()
+        taxi_h = self.taxi_image.get_height()
+        
+        self.taxi_x = panel.x + 160 + (120 - taxi_w) // 2
         self.taxi_y = panel.y + 60
         
         progress_theme = Theme(
             background_color=pygame.Color(50, 50, 50),
-            accent_color=pygame.Color(255, 255, 0),
+            accent_color=self._get_health_color(self.health, self.max_health),
             border_color=pygame.Color(255, 255, 255),
             border_width=1
         )
         self.health_bar = ProgressBar(
-            self.taxi_x, self.taxi_y + self.taxi_frame.height + 10,
-            self.taxi_frame.width, 10,
+            self.taxi_x, self.taxi_y + taxi_h + 5,
+            taxi_w, 10,
             self.health,
             self.max_health,
             theme=progress_theme
@@ -139,8 +154,8 @@ class EndOfDayState(BaseState):
         btn_save = Button(
             start_x + btn_width + btn_spacing, panel.y + panel_height - 40,
             btn_width, 25,
-            "Save and Exit",
-            on_click=self._on_exit, # For now just exits
+            "Save & Exit",
+            on_click=self._on_exit,
             theme=btn_theme
         )
         container.add_child(btn_save)
@@ -183,6 +198,7 @@ class EndOfDayState(BaseState):
             # Update UI
             self.money_label.text = f"Money Earned: ${self.money:.2f}"
             self.health_bar.value = self.health
+            self.health_bar.theme.accent_color = self._get_health_color(self.health, self.max_health)
             self._update_repair_button()
         else:
             if "error" in settings.SOUNDS: settings.SOUNDS["error"].play()
