@@ -16,7 +16,7 @@ class Radio:
         self.songs = [station["name"] for station in self.stations]
         self.ind_song = 0
         self.angulo_perilla = [90, 45, 0, -45, -90]
-        self.pos_marker_list = [self.x + 75, self.x + 100, self.x + 125, self.x + 175, self.x + 325]
+        self.pos_marker_list = [self.x + 80, self.x + 100, self.x + 125, self.x + 175, self.x + 325]
         
         self.estado_plus = 0  # 0 = Normal, 1 = Presionado
         self.estado_less = 0 
