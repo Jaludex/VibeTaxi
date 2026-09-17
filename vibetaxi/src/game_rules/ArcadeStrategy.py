@@ -67,7 +67,8 @@ class ArcadeStrategy(BaseRuleStrategy):
         
         def show_game_over(record_data=None):
             from src.states.game.Gameplay.GameOverState import GameOverState
-            state_machine.push(GameOverState(state_machine, record_data=record_data))
+            reason = "Time is up!" if self.time_remaining <= 0 else "Your taxi was destroyed!"
+            state_machine.push(GameOverState(state_machine, reason=reason, record_data=record_data))
 
         score = self.passengers_delivered
         record_data = None
