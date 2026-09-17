@@ -55,8 +55,13 @@ class Radio:
         return 90 - (index / (len(self.stations) - 1)) * 180
 
     def update(self, dt: float):
-        pass
-        
+        station = self.stations[self.ind_song]
+        # Si la emisora tiene música y la música se detuvo (terminó la canción)
+        if station["songs"] and not pygame.mixer.music.get_busy():
+            song = random.choice(station["songs"])
+            pygame.mixer.music.load(song)
+            pygame.mixer.music.play(0) # Reproducir sin bucles desde el inicio
+            
     def get_current_song(self) -> str:
         return self.songs[self.ind_song]
 
@@ -104,8 +109,13 @@ class Radio:
         station = self.stations[self.ind_song]
         if station["songs"]:
             song = random.choice(station["songs"])
+            start_time = random.uniform(0.0, 60.0)
             pygame.mixer.music.load(song)
-            pygame.mixer.music.play(-1)
+            try:
+                # Reproducir una vez (0 bucles) con salto de tiempo
+                pygame.mixer.music.play(0, start=start_time)
+            except Exception:
+                pygame.mixer.music.play(0)
 
     def _start_fade_out(self):
         if self._alpha_tween:
