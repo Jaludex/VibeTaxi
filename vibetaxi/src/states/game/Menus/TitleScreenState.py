@@ -150,9 +150,11 @@ class TitleScreenState(BaseState):
 
     def on_input(self, input_id, input_data):
         if input_id == "mouse_click" and input_data.pressed:
-            self._cancel_pan_timers()
-            self.state_machine.pop()
-            self.state_machine.push(PlayState(self.state_machine))
+            if not getattr(self, "mode_selection_triggered", False):
+                self.mode_selection_triggered = True
+                self._cancel_pan_timers()
+                from src.states.game.Menus.ModeSelectionState import ModeSelectionState
+                self.state_machine.push(ModeSelectionState(self.state_machine))
 
     def render(self, surface: pygame.Surface):
         surface.fill((20, 20, 30))

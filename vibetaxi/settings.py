@@ -10,6 +10,7 @@ from src.frame_tools import generate_car_frames
 
 input_handler.InputHandler.set_keyboard_action(input_handler.KEY_ESCAPE, "quit")
 input_handler.InputHandler.set_mouse_click_action(input_handler.MOUSE_BUTTON_1, "mouse_click")
+input_handler.InputHandler.set_mouse_motion_action(None, "mouse_motion")
 input_handler.InputHandler.set_keyboard_action(input_handler.KEY_x, "brake")
 input_handler.InputHandler.set_keyboard_action(input_handler.KEY_z, "reverse")
 input_handler.InputHandler.set_keyboard_action(input_handler.KEY_LSHIFT, "drift")

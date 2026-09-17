@@ -15,6 +15,12 @@ from src.definitions.vehicles import VEHICLE_DEFS
 
 class PlayState(BaseState):
     def enter(self, **enter_params: Dict[str, Any]) -> None:
+        self.game_rule_strategy = enter_params.get("game_rule_strategy")
+        if self.game_rule_strategy is None:
+            # Fallback for testing if not provided
+            from src.game_rules.ArcadeStrategy import ArcadeStrategy
+            self.game_rule_strategy = ArcadeStrategy()
+            
         self.city_map = enter_params.get("city_map")
         if self.city_map is None:
             self.city_map = CityMap("city")
@@ -84,7 +90,9 @@ class PlayState(BaseState):
         self.camera.update(dt)
         self.radio.update(dt)
         
-        if self.taxi.health <= 0 and not getattr(self, "game_over_triggered", False):
+        self.game_rule_strategy.update(dt)
+        
+        if (self.taxi.health <= 0 or self.game_rule_strategy.game_over) and not getattr(self, "game_over_triggered", False):
             self.game_over_triggered = True
             from src.states.game.Gameplay.GameOverState import GameOverState
             self.state_machine.push(GameOverState(self.state_machine))
@@ -197,7 +205,12 @@ class PlayState(BaseState):
             distance = math.hypot(dx, dy)
             
             if distance <= 80 and abs(self.taxi.speed) < 5:
+                # Capture variables for closure
+                p = self.active_passenger
+                distance_traveled = math.hypot(dest_x - p.pickup_x, dest_y - p.pickup_y)
+                
                 def reach_destination():
+                    self.game_rule_strategy.on_passenger_delivered(distance_traveled)
                     self.active_passenger = None
                     
                     # Salir de vibe si estabamos ahi
@@ -230,6 +243,8 @@ class PlayState(BaseState):
                     genres = ["rock", "pop", "hiphop", "electronic", None]
                     p.preferred_genre = random.choice(genres)
                     p.satisfaction = 10.0
+                    p.pickup_x = p.x
+                    p.pickup_y = p.y
                     print(f"DEBUG: Pasajero nuevo activo. Genero preferido: {p.preferred_genre if p.preferred_genre else 'off'}")
                     break
 
@@ -310,6 +325,8 @@ class PlayState(BaseState):
                 (255, 50, 50),
                 center=True
             )
+            
+        self.game_rule_strategy.render_ui(surface, settings.FONTS["minecraft"], 20, 20)
         
     def _render_detection_circle(self, surface, x, y, radius, color):
         """Método auxiliar para renderizar los aros en el suelo con la cámara."""

@@ -92,7 +92,7 @@ class OpeningState(BaseState):
         self.state_machine.push(TitleScreenState(self.state_machine))
 
     def on_input(self, input_id: str, input_data: InputData) -> None:
-        if input_data.pressed:
+        if getattr(input_data, "pressed", False):
             self._finish()
 
     def exit(self) -> None:
