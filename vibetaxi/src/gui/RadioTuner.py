@@ -25,6 +25,7 @@ class Radio:
         self.pos_btn_less = (self.x + 421, self.y + 32)
         
         self.pos_marker_x, self.pos_marker_y = self.get_marker_x(self.ind_song), self.y + 24
+        self.knob_angle = self.get_knob_angle(self.ind_song)
         
         self.alpha = 0.0
         
@@ -77,7 +78,7 @@ class Radio:
         radio_surf.blit(settings.TEXTURES["radio"], (self.x, self.y))
         radio_surf.blit(settings.TEXTURES["marker"], (self.pos_marker_x, self.pos_marker_y))
         
-        angulo = self.get_knob_angle(self.ind_song)
+        angulo = self.knob_angle
         perilla_rotada = pygame.transform.rotate(settings.TEXTURES["button-radio"], angulo)
         rect_perilla = perilla_rotada.get_rect(center=self.pos_centro_perilla)
         radio_surf.blit(perilla_rotada, rect_perilla.topleft)
@@ -101,7 +102,10 @@ class Radio:
     def change_station(self):
         Timer.tween(
             0.15, 
-            [(self, {"pos_marker_x": self.get_marker_x(self.ind_song)})],
+            [(self, {
+                "pos_marker_x": self.get_marker_x(self.ind_song),
+                "knob_angle": self.get_knob_angle(self.ind_song)
+            })],
             on_finish=None
         )
         

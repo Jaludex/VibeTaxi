@@ -342,7 +342,7 @@ class PlayState(BaseState):
                 "Danger!",
                 settings.FONTS["big"],
                 settings.VIRTUAL_WIDTH // 2,
-                settings.VIRTUAL_HEIGHT // 4,
+                30,
                 self.danger_color,
                 center=True,
                 shadowed=True
