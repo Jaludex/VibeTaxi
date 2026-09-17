@@ -1,10 +1,11 @@
 from src.game_rules.BaseRuleStrategy import BaseRuleStrategy
 
 class WorkdayStrategy(BaseRuleStrategy):
-    def __init__(self, time_limit: float = 300.0):
+    def __init__(self, time_limit: float = 20.0, money: float = 0.0, day: int = 1):
         super().__init__()
         self.time_remaining = time_limit
-        self.money = 0.0
+        self.money = money
+        self.day = day
 
     def update(self, dt: float):
         if self.game_over:
@@ -16,8 +17,9 @@ class WorkdayStrategy(BaseRuleStrategy):
             self.game_over = True
 
     def on_passenger_delivered(self, distance: float):
-        # Ganancia base + bono por distancia
-        earned = 10.0 + (distance / 100.0)
+        # Ganancia base decae segun el dia
+        base_gain = max(2.0, 10.0 - (self.day - 1) * 1.5)
+        earned = base_gain + (distance / 100.0)
         self.money += earned
 
     def render_ui(self, surface, font, x, y):

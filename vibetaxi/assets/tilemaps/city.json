@@ -5485,12 +5485,12 @@
                  "type":"",
                  "visible":true,
                  "width":16,
-                 "x":1070.92424242424,
-                 "y":689.128787878788
+                 "x":1088.42424242424,
+                 "y":654.628787878788
                 }],
          "opacity":1,
          "type":"objectgroup",
-         "visible":false,
+         "visible":true,
          "x":0,
          "y":0
         }, 
@@ -6689,7 +6689,7 @@
                 }],
          "opacity":1,
          "type":"objectgroup",
-         "visible":false,
+         "visible":true,
          "x":0,
          "y":0
         }, 

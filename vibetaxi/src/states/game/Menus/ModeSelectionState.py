@@ -34,8 +34,8 @@ class ModeSelectionState(BaseState):
             window_x + 60,
             self.panel_y + 75,
             100, 30,
-            "Jornada",
-            on_click=lambda: self.select_mode("jornada")
+            "Workday",
+            on_click=lambda: self.select_mode("workday")
         )
         
         self.btn_arcade = Button(
@@ -124,7 +124,7 @@ class ModeSelectionState(BaseState):
         self.state_machine.pop() # Pops ModeSelectionState
         self.state_machine.pop() # Pops TitleScreenState
         
-        if self.selected_mode == "jornada":
+        if self.selected_mode == "workday":
             strategy = WorkdayStrategy()
         else:
             strategy = ArcadeStrategy()

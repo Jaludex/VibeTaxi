@@ -120,8 +120,10 @@ SOUNDS = {
     "engine2": pygame.mixer.Sound(BASE_DIR / "assets" / "sounds" / "car_sounds" / "engine2.wav"),
     "into_vibe": pygame.mixer.Sound(BASE_DIR / "assets" / "sounds" / "misc" / "into_vibe.wav"),
     "out_vibe": pygame.mixer.Sound(BASE_DIR / "assets" / "sounds" / "misc" / "out_vibe.wav"),
+    "win": pygame.mixer.Sound(BASE_DIR / "assets" / "sounds" / "misc" / "victory.wav"),
 }
 
 MUSIC = {
     "menu": str(BASE_DIR / "assets" / "music" / "menu.ogg"),
 }
+REPAIR_COST = 70.0

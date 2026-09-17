@@ -31,6 +31,10 @@ class PlayState(BaseState):
         if self.taxi is None:
             spawn_x, spawn_y = self.city_map.get_taxi_spawn_position()
             self.taxi = Taxi(spawn_x, spawn_y, VEHICLE_DEFS["yellow_taxi"])
+            
+        taxi_health = enter_params.get("taxi_health")
+        if taxi_health is not None:
+            self.taxi.health = taxi_health
 
         self.taxi.tilemap = self.city_map.tilemap
         self.taxi.city_map = self.city_map
@@ -104,8 +108,21 @@ class PlayState(BaseState):
         
         if (self.taxi.health <= 0 or self.game_rule_strategy.game_over) and not getattr(self, "game_over_triggered", False):
             self.game_over_triggered = True
-            from src.states.game.Gameplay.GameOverState import GameOverState
-            self.state_machine.push(GameOverState(self.state_machine))
+            
+            from src.game_rules.WorkdayStrategy import WorkdayStrategy
+            if self.taxi.health > 0 and isinstance(self.game_rule_strategy, WorkdayStrategy):
+                # End of day
+                from src.states.game.Gameplay.EndOfDayState import EndOfDayState
+                self.state_machine.push(EndOfDayState(
+                    self.state_machine,
+                    money=self.game_rule_strategy.money,
+                    health=self.taxi.health,
+                    max_health=self.taxi.max_health,
+                    day=self.game_rule_strategy.day
+                ))
+            else:
+                from src.states.game.Gameplay.GameOverState import GameOverState
+                self.state_machine.push(GameOverState(self.state_machine))
             return
         
         self.arrow_time = getattr(self, 'arrow_time', 0.0) + dt
@@ -351,7 +368,6 @@ class PlayState(BaseState):
         self.game_rule_strategy.render_ui(surface, settings.FONTS["minecraft"], 20, 20)
         
     def _render_detection_circle(self, surface, x, y, radius, color):
-        """Método auxiliar para renderizar los aros en el suelo con la cámara."""
         if self.camera:
             rect = self.camera.apply(pygame.Rect(x, y, 0, 0))
             px, py = rect.x, rect.y

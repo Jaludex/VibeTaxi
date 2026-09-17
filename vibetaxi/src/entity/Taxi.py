@@ -12,8 +12,8 @@ class Taxi(Car):
     def __init__(self, x, y, definition):
         super().__init__(x, y, definition) 
 
-        self.max_health = 100
-        self.health = 100
+        self.max_health = 140
+        self.health = 140
         self.is_accelerating = False
         self.is_crashed = False
 
