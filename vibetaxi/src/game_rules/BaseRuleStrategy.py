@@ -29,10 +29,10 @@ class BaseRuleStrategy:
         
         render_text(
             surface, "TIME", settings.FONTS["minecraft"],
-            x + 40, y + 7, led_color, center=True
+            x + 40, y + 7, (170, 170, 170), center=True
         )
         
         render_text(
             surface, time_str, settings.FONTS["led"],
-            x + 40, y + 20, led_color, center=True
+            x + 40, y + 17, led_color, center=True
         )

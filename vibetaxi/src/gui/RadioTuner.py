@@ -15,8 +15,6 @@ class Radio:
         self.stations = RADIO_STATIONS
         self.songs = [station["name"] for station in self.stations]
         self.ind_song = 0
-        self.angulo_perilla = [90, 45, 0, -45, -90]
-        self.pos_marker_list = [self.x + 80, self.x + 100, self.x + 125, self.x + 175, self.x + 325]
         
         self.estado_plus = 0  # 0 = Normal, 1 = Presionado
         self.estado_less = 0 
@@ -25,7 +23,8 @@ class Radio:
         self.pos_centro_perilla = (self.x + 36, self.y + 31) 
         self.pos_btn_plus = (self.x + 422, self.y + 7)
         self.pos_btn_less = (self.x + 421, self.y + 32)
-        self.pos_marker_x, self.pos_marker_y = self.pos_marker_list[0], self.y + 24
+        
+        self.pos_marker_x, self.pos_marker_y = self.get_marker_x(self.ind_song), self.y + 24
         
         self.alpha = 0.0
         
@@ -42,6 +41,18 @@ class Radio:
         self.command_bindings.bind("vol-down", press=commands.RADIO_VOL_DOWN)
         self.command_bindings.bind("next-song", press=commands.RADIO_NEXT_STATION)
         self.command_bindings.bind("prev-song", press=commands.RADIO_PREV_STATION)
+        
+    def get_marker_x(self, index: int) -> float:
+        origin_x = self.x + 80
+        width = 302
+        if len(self.stations) <= 1:
+            return origin_x
+        return origin_x + (index / (len(self.stations) - 1)) * width
+
+    def get_knob_angle(self, index: int) -> float:
+        if len(self.stations) <= 1:
+            return 90
+        return 90 - (index / (len(self.stations) - 1)) * 180
 
     def update(self, dt: float):
         pass
@@ -61,7 +72,7 @@ class Radio:
         radio_surf.blit(settings.TEXTURES["radio"], (self.x, self.y))
         radio_surf.blit(settings.TEXTURES["marker"], (self.pos_marker_x, self.pos_marker_y))
         
-        angulo = self.angulo_perilla[self.ind_song]
+        angulo = self.get_knob_angle(self.ind_song)
         perilla_rotada = pygame.transform.rotate(settings.TEXTURES["button-radio"], angulo)
         rect_perilla = perilla_rotada.get_rect(center=self.pos_centro_perilla)
         radio_surf.blit(perilla_rotada, rect_perilla.topleft)
@@ -85,7 +96,7 @@ class Radio:
     def change_station(self):
         Timer.tween(
             0.15, 
-            [(self, {"pos_marker_x": self.pos_marker_list[self.ind_song]})],
+            [(self, {"pos_marker_x": self.get_marker_x(self.ind_song)})],
             on_finish=None
         )
         
