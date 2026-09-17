@@ -96,6 +96,16 @@ class PlayState(BaseState):
         self.camera.update(dt)
         self.radio.update(dt)
         
+        if getattr(self, "_click_emitter", None) and getattr(self._click_emitter, "_is_emitting", False):
+            import pygame
+            from src.mouse_tools import physical_to_virtual
+            px, py = pygame.mouse.get_pos()
+            vx, vy = physical_to_virtual(px, py)
+            if self.camera:
+                world_x, world_y = self.camera.screen_to_world((vx, vy))
+                self._click_emitter.x = world_x
+                self._click_emitter.y = world_y
+        
         if self.soundscape_channel:
             if self.radio.ind_song == 0:
                 self.soundscape_channel.set_volume(0.5)
@@ -209,9 +219,8 @@ class PlayState(BaseState):
         self.city_map.render_traffic(surface, self.camera)
         self.taxi.render(surface, self.camera)
         for emitter in self.city_map.particle_emitters:
-            if not getattr(emitter, "is_ground", False):
+            if not getattr(emitter, "is_ground", False) and not getattr(emitter, "is_ui", False):
                 emitter.render(surface, self.camera)
-
 
         self.city_map.render_layers(surface, self.camera, settings.TILED_UPPER_NO_SHADOW_LAYERS)
         self.city_map.render_layers(surface, self.camera, settings.TILED_UPPER_SHADOW_LAYERS)
@@ -240,6 +249,10 @@ class PlayState(BaseState):
             dest_x, dest_y = self.city_map.nodes[self.active_passenger.destination]
             self._render_arrow(surface, dest_x, dest_y)
             
+        for emitter in self.city_map.particle_emitters:
+            if getattr(emitter, "is_ui", False):
+                emitter.render(surface, self.camera)
+                
         if getattr(self.taxi, 'is_crashed', False):
             from gale.text import render_text
             render_text(
@@ -306,6 +319,25 @@ class PlayState(BaseState):
     def on_input(self, input_id: str, input_data: InputData) -> None:
         self.radio.on_input(input_id, input_data)
         self.taxi.on_input(input_id, input_data)
+
+        if input_id == "mouse_click":
+            import pygame
+            from src.mouse_tools import physical_to_virtual
+            from src.ParticleEmitter import ParticleEmitter
+            if input_data.pressed:
+                px, py = pygame.mouse.get_pos()
+                vx, vy = physical_to_virtual(px, py)
+                world_x, world_y = self.camera.screen_to_world((vx, vy))
+                
+                if getattr(self, "_click_emitter", None) is not None:
+                    self._click_emitter.stop()
+                    
+                self._click_emitter = ParticleEmitter.create_mouse_click(world_x, world_y)
+                self.city_map.particle_emitters.append(self._click_emitter)
+            else:
+                if getattr(self, "_click_emitter", None) is not None:
+                    self._click_emitter.stop()
+                    self._click_emitter = None
 
     def exit(self) -> None:
         self.exited = True

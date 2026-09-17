@@ -205,4 +205,26 @@ class ParticleEmitter:
             is_ground=True,
         )
 
-
+    @classmethod
+    def create_mouse_click(cls, x: float, y: float) -> "ParticleEmitter":
+        """Generates particles at the mouse click location."""
+        colors = [
+            (255, 255, 255, 255),
+            (200, 200, 255, 255),
+        ]
+        emitter = cls(
+            x,
+            y,
+            colors=colors,
+            emission_duration=9999.0,
+            emission_interval=0.08,
+            particles_per_burst=3,
+            single_burst_count=3,
+            lifetime_min=0.2,
+            lifetime_max=0.4,
+            accel=2.0,
+            spread=3.0,
+            particle_size=3,
+        )
+        emitter.is_ui = True
+        return emitter
