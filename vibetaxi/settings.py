@@ -132,4 +132,4 @@ SOUNDS = {
 MUSIC = {
     "menu": str(BASE_DIR / "assets" / "music" / "menu.ogg"),
 }
-REPAIR_COST = 70.0
+REPAIR_COST = 40.0
