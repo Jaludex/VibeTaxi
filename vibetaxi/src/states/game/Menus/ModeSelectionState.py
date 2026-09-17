@@ -19,7 +19,7 @@ class ModeSelectionState(BaseState):
         self.fade_alpha = 0.0
         
         window_width = 340
-        window_height = 240
+        window_height = 120
         window_x = settings.VIRTUAL_WIDTH / 2 - window_width / 2
         
         self.panel_y = settings.VIRTUAL_HEIGHT + 100
@@ -32,7 +32,7 @@ class ModeSelectionState(BaseState):
         # We will manually calculate widget positions relative to the window
         self.btn_jornada = Button(
             window_x + 60,
-            self.panel_y + 180,
+            self.panel_y + 75,
             100, 30,
             "Jornada",
             on_click=lambda: self.select_mode("jornada")
@@ -40,7 +40,7 @@ class ModeSelectionState(BaseState):
         
         self.btn_arcade = Button(
             window_x + 180,
-            self.panel_y + 180,
+            self.panel_y + 75,
             100, 30,
             "Arcade",
             on_click=lambda: self.select_mode("arcade")
@@ -48,8 +48,8 @@ class ModeSelectionState(BaseState):
         
         self.desc_label = Label(
             settings.VIRTUAL_WIDTH / 2,
-            self.panel_y + 145,
-            "Elige un modo de juego.",
+            self.panel_y + 45,
+            "Choose a game mode",
             center=True
         )
         
@@ -57,7 +57,7 @@ class ModeSelectionState(BaseState):
             window_x, 
             self.panel_y, 
             window_width, window_height,
-            title="Selecciona un Modo",
+            title="Please select a mode",
             on_close=self.on_close_click,
             children=[self.btn_jornada, self.btn_arcade, self.desc_label]
         )
@@ -81,8 +81,7 @@ class ModeSelectionState(BaseState):
         self._last_panel_y = self.panel_y
         self.is_exiting = False
         
-        Timer.tween(1.0, [(self, {"fade_alpha": 180.0})])
-        Timer.tween(1.0, [(self, {"panel_y": self.target_y})])
+        Timer.tween(1.0, [(self, {"fade_alpha": 180.0, "panel_y": self.target_y})], ease_function_name="out_cubic")
         
     def _offset_widget(self, w, dy):
         w.y += dy
@@ -101,7 +100,7 @@ class ModeSelectionState(BaseState):
         if self.is_exiting: return
         self.selected_mode = mode
         self.is_exiting = True
-        Timer.tween(0.8, [(self, {"fade_alpha": 255.0})], on_finish=self.start_game)
+        Timer.tween(0.8, [(self, {"fade_alpha": 255.0})], ease_function_name="in_cubic", on_finish=self.start_game)
             
     def on_close_click(self):
         if self.is_exiting: return
@@ -113,7 +112,7 @@ class ModeSelectionState(BaseState):
         Timer.tween(0.8, [
             (self, {"fade_alpha": 0.0}),
             (self, {"panel_y": settings.VIRTUAL_HEIGHT + 100})
-        ], on_finish=self.return_to_title)
+        ], ease_function_name="in_cubic", on_finish=self.return_to_title)
         
     def return_to_title(self):
         self.state_machine.pop() # Pop ModeSelectionState
@@ -138,11 +137,11 @@ class ModeSelectionState(BaseState):
         
         # Update description text based on hover
         if self.btn_jornada.hovered:
-            self.desc_label.set_text("Gana dinero para reparar tu auto.")
+            self.desc_label.set_text("Win money with each trip. Use it to repare your car")
         elif self.btn_arcade.hovered:
-            self.desc_label.set_text("Gana tiempo con cada entrega.")
+            self.desc_label.set_text("Win as many trips as you can before time runs out")
         else:
-            self.desc_label.set_text("Elige un modo de juego.")
+            self.desc_label.set_text("Choose a game mode.")
 
     def on_input(self, input_id, input_data):
         self.ui.on_input(input_id, input_data)
@@ -154,11 +153,6 @@ class ModeSelectionState(BaseState):
             surface.blit(fade_surf, (0, 0))
             
         self.ui.render(surface)
-        
-        # Placeholder for image
-        img_rect_y = self.panel_y + 40
-        img_rect_x = settings.VIRTUAL_WIDTH / 2 - 100
-        pygame.draw.rect(surface, (50, 50, 60), (img_rect_x, img_rect_y, 200, 90))
         
         # Exit fade (to black, used for start_game)
         if self.fade_alpha > 180.0 and self.selected_mode and self.is_exiting and self.target_y == self.panel_y:

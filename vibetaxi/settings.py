@@ -84,6 +84,7 @@ TEXTURES = {
     "peds": pygame.image.load(BASE_DIR / "assets" / "graphics" / "peds.png"),
     "arrow": pygame.image.load(BASE_DIR / "assets" / "graphics" / "arrow.png"),
     "title_gradient": pygame.image.load(BASE_DIR / "assets" / "graphics" / "title_gradient.png"),
+    "taximeter": pygame.image.load(BASE_DIR / "assets" / "graphics" / "taximeter.png")
 }
 
 TILEMAPS = {
@@ -100,7 +101,9 @@ FRAMES = {
 
 FONTS = {
     "big": pygame.font.Font(BASE_DIR / "assets" / "fonts" / "Big.ttf", 32),
-    "minecraft": pygame.font.Font(BASE_DIR/ "assets" / "fonts" / "Minecraft.ttf", 8)
+    "minecraft": pygame.font.Font(BASE_DIR/ "assets" / "fonts" / "Minecraft.ttf", 8),
+    "led": pygame.font.Font(BASE_DIR / "assets" / "fonts" / "led.ttf", 16),
+    "led_small": pygame.font.Font(BASE_DIR / "assets" / "fonts" / "led.ttf", 8)
 }
 
 SOUNDS = {

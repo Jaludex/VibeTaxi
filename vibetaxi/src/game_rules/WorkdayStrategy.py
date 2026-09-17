@@ -22,11 +22,8 @@ class WorkdayStrategy(BaseRuleStrategy):
 
     def render_ui(self, surface, font, x, y):
         from gale.text import render_text
-        import settings
         
-        minutes = int(self.time_remaining) // 60
-        seconds = int(self.time_remaining) % 60
-        time_str = f"Time: {minutes:02d}:{seconds:02d}"
+        # Render common taximeter
+        self._render_taximeter(surface, x, y)
         
-        render_text(surface, time_str, font, x, y, (255, 255, 255), shadowed=True)
-        render_text(surface, f"Money: ${self.money:.2f}", font, x, y + 25, (100, 255, 100), shadowed=True)
+        render_text(surface, f"Money: ${self.money:.2f}", font, x, y + 35, (100, 255, 100), shadowed=True)
