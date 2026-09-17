@@ -161,14 +161,5 @@ class Taxi(Car):
             self.engine_channels = {}
 
     def on_input(self, input_id: str, input_data: Any) -> None:
-        if input_id == "toggle_vibe" and input_data.pressed:
-            if isinstance(self.state_machine.current, TaxiVibeState):
-                self.state_machine.change('idle') 
-                print("Exit Vibe")
-                
-            else:
-                self.state_machine.change('vibe')
-                print("Enter Vibe")
-
         if not self.is_crashed:
             self.command_bindings.dispatch(self, input_id, input_data)

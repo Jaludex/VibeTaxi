@@ -152,6 +152,21 @@ class PlayState(BaseState):
             self.taxi.is_accelerating = False
 
         if self.active_passenger.is_riding():
+            # Actualizar satisfacción
+            current_genre = self.radio.get_current_genre()
+            if current_genre == self.active_passenger.preferred_genre:
+                self.active_passenger.satisfaction = min(100.0, self.active_passenger.satisfaction + 20.0 * dt)
+            else:
+                self.active_passenger.satisfaction = max(0.0, self.active_passenger.satisfaction - 15.0 * dt)
+                
+            from src.states.entity.TaxiVibeState import TaxiVibeState
+            if self.active_passenger.satisfaction >= 100.0:
+                if not isinstance(self.taxi.state_machine.current, TaxiVibeState):
+                    self.taxi.state_machine.change("vibe")
+            else:
+                if isinstance(self.taxi.state_machine.current, TaxiVibeState):
+                    self.taxi.state_machine.change("drive")
+
             dest_x, dest_y = self.city_map.nodes[self.active_passenger.destination]
             dx = self.taxi.x - dest_x
             dy = self.taxi.y - dest_y
@@ -160,6 +175,11 @@ class PlayState(BaseState):
             if distance <= 80 and abs(self.taxi.speed) < 5:
                 def reach_destination():
                     self.active_passenger = None
+                    
+                    # Salir de vibe si estabamos ahi
+                    from src.states.entity.TaxiVibeState import TaxiVibeState
+                    if isinstance(self.taxi.state_machine.current, TaxiVibeState):
+                        self.taxi.state_machine.change("drive")
 
                 self.active_passenger.state_machine.change(
                     "walk", 
@@ -181,6 +201,12 @@ class PlayState(BaseState):
                     p.state_machine.change("walk", target=self.taxi, on_arrival=reach_taxi)
                     self.active_passenger = p
                     self.map_passengers.remove(p)
+                    
+                    import random
+                    genres = ["rock", "pop", "hiphop", "electronic", None]
+                    p.preferred_genre = random.choice(genres)
+                    p.satisfaction = 10.0
+                    print(f"DEBUG: Pasajero nuevo activo. Genero preferido: {p.preferred_genre if p.preferred_genre else 'off'}")
                     break
 
     def render(self, surface):

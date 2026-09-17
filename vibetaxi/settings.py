@@ -19,7 +19,7 @@ input_handler.InputHandler.set_keyboard_action(input_handler.KEY_w, "vol-up")
 input_handler.InputHandler.set_keyboard_action(input_handler.KEY_s, "vol-down")
 
 #DEBUG
-input_handler.InputHandler.set_keyboard_action(input_handler.KEY_TAB, "toggle_vibe")
+
 
 RADIO_FADEOUT_TIME = 2.0
 
