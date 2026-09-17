@@ -27,53 +27,35 @@ class NewRecordState(BaseState):
         
         panel_width = 240
         panel_height = 160
+        from src.themes import BUTTON_THEME, LABEL_GOLD_THEME, LABEL_THEME, INPUT_THEME, PANEL_THEME
         self.panel = Panel(
             settings.VIRTUAL_WIDTH / 2 - panel_width / 2, 
             self.panel_y, 
-            panel_width, panel_height
+            panel_width, panel_height,
+            theme=PANEL_THEME
         )
         
-        lbl_theme = Theme(font=settings.FONTS["minecraft"], text_color=pygame.Color(255, 255, 50))
         self.label_title = Label(
             settings.VIRTUAL_WIDTH / 2, 
             self.panel_y + 20, 
             "New Record!", 
-            theme=lbl_theme,
+            theme=LABEL_GOLD_THEME,
             center=True
         )
         
-        lbl_score_theme = Theme(font=settings.FONTS["minecraft"], text_color=pygame.Color(255, 255, 255))
         self.label_score = Label(
             settings.VIRTUAL_WIDTH / 2, 
             self.panel_y + 50, 
             f"Score: {self.score}", 
-            theme=lbl_score_theme,
+            theme=LABEL_THEME,
             center=True
         )
         
-        input_theme = Theme(
-            font=settings.FONTS["minecraft"],
-            background_color=pygame.Color(40, 20, 30),
-            focus_color=pygame.Color(255, 200, 50),
-            text_color=pygame.Color(255, 255, 255),
-            border_color=pygame.Color(150, 150, 150),
-            border_width=2,
-            padding=5
-        )
         self.text_input = TextInput(
             settings.VIRTUAL_WIDTH / 2 - 80, self.panel_y + 80,
             160, 25,
             max_length=10,
-            theme=input_theme
-        )
-        
-        btn_theme = Theme(
-            font=settings.FONTS["minecraft"],
-            background_color=pygame.Color(100, 60, 90),
-            hover_color=pygame.Color(150, 90, 120),
-            text_color=pygame.Color(255, 255, 255),
-            border_color=pygame.Color(255, 255, 255),
-            border_width=1
+            theme=INPUT_THEME
         )
         
         self.btn_submit = Button(
@@ -81,7 +63,7 @@ class NewRecordState(BaseState):
             80, 25,
             "Save",
             on_click=self.on_submit_click,
-            theme=btn_theme
+            theme=BUTTON_THEME
         )
         
         self.container = Container(0, 0, settings.VIRTUAL_WIDTH, settings.VIRTUAL_HEIGHT, children=[

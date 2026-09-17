@@ -67,27 +67,10 @@ class TitleScreenState(BaseState):
     def _setup_ui(self):
         from gale.ui.manager import UIManager
         from gale.ui.button import Button
-        from gale.ui.theme import Theme
         from gale.ui.container import Container
+        from src.themes import BUTTON_THEME, DISABLED_BUTTON_THEME
 
         container = Container(0, 0, settings.VIRTUAL_WIDTH, settings.VIRTUAL_HEIGHT)
-        
-        btn_theme = Theme(
-            font=settings.FONTS["minecraft"],
-            background_color=pygame.Color(100, 60, 90),
-            hover_color=pygame.Color(150, 90, 120),
-            text_color=pygame.Color(255, 255, 255),
-            border_color=pygame.Color(255, 255, 255),
-            border_width=1
-        )
-        disabled_theme = Theme(
-            font=settings.FONTS["minecraft"],
-            background_color=pygame.Color(60, 40, 50),
-            hover_color=pygame.Color(60, 40, 50),
-            text_color=pygame.Color(150, 150, 150),
-            border_color=pygame.Color(150, 150, 150),
-            border_width=1
-        )
 
         center_y = settings.VIRTUAL_HEIGHT / 2 + 30
         
@@ -96,7 +79,7 @@ class TitleScreenState(BaseState):
             150, 30,
             "New Game",
             on_click=self._on_new_game,
-            theme=btn_theme
+            theme=BUTTON_THEME
         )
         container.add_child(btn_new_game)
         
@@ -109,7 +92,7 @@ class TitleScreenState(BaseState):
                 150, 30,
                 f"Resume Work. Day: {day}",
                 on_click=self._on_resume,
-                theme=btn_theme
+                theme=BUTTON_THEME
             )
         else:
             btn_resume = Button(
@@ -117,7 +100,7 @@ class TitleScreenState(BaseState):
                 150, 30,
                 "Resume Work",
                 on_click=lambda: None,
-                theme=disabled_theme
+                theme=DISABLED_BUTTON_THEME
             )
             btn_resume.enabled = False
         
@@ -133,7 +116,7 @@ class TitleScreenState(BaseState):
                     100, 30,
                     "Records",
                     on_click=self._on_records,
-                    theme=btn_theme
+                    theme=BUTTON_THEME
                 )
                 container.add_child(btn_records)
         

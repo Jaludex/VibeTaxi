@@ -21,28 +21,20 @@ class PauseState(BaseState):
         
         panel_width = 200
         panel_height = 120
+        from src.themes import BUTTON_THEME, LABEL_THEME, PANEL_THEME
         self.panel = Panel(
             settings.VIRTUAL_WIDTH / 2 - panel_width / 2, 
             self.panel_y, 
-            panel_width, panel_height
+            panel_width, panel_height,
+            theme=PANEL_THEME
         )
         
-        lbl_theme = Theme(font=settings.FONTS["minecraft"], text_color=pygame.Color(255, 255, 255))
         self.label_title = Label(
             settings.VIRTUAL_WIDTH / 2, 
             self.panel_y + 20, 
             "Paused", 
-            theme=lbl_theme,
+            theme=LABEL_THEME,
             center=True
-        )
-        
-        btn_theme = Theme(
-            font=settings.FONTS["minecraft"],
-            background_color=pygame.Color(100, 60, 90),
-            hover_color=pygame.Color(150, 90, 120),
-            text_color=pygame.Color(255, 255, 255),
-            border_color=pygame.Color(255, 255, 255),
-            border_width=1
         )
         
         self.btn_resume = Button(
@@ -50,7 +42,7 @@ class PauseState(BaseState):
             120, 25,
             "Continue",
             on_click=self.on_resume_click,
-            theme=btn_theme
+            theme=BUTTON_THEME
         )
         
         self.btn_exit = Button(
@@ -58,7 +50,7 @@ class PauseState(BaseState):
             120, 25,
             "Exit",
             on_click=self.on_exit_click,
-            theme=btn_theme
+            theme=BUTTON_THEME
         )
         
         self.container = Container(0, 0, settings.VIRTUAL_WIDTH, settings.VIRTUAL_HEIGHT, children=[

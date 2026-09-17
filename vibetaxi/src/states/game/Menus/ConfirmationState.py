@@ -21,24 +21,20 @@ class ConfirmationState(BaseState):
         self.on_confirm_callback = on_confirm
         self.on_cancel_callback = on_cancel
         
+        from src.themes import BUTTON_THEME, PANEL_THEME, LABEL_THEME
         self.panel = Panel(
             settings.VIRTUAL_WIDTH / 2 - 150, 
             self.panel_y, 
-            300, 100
+            300, 100,
+            theme=PANEL_THEME
         )
         
         self.label_msg = Label(
             settings.VIRTUAL_WIDTH / 2, 
             self.panel_y + 30, 
             message, 
+            theme=LABEL_THEME,
             center=True
-        )
-        
-        from gale.ui.theme import Theme
-        btn_theme = Theme(
-            font=settings.FONTS["minecraft"],
-            background_color=pygame.Color(69, 40, 60),
-            border_color=pygame.Color(255, 255, 255)
         )
         
         self.btn_yes = Button(
@@ -47,7 +43,7 @@ class ConfirmationState(BaseState):
             100, 25, 
             "Yes", 
             on_click=self._on_yes,
-            theme=btn_theme
+            theme=BUTTON_THEME
         )
         
         self.btn_no = Button(
@@ -56,7 +52,7 @@ class ConfirmationState(BaseState):
             100, 25, 
             "No", 
             on_click=self._on_no,
-            theme=btn_theme
+            theme=BUTTON_THEME
         )
         
         self.container = Container(0, 0, settings.VIRTUAL_WIDTH, settings.VIRTUAL_HEIGHT, children=[

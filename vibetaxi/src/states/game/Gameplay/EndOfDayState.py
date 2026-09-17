@@ -48,13 +48,8 @@ class EndOfDayState(BaseState):
             return pygame.Color(0, 255, 0)
 
     def _setup_ui(self):
+        from src.themes import BUTTON_THEME, LABEL_THEME, LABEL_GREEN_THEME, PANEL_THEME
         container = Container(0, 0, settings.VIRTUAL_WIDTH, settings.VIRTUAL_HEIGHT)
-        
-        panel_theme = Theme(
-            background_color=pygame.Color(69, 40, 60),
-            border_color=pygame.Color(255, 255, 255),
-            border_width=2
-        )
         
         panel_width = 300
         panel_height = 160
@@ -63,40 +58,29 @@ class EndOfDayState(BaseState):
             (settings.VIRTUAL_HEIGHT - panel_height) // 2,
             panel_width,
             panel_height,
-            theme=panel_theme
+            theme=PANEL_THEME
         )
         container.add_child(panel)
 
         # Labels
-        lbl_theme = Theme(font=settings.FONTS["minecraft"], text_color=pygame.Color(255, 255, 255))
-        day_label = Label(0, 10, f"End of Day {self.day}", theme=lbl_theme)
+        day_label = Label(0, 10, f"End of Day {self.day}", theme=LABEL_THEME)
         day_label.x = panel.x + (panel.width - day_label.width) // 2
         day_label.y = panel.y + 10
         container.add_child(day_label)
 
-        money_theme = Theme(font=settings.FONTS["minecraft"], text_color=pygame.Color(100, 255, 100))
-        self.money_label = Label(0, 30, f"Money Left: ${self.money:.2f}", theme=money_theme)
+        self.money_label = Label(0, 30, f"Money Left: ${self.money:.2f}", theme=LABEL_GREEN_THEME)
         self.money_label.x = panel.x + (panel.width - self.money_label.width) // 2
         self.money_label.y = panel.y + 30
         container.add_child(self.money_label)
 
         # Left side: Repair button
-        repair_theme = Theme(
-            font=settings.FONTS["minecraft"],
-            background_color=pygame.Color(100, 60, 90),
-            hover_color=pygame.Color(150, 90, 120),
-            text_color=pygame.Color(255, 255, 255),
-            border_color=pygame.Color(255, 255, 255),
-            border_width=1
-        )
-        
         self.repair_button = Button(
             panel.x + 20,
             panel.y + 65,
             110, 30,
             f"Repair - ${settings.REPAIR_COST}",
             on_click=self._on_repair,
-            theme=repair_theme
+            theme=BUTTON_THEME
         )
         container.add_child(self.repair_button)
         self._update_repair_button()
@@ -118,7 +102,8 @@ class EndOfDayState(BaseState):
             background_color=pygame.Color(50, 50, 50),
             accent_color=self._get_health_color(self.health, self.max_health),
             border_color=pygame.Color(255, 255, 255),
-            border_width=1
+            border_width=1,
+            focus_color=pygame.Color(150, 90, 120)
         )
         self.health_bar = ProgressBar(
             self.taxi_x, self.taxi_y + taxi_h + 5,
@@ -135,21 +120,12 @@ class EndOfDayState(BaseState):
         total_btn_width = (btn_width * 3) + (btn_spacing * 2)
         start_x = panel.x + (panel.width - total_btn_width) // 2
         
-        btn_theme = Theme(
-            font=settings.FONTS["minecraft"],
-            background_color=pygame.Color(100, 60, 90),
-            hover_color=pygame.Color(150, 90, 120),
-            text_color=pygame.Color(255, 255, 255),
-            border_color=pygame.Color(255, 255, 255),
-            border_width=1
-        )
-        
         btn_exit = Button(
             start_x, panel.y + panel_height - 40,
             btn_width, 25,
             "Exit",
             on_click=self._on_exit,
-            theme=btn_theme
+            theme=BUTTON_THEME
         )
         container.add_child(btn_exit)
 
@@ -158,7 +134,7 @@ class EndOfDayState(BaseState):
             btn_width, 25,
             "Save & Exit",
             on_click=self._on_save_exit,
-            theme=btn_theme
+            theme=BUTTON_THEME
         )
         container.add_child(btn_save)
 
@@ -167,7 +143,7 @@ class EndOfDayState(BaseState):
             btn_width, 25,
             "Continue",
             on_click=self._on_continue,
-            theme=btn_theme
+            theme=BUTTON_THEME
         )
         container.add_child(btn_continue)
 

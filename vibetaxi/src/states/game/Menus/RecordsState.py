@@ -23,23 +23,15 @@ class RecordsState(BaseState):
         self._setup_ui()
         
     def _setup_ui(self):
+        from src.themes import BUTTON_THEME
         container = Container(0, 0, settings.VIRTUAL_WIDTH, settings.VIRTUAL_HEIGHT)
-        
-        btn_theme = Theme(
-            font=settings.FONTS["minecraft"],
-            background_color=pygame.Color(100, 60, 90),
-            hover_color=pygame.Color(150, 90, 120),
-            text_color=pygame.Color(255, 255, 255),
-            border_color=pygame.Color(255, 255, 255),
-            border_width=1
-        )
         
         btn_back = Button(
             settings.VIRTUAL_WIDTH / 2 - 50, settings.VIRTUAL_HEIGHT - 40,
             100, 25,
             "Back",
             on_click=self.on_back_click,
-            theme=btn_theme
+            theme=BUTTON_THEME
         )
         container.add_child(btn_back)
         
