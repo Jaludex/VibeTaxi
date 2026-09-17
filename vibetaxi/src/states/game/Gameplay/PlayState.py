@@ -12,6 +12,9 @@ from src.world.CityMap import CityMap
 from src.entity.Taxi import Taxi
 from src.gui.RadioTuner import Radio
 from src.definitions.vehicles import VEHICLE_DEFS
+from src.gui.PassengerHUD import PassengerHUD
+from gale.ui.manager import UIManager
+from gale.timer import Timer
 
 class PlayState(BaseState):
     def enter(self, **enter_params: Dict[str, Any]) -> None:
@@ -95,6 +98,15 @@ class PlayState(BaseState):
         self.day_text_alpha = 0.0
         self.start_text = self.game_rule_strategy.get_start_text()
         
+        self.passenger_hud = PassengerHUD()
+        self.ui = UIManager(
+            self.passenger_hud.container,
+            virtual_width=settings.VIRTUAL_WIDTH,
+            window_width=settings.WINDOW_WIDTH,
+            virtual_height=settings.VIRTUAL_HEIGHT,
+            window_height=settings.WINDOW_HEIGHT
+        )
+        
         def fade_out_text():
             Timer.tween(1.0, [(self, {"day_text_alpha": 0.0})])
             
@@ -117,8 +129,12 @@ class PlayState(BaseState):
             
         self.taxi.update(dt)
         self.city_map.update(dt, self.camera)
+        self.passenger_hud.update(dt)
+        self.ui.update(dt)
         self.camera.update(dt)
         self.radio.update(dt)
+        Timer.update(dt)
+        
         
         self.game_rule_strategy.update(dt)
         
@@ -228,22 +244,21 @@ class PlayState(BaseState):
             self.taxi.is_accelerating = False
 
         if self.active_passenger.is_riding():
-            # Update satisfaction
-            current_genre = self.radio.get_current_genre()
-            if current_genre == self.active_passenger.preferred_genre:
-                self.active_passenger.satisfaction = min(100.0, self.active_passenger.satisfaction + 20.0 * dt)
-            else:
-                self.active_passenger.satisfaction = max(0.0, self.active_passenger.satisfaction - 15.0 * dt)
+            
+            song_actual = self.radio.get_current_song()
+            self.active_passenger.update_comfort(dt, song_actual, self.passenger_hud)
                 
             from src.states.entity.TaxiVibeState import TaxiVibeState
             if not getattr(self.game_rule_strategy, "always_vibe", False):
-                if self.active_passenger.satisfaction >= 100.0:
+                if self.active_passenger.satisfaction >= 75.0:
                     if not isinstance(self.taxi.state_machine.current, TaxiVibeState):
                         self.taxi.state_machine.change("vibe")
                 else:
                     if isinstance(self.taxi.state_machine.current, TaxiVibeState):
                         self.taxi.state_machine.change("drive")
 
+
+            
             dest_x, dest_y = self.city_map.nodes[self.active_passenger.destination]
             dx = self.taxi.x - dest_x
             dy = self.taxi.y - dest_y
@@ -272,6 +287,7 @@ class PlayState(BaseState):
                     target=(dest_x, dest_y), 
                     on_arrival=reach_destination
                 )
+                self.passenger_hud.unbind_passenger()
 
     def update_city_passengers(self, dt: float):
         for p in self.map_passengers:
@@ -283,6 +299,7 @@ class PlayState(BaseState):
                 if distance <= settings.PASSENGER_DETECTION_RADIUS and abs(self.taxi.speed) < 5:
                     def reach_taxi():
                         p.state_machine.change("ride", taxi=self.taxi)
+                        self.passenger_hud.bind_passenger(p)
                     
                     if "honk" in settings.SOUNDS:
                         settings.SOUNDS["honk"].play()
@@ -358,6 +375,7 @@ class PlayState(BaseState):
             surface.blit(filter_surf, (0, 0))
 
         self.radio.render(surface)
+        self.ui.render(surface)
         
         if self.active_passenger and self.active_passenger.is_riding():
             dest_x, dest_y = self.city_map.nodes[self.active_passenger.destination]
