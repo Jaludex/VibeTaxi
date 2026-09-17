@@ -9,6 +9,14 @@ from src.states.game.Menus.OpeningState import OpeningState
 
 class VibeTaxi(Game):
     def init(self) -> None:
+        from gale.ui.theme import Theme, set_default_theme
+        import settings
+        set_default_theme(Theme(
+            font=settings.FONTS["minecraft"],
+            background_color=pygame.Color(69, 40, 60),
+            border_color=pygame.Color(255, 255, 255)
+        ))
+        
         self.state_stack = StateStack()
         self.state_stack.push(OpeningState(self.state_stack))
 
