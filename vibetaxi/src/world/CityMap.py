@@ -449,6 +449,8 @@ class CityMap:
         if len(node_names) < 2:
             print("Advertencia: Hay menos de 2 nodos cargados.")
             return []
+        
+        from src.definitions.passengers import PASSENGER_DEFS
 
         for name, (x, y) in self.nodes.items():
             if random.random() < spawn_chance:
@@ -458,7 +460,9 @@ class CityMap:
                 destination_pos = self.nodes[destination_name]
                 
                 ped_key = random.choice(list(PASSENGER_DEFS.keys()))
-                definition = PASSENGER_DEFS[ped_key]
+                definition = PASSENGER_DEFS[ped_key].copy()
+                
+                definition["music_preference"] = random.choice(settings.MUSIC_GENRES)
                 
                 passenger = Passenger(x, y, destination_name, destination_pos, definition)
                 spawned_passengers.append(passenger)
