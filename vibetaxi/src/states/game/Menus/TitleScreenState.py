@@ -156,8 +156,15 @@ class TitleScreenState(BaseState):
     def _on_records(self):
         if not getattr(self, "mode_selection_triggered", False):
             settings.SOUNDS["press"].play()
-            from src.states.game.Menus.RecordsState import RecordsState
-            self.state_machine.push(RecordsState(self.state_machine))
+
+            def proceed():
+                from src.states.game.Menus.RecordsState import RecordsState
+
+                self._cancel_pan_timers()
+                self.state_machine.pop()
+                self.state_machine.push(RecordsState(self.state_machine))
+
+            Timer.tween(0.8, [(self, {"fade_alpha": 255.0})], ease_function_name="in_cubic", on_finish=proceed)
 
     def _pick_random_position(self):
         """Pick a random node position far from the current camera."""

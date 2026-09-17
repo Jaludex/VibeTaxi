@@ -38,6 +38,7 @@ class PlayState(BaseState):
 
         self.taxi.tilemap = self.city_map.tilemap
         self.taxi.city_map = self.city_map
+        self.taxi.invincible = getattr(self.game_rule_strategy, "invincible", False)
         self.taxi.set_physics(
             self.city_map.physics_world,
             body_type=BodyType.DYNAMIC,
@@ -120,6 +121,15 @@ class PlayState(BaseState):
         self.radio.update(dt)
         
         self.game_rule_strategy.update(dt)
+        
+        if hasattr(self.game_rule_strategy, "should_respawn_passengers") and self.game_rule_strategy.should_respawn_passengers(len(self.map_passengers)):
+            new_passengers = self.city_map.generate_passengers(spawn_chance=0.3)
+            self.map_passengers.extend(new_passengers)
+            
+        if getattr(self.game_rule_strategy, "invincible", False):
+            from src.states.entity.TaxiVibeState import TaxiVibeState
+            if not isinstance(self.taxi.state_machine.current, TaxiVibeState) and self.taxi.health > 0:
+                self.taxi.state_machine.change("vibe")
         
         if (self.taxi.health <= 0 or self.game_rule_strategy.game_over) and not getattr(self, "game_over_triggered", False):
             self.game_over_triggered = True
@@ -226,12 +236,13 @@ class PlayState(BaseState):
                 self.active_passenger.satisfaction = max(0.0, self.active_passenger.satisfaction - 15.0 * dt)
                 
             from src.states.entity.TaxiVibeState import TaxiVibeState
-            if self.active_passenger.satisfaction >= 100.0:
-                if not isinstance(self.taxi.state_machine.current, TaxiVibeState):
-                    self.taxi.state_machine.change("vibe")
-            else:
-                if isinstance(self.taxi.state_machine.current, TaxiVibeState):
-                    self.taxi.state_machine.change("drive")
+            if not getattr(self.game_rule_strategy, "invincible", False):
+                if self.active_passenger.satisfaction >= 100.0:
+                    if not isinstance(self.taxi.state_machine.current, TaxiVibeState):
+                        self.taxi.state_machine.change("vibe")
+                else:
+                    if isinstance(self.taxi.state_machine.current, TaxiVibeState):
+                        self.taxi.state_machine.change("drive")
 
             dest_x, dest_y = self.city_map.nodes[self.active_passenger.destination]
             dx = self.taxi.x - dest_x
@@ -247,10 +258,11 @@ class PlayState(BaseState):
                     self.game_rule_strategy.on_passenger_delivered(p, distance_traveled)
                     self.active_passenger = None
                     
-                    # Exit vibe if we were in it
+                    # Exit vibe if we were in it, unless in Zen mode
                     from src.states.entity.TaxiVibeState import TaxiVibeState
-                    if isinstance(self.taxi.state_machine.current, TaxiVibeState):
-                        self.taxi.state_machine.change("drive")
+                    if not getattr(self.game_rule_strategy, "invincible", False):
+                        if isinstance(self.taxi.state_machine.current, TaxiVibeState):
+                            self.taxi.state_machine.change("drive")
 
                 if "money" in settings.SOUNDS:
                     settings.SOUNDS["money"].play()

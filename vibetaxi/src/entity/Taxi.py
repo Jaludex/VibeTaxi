@@ -36,6 +36,9 @@ class Taxi(Car):
         self.state_machine.change('idle')
 
     def damage(self, amount):
+        if getattr(self, "invincible", False):
+            return
+            
         if self.health > 0 and not self.is_crashed:
             from src.states.entity.TaxiVibeState import TaxiVibeState
             if isinstance(self.state_machine.current, TaxiVibeState):

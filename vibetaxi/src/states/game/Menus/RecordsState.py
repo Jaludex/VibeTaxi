@@ -10,6 +10,8 @@ from gale.ui.container import Container
 from gale.ui.button import Button
 from gale.ui.theme import Theme
 
+from src.states.game.Menus.TitleScreenState import TitleScreenState
+
 class RecordsState(BaseState):
     def __init__(self, state_machine: Any) -> None:
         super().__init__(state_machine)
@@ -53,6 +55,7 @@ class RecordsState(BaseState):
         
         def exit_to_title():
             self.state_machine.pop()
+            self.state_machine.push(TitleScreenState(self.state_machine))
             
         Timer.tween(0.5, [(self, {"fade_alpha": 255.0})], on_finish=exit_to_title)
 

@@ -85,7 +85,8 @@ VIBE_COLORS = {
     "pop": (255, 105, 180),
     "hiphop": (255, 200, 0),
     "electronic": (50, 255, 255),
-    "jazz": (50, 100, 255)
+    "jazz": (50, 100, 255),
+    "off": (150, 255, 150)
 }
 
 TRAFFIC_SPAWN_INTERVAL = 0.2

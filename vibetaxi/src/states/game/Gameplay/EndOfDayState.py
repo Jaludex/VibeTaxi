@@ -156,15 +156,12 @@ class EndOfDayState(BaseState):
         )
         
     def _update_repair_button(self):
+        from src.themes import BUTTON_THEME, DISABLED_BUTTON_THEME
         if self.health >= self.max_health or self.money < settings.REPAIR_COST:
-            self.repair_button.theme.background_color = (60, 40, 50)
-            self.repair_button.theme.hover_color = (60, 40, 50)
-            self.repair_button.theme.text_color = (150, 150, 150)
+            self.repair_button.theme = DISABLED_BUTTON_THEME
             self.repair_button.enabled = False
         else:
-            self.repair_button.theme.background_color = (100, 60, 90)
-            self.repair_button.theme.hover_color = (150, 90, 120)
-            self.repair_button.theme.text_color = (255, 255, 255)
+            self.repair_button.theme = BUTTON_THEME
             self.repair_button.enabled = True
 
     def _on_repair(self):

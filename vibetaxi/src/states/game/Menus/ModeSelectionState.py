@@ -12,13 +12,14 @@ from gale.ui.container import Container
 from src.states.game.Gameplay.PlayState import PlayState
 from src.game_rules.WorkdayStrategy import WorkdayStrategy
 from src.game_rules.ArcadeStrategy import ArcadeStrategy
+from src.game_rules.ZenStrategy import ZenStrategy
 
 class ModeSelectionState(BaseState):
     def __init__(self, state_machine: Any) -> None:
         super().__init__(state_machine)
         self.fade_alpha = 0.0
         
-        window_width = 340
+        window_width = 360
         window_height = 120
         window_x = settings.VIRTUAL_WIDTH / 2 - window_width / 2
         
@@ -31,19 +32,27 @@ class ModeSelectionState(BaseState):
         
         # We will manually calculate widget positions relative to the window
         self.btn_jornada = Button(
-            window_x + 60,
+            window_x + 20,
             self.panel_y + 75,
-            100, 30,
+            95, 30,
             "Workday",
             on_click=lambda: self.select_mode("workday")
         )
         
         self.btn_arcade = Button(
-            window_x + 180,
+            window_x + 132,
             self.panel_y + 75,
-            100, 30,
+            95, 30,
             "Arcade",
             on_click=lambda: self.select_mode("arcade")
+        )
+
+        self.btn_zen = Button(
+            window_x + 245,
+            self.panel_y + 75,
+            95, 30,
+            "Zen",
+            on_click=lambda: self.select_mode("zen")
         )
         
         self.desc_label = Label(
@@ -59,7 +68,7 @@ class ModeSelectionState(BaseState):
             window_width, window_height,
             title="Please select a mode",
             on_close=self.on_close_click,
-            children=[self.btn_jornada, self.btn_arcade, self.desc_label]
+            children=[self.btn_jornada, self.btn_arcade, self.btn_zen, self.desc_label]
         )
         
         self.container = Container(0, 0, settings.VIRTUAL_WIDTH, settings.VIRTUAL_HEIGHT, children=[self.window])
@@ -128,8 +137,10 @@ class ModeSelectionState(BaseState):
         
         if self.selected_mode == "workday":
             strategy = WorkdayStrategy()
-        else:
+        elif self.selected_mode == "arcade":
             strategy = ArcadeStrategy()
+        else:
+            strategy = ZenStrategy()
             
         self.state_machine.push(PlayState(self.state_machine), game_rule_strategy=strategy)
 
@@ -142,6 +153,8 @@ class ModeSelectionState(BaseState):
             self.desc_label.set_text("Win money with each trip. Use it to repare your car")
         elif self.btn_arcade.hovered:
             self.desc_label.set_text("Win as many trips as you can before time runs out")
+        elif self.btn_zen.hovered:
+            self.desc_label.set_text("No damage, no limits. Just chill and drive.")
         else:
             self.desc_label.set_text("Choose a game mode.")
 

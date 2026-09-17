@@ -4,6 +4,7 @@ import settings
 RADIO_STATIONS = [
     {
         "name": "off",
+        "genre": "off",
         "songs": []
     },
     {
