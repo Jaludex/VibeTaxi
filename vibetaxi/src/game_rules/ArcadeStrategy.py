@@ -18,7 +18,7 @@ class ArcadeStrategy(BaseRuleStrategy):
     def on_passenger_delivered(self, distance: float):
         self.passengers_delivered += 1
         
-        # Otorga algo de tiempo en función de la distancia (ej. 1 segundo por cada 200 pixeles, max 15 segs)
+        # Grants some time based on distance (e.g., 1 second per 200 pixels, max 15 secs)
         time_bonus = min(15.0, distance / 200.0)
         self.time_remaining += time_bonus
 

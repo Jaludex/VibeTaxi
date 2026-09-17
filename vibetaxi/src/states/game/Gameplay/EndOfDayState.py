@@ -127,32 +127,32 @@ class EndOfDayState(BaseState):
             border_width=1
         )
         
-        btn_salir = Button(
+        btn_exit = Button(
             start_x, panel.y + panel_height - 40,
             btn_width, 25,
-            "Salir",
-            on_click=self._on_salir,
+            "Exit",
+            on_click=self._on_exit,
             theme=btn_theme
         )
-        container.add_child(btn_salir)
+        container.add_child(btn_exit)
 
-        btn_guardar = Button(
+        btn_save = Button(
             start_x + btn_width + btn_spacing, panel.y + panel_height - 40,
             btn_width, 25,
-            "Guardar y salir",
-            on_click=self._on_salir, # For now just exits
+            "Save and Exit",
+            on_click=self._on_exit, # For now just exits
             theme=btn_theme
         )
-        container.add_child(btn_guardar)
+        container.add_child(btn_save)
 
-        btn_continuar = Button(
+        btn_continue = Button(
             start_x + (btn_width + btn_spacing) * 2, panel.y + panel_height - 40,
             btn_width, 25,
-            "Continuar",
-            on_click=self._on_continuar,
+            "Continue",
+            on_click=self._on_continue,
             theme=btn_theme
         )
-        container.add_child(btn_continuar)
+        container.add_child(btn_continue)
 
         self.ui = UIManager(
             container,
@@ -187,14 +187,14 @@ class EndOfDayState(BaseState):
         else:
             if "error" in settings.SOUNDS: settings.SOUNDS["error"].play()
 
-    def _on_salir(self):
+    def _on_exit(self):
         if "select" in settings.SOUNDS: settings.SOUNDS["select"].play()
         from src.states.game.Menus.TitleScreenState import TitleScreenState
         while len(self.state_machine.states) > 0:
             self.state_machine.pop()
         self.state_machine.push(TitleScreenState(self.state_machine))
 
-    def _on_continuar(self):
+    def _on_continue(self):
         if "select" in settings.SOUNDS: settings.SOUNDS["select"].play()
         self.ui = None # Disable UI interactions
         Timer.tween(

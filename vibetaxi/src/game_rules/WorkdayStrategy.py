@@ -17,7 +17,7 @@ class WorkdayStrategy(BaseRuleStrategy):
             self.game_over = True
 
     def on_passenger_delivered(self, distance: float):
-        # Ganancia base decae segun el dia
+        # Base gain decays depending on the day
         base_gain = max(2.0, 10.0 - (self.day - 1) * 1.5)
         earned = base_gain + (distance / 100.0)
         self.money += earned

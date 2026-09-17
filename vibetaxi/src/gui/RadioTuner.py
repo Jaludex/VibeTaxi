@@ -11,16 +11,16 @@ class Radio:
         self.x = x
         self.y = y
         
-        self.volumen = 50
+        self.volume = 50
         self.stations = RADIO_STATIONS
         self.songs = [station["name"] for station in self.stations]
         self.ind_song = 0
         
-        self.estado_plus = 0  # 0 = Normal, 1 = Presionado
-        self.estado_less = 0 
-        self.tiempo_animacion = 0.15
+        self.state_plus = 0  # 0 = Normal, 1 = Pressed
+        self.state_less = 0 
+        self.animation_time = 0.15
         
-        self.pos_centro_perilla = (self.x + 36, self.y + 31) 
+        self.knob_center_pos = (self.x + 36, self.y + 31) 
         self.pos_btn_plus = (self.x + 422, self.y + 7)
         self.pos_btn_less = (self.x + 421, self.y + 32)
         
@@ -57,11 +57,11 @@ class Radio:
 
     def update(self, dt: float):
         station = self.stations[self.ind_song]
-        # Si la emisora tiene música y la música se detuvo (terminó la canción)
+        # If the station has music and the music stopped (song finished)
         if station["songs"] and not pygame.mixer.music.get_busy():
             song = random.choice(station["songs"])
             pygame.mixer.music.load(song)
-            pygame.mixer.music.play(0) # Reproducir sin bucles desde el inicio
+            pygame.mixer.music.play(0) # Play without loops from the start
             
     def get_current_song(self) -> str:
         return self.songs[self.ind_song]
@@ -78,13 +78,13 @@ class Radio:
         radio_surf.blit(settings.TEXTURES["radio"], (self.x, self.y))
         radio_surf.blit(settings.TEXTURES["marker"], (self.pos_marker_x, self.pos_marker_y))
         
-        angulo = self.knob_angle
-        perilla_rotada = pygame.transform.rotate(settings.TEXTURES["button-radio"], angulo)
-        rect_perilla = perilla_rotada.get_rect(center=self.pos_centro_perilla)
-        radio_surf.blit(perilla_rotada, rect_perilla.topleft)
+        angle = self.knob_angle
+        rotated_knob = pygame.transform.rotate(settings.TEXTURES["button-radio"], angle)
+        knob_rect = rotated_knob.get_rect(center=self.knob_center_pos)
+        radio_surf.blit(rotated_knob, knob_rect.topleft)
         
-        radio_surf.blit(settings.TEXTURES["button-plus"], self.pos_btn_plus, settings.FRAMES["button-plus"][self.estado_plus])
-        radio_surf.blit(settings.TEXTURES["button-less"], self.pos_btn_less, settings.FRAMES["button-less"][self.estado_less])
+        radio_surf.blit(settings.TEXTURES["button-plus"], self.pos_btn_plus, settings.FRAMES["button-plus"][self.state_plus])
+        radio_surf.blit(settings.TEXTURES["button-less"], self.pos_btn_less, settings.FRAMES["button-less"][self.state_less])
         
         render_text(
             radio_surf,
@@ -116,7 +116,7 @@ class Radio:
             start_time = random.uniform(0.0, 60.0)
             pygame.mixer.music.load(song)
             try:
-                # Reproducir una vez (0 bucles) con salto de tiempo
+                # Play once (0 loops) with time jump
                 pygame.mixer.music.play(0, start=start_time)
             except Exception:
                 pygame.mixer.music.play(0)
@@ -137,21 +137,21 @@ class Radio:
 
     def volume_up(self):
         self._trigger_ui_activity()
-        self.volumen = min(100, self.volumen + 10)
-        self.estado_plus = 1
+        self.volume = min(100, self.volume + 10)
+        self.state_plus = 1
         if self._plus_timer:
             self._plus_timer.remove()
-        self._plus_timer = Timer.after(self.tiempo_animacion, lambda: setattr(self, 'estado_plus', 0))
-        pygame.mixer.music.set_volume(self.volumen / 100.0)
+        self._plus_timer = Timer.after(self.animation_time, lambda: setattr(self, 'state_plus', 0))
+        pygame.mixer.music.set_volume(self.volume / 100.0)
 
     def volume_down(self):
         self._trigger_ui_activity()
-        self.volumen = max(0, self.volumen - 10)
-        self.estado_less = 1
+        self.volume = max(0, self.volume - 10)
+        self.state_less = 1
         if self._less_timer:
             self._less_timer.remove()
-        self._less_timer = Timer.after(self.tiempo_animacion, lambda: setattr(self, 'estado_less', 0))
-        pygame.mixer.music.set_volume(self.volumen / 100.0)
+        self._less_timer = Timer.after(self.animation_time, lambda: setattr(self, 'state_less', 0))
+        pygame.mixer.music.set_volume(self.volume / 100.0)
 
     def next_station(self):
         self._trigger_ui_activity()

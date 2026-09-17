@@ -211,7 +211,7 @@ class PlayState(BaseState):
             self.taxi.is_accelerating = False
 
         if self.active_passenger.is_riding():
-            # Actualizar satisfacción
+            # Update satisfaction
             current_genre = self.radio.get_current_genre()
             if current_genre == self.active_passenger.preferred_genre:
                 self.active_passenger.satisfaction = min(100.0, self.active_passenger.satisfaction + 20.0 * dt)
@@ -240,7 +240,7 @@ class PlayState(BaseState):
                     self.game_rule_strategy.on_passenger_delivered(distance_traveled)
                     self.active_passenger = None
                     
-                    # Salir de vibe si estabamos ahi
+                    # Exit vibe if we were in it
                     from src.states.entity.TaxiVibeState import TaxiVibeState
                     if isinstance(self.taxi.state_machine.current, TaxiVibeState):
                         self.taxi.state_machine.change("drive")
@@ -272,7 +272,7 @@ class PlayState(BaseState):
                     p.satisfaction = 10.0
                     p.pickup_x = p.x
                     p.pickup_y = p.y
-                    print(f"DEBUG: Pasajero nuevo activo. Genero preferido: {p.preferred_genre if p.preferred_genre else 'off'}")
+                    print(f"DEBUG: New active passenger. Preferred genre: {p.preferred_genre if p.preferred_genre else 'off'}")
                     break
 
     def render(self, surface):

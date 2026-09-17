@@ -39,7 +39,7 @@ class ParticleEmitter:
         self._is_emitting: bool = True
         self._timer_item: Optional[Any] = None
 
-        # Ráfaga inicial inmediata
+        # Immediate initial burst
         initial_count = (
             self.single_burst_count
             if self.emission_duration <= 0
@@ -47,7 +47,7 @@ class ParticleEmitter:
         )
         self._spawn_burst(initial_count)
 
-        # Si la emisión es continua en el tiempo, delegamos el intervalo a gale.timer.Timer.every
+        # If emission is continuous, delegate interval to gale.timer.Timer.every
         if self.emission_duration > 0 and self.emission_interval > 0:
             burst_limit = max(1, int(self.emission_duration / self.emission_interval))
             self._timer_item = Timer.every(
@@ -77,7 +77,7 @@ class ParticleEmitter:
         self._timer_item = None
 
     def stop(self) -> None:
-        """Cancela la emisión programada inmediatamente."""
+        """Cancels the scheduled emission immediately."""
         if self._timer_item is not None:
             self._timer_item.remove()
             self._timer_item = None
