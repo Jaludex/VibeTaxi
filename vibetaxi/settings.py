@@ -70,7 +70,6 @@ TRAFFIC_MAX_CARS = 20
 
 CANT_MUSIC_CHANNELS = 5
 
-
 PHYSICS_DEBUG = True
 
 TEXTURES = {
@@ -83,10 +82,9 @@ TEXTURES = {
     "button-less": pygame.image.load(BASE_DIR / "assets" / "graphics" / "button_less.png"),
     "marker": pygame.image.load(BASE_DIR / "assets" / "graphics" / "marker.png"),
     "peds": pygame.image.load(BASE_DIR / "assets" / "graphics" / "peds.png"),
-    "arrow": pygame.image.load(BASE_DIR / "assets" / "graphics" / "arrow.png")
+    "arrow": pygame.image.load(BASE_DIR / "assets" / "graphics" / "arrow.png"),
+    "title_gradient": pygame.image.load(BASE_DIR / "assets" / "graphics" / "title_gradient.png"),
 }
-
-# TILESET = tilemap.Tileset(TEXTURES["tiles"], TILE_SIZE, TILE_SIZE)
 
 TILEMAPS = {
     "city": str(BASE_DIR / "assets" / "tilemaps" / "city.json")
@@ -116,4 +114,8 @@ SOUNDS = {
     "idle_damaged": pygame.mixer.Sound(BASE_DIR / "assets" / "sounds" / "car_sounds" / "idle-damaged.wav"),
     "engine1": pygame.mixer.Sound(BASE_DIR / "assets" / "sounds" / "car_sounds" / "engine1.wav"),
     "engine2": pygame.mixer.Sound(BASE_DIR / "assets" / "sounds" / "car_sounds" / "engine2.wav"),
+}
+
+MUSIC = {
+    "menu": str(BASE_DIR / "assets" / "music" / "menu.ogg"),
 }

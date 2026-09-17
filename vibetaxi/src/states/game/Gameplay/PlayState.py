@@ -6,7 +6,6 @@ from gale.camera import Camera
 from gale.input_handler import InputData
 from gale.physics import BodyType
 from gale.state import BaseState
-from gale.timer import Timer
 
 import settings
 from src.world.CityMap import CityMap
@@ -75,17 +74,6 @@ class PlayState(BaseState):
             
         self.taxi.init_sounds()
         self.exited = False
-        self._start_arrow_tween()
-
-    def _start_arrow_tween(self):
-        self.arrow_offset_y = 0
-        def move_down():
-            if not getattr(self, "exited", False):
-                Timer.tween(0.5, [(self, {"arrow_offset_y": 10})], on_finish=move_up)
-        def move_up():
-            if not getattr(self, "exited", False):
-                Timer.tween(0.5, [(self, {"arrow_offset_y": 0})], on_finish=move_down)
-        move_down()
 
     def fixed_update(self) -> None:
         self.city_map.fixed_update()
@@ -95,6 +83,16 @@ class PlayState(BaseState):
         self.city_map.update(dt, self.camera)
         self.camera.update(dt)
         self.radio.update(dt)
+        
+        if self.taxi.health <= 0 and not getattr(self, "game_over_triggered", False):
+            self.game_over_triggered = True
+            from src.states.game.Gameplay.GameOverState import GameOverState
+            self.state_machine.push(GameOverState(self.state_machine))
+            return
+        
+        self.arrow_time = getattr(self, 'arrow_time', 0.0) + dt
+        import math
+        self.arrow_offset_y = (math.sin(self.arrow_time * 6.0) + 1.0) * 5.0
         
         if getattr(self, "_click_emitter", None) and getattr(self._click_emitter, "_is_emitting", False):
             import pygame

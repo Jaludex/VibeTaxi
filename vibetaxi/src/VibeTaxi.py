@@ -4,13 +4,13 @@ from gale.game import Game
 from gale.input_handler import InputData
 from gale.state import StateStack
 
-from src.states.game.Menus.TitleScreenState import TitleScreenState
+from src.states.game.Menus.OpeningState import OpeningState
 
 
 class VibeTaxi(Game):
     def init(self) -> None:
         self.state_stack = StateStack()
-        self.state_stack.push(TitleScreenState(self.state_stack), )
+        self.state_stack.push(OpeningState(self.state_stack))
 
     def fixed_update(self) -> None:
         state = self.state_stack.states[-1]

@@ -59,6 +59,8 @@ class CityMap:
             Car = None
 
         def play_crash_sound(sound_key, base_volume=0.5):
+            if getattr(self, 'muted', False):
+                return
             try:
                 import settings
                 sound = settings.SOUNDS.get(sound_key)
