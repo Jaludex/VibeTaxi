@@ -265,6 +265,9 @@ class PlayState(BaseState):
                     if isinstance(self.taxi.state_machine.current, TaxiVibeState):
                         self.taxi.state_machine.change("drive")
 
+                if "money" in settings.SOUNDS:
+                    settings.SOUNDS["money"].play()
+
                 self.active_passenger.state_machine.change(
                     "walk", 
                     target=(dest_x, dest_y), 
@@ -282,6 +285,9 @@ class PlayState(BaseState):
                     def reach_taxi():
                         p.state_machine.change("ride", taxi=self.taxi)
                     
+                    if "honk" in settings.SOUNDS:
+                        settings.SOUNDS["honk"].play()
+                        
                     p.state_machine.change("walk", target=self.taxi, on_arrival=reach_taxi)
                     self.active_passenger = p
                     self.map_passengers.remove(p)

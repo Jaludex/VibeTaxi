@@ -71,7 +71,7 @@ TRAFFIC_MAX_CARS = 20
 
 CANT_MUSIC_CHANNELS = 5
 
-PHYSICS_DEBUG = True
+PHYSICS_DEBUG = False
 
 TEXTURES = {
     "city_tiles": pygame.image.load(BASE_DIR / "assets" / "graphics" / "city_tileset.png"),
@@ -102,6 +102,7 @@ FRAMES = {
 
 FONTS = {
     "big": pygame.font.Font(BASE_DIR / "assets" / "fonts" / "Big.ttf", 32),
+    "medium": pygame.font.Font(BASE_DIR/ "assets" / "fonts" / "Minecraft.ttf", 12),
     "minecraft": pygame.font.Font(BASE_DIR/ "assets" / "fonts" / "Minecraft.ttf", 8),
     "led": pygame.font.Font(BASE_DIR / "assets" / "fonts" / "led.ttf", 16),
     "led_small": pygame.font.Font(BASE_DIR / "assets" / "fonts" / "led.ttf", 8)
@@ -121,6 +122,8 @@ SOUNDS = {
     "into_vibe": pygame.mixer.Sound(BASE_DIR / "assets" / "sounds" / "misc" / "into_vibe.wav"),
     "out_vibe": pygame.mixer.Sound(BASE_DIR / "assets" / "sounds" / "misc" / "out_vibe.wav"),
     "win": pygame.mixer.Sound(BASE_DIR / "assets" / "sounds" / "misc" / "victory.wav"),
+    "honk": pygame.mixer.Sound(BASE_DIR / "assets" / "sounds" / "car_sounds" / "car_honk.wav"),
+    "money": pygame.mixer.Sound(BASE_DIR / "assets" / "sounds" / "misc" / "gain_money.wav"),
 }
 
 MUSIC = {

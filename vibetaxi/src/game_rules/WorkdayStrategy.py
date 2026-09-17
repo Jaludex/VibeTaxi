@@ -24,11 +24,18 @@ class WorkdayStrategy(BaseRuleStrategy):
         base_gain = max(2.0, 10.0 - (self.day - 1) * 1.5)
         earned = base_gain + (distance / 100.0)
         self.money += earned
+        
+        self.trigger_popup_text(f"+${earned:.2f}", (50, 255, 50))
 
     def render_ui(self, surface, font, x, y):
         from gale.text import render_text
+        import settings
         
         # Render common taximeter
         self._render_taximeter(surface, x, y)
         
-        render_text(surface, f"Money: ${self.money:.2f}", font, x, y + 35, (100, 255, 100), shadowed=True)
+        # Use bigger font for the label
+        big_font = settings.FONTS["medium"]
+        render_text(surface, f"Money: ${self.money:.2f}", big_font, x, y + 45, (100, 255, 100), shadowed=True)
+        
+        self._render_popup_text(surface)

@@ -39,3 +39,45 @@ class BaseRuleStrategy:
             surface, time_str, settings.FONTS["led"],
             x + 40, y + 17, led_color, center=True
         )
+
+    def trigger_popup_text(self, text: str, color: tuple):
+        from gale.timer import Timer
+        self.popup_text = text
+        self.popup_color = color
+        self.popup_alpha = 0.0
+        
+        def fade_out():
+            Timer.tween(
+                0.3,
+                [(self, {"popup_alpha": 0.0})],
+                ease_function_name="out_cubic"
+            )
+            
+        Timer.tween(
+            0.3,
+            [(self, {"popup_alpha": 255.0})],
+            ease_function_name="in_cubic",
+            on_finish=lambda: Timer.after(0.5, fade_out)
+        )
+
+    def _render_popup_text(self, surface):
+        if getattr(self, "popup_alpha", 0) > 0:
+            import settings
+            import pygame
+            from gale.text import render_text
+            
+            text_layer = pygame.Surface((settings.VIRTUAL_WIDTH, settings.VIRTUAL_HEIGHT), pygame.SRCALPHA)
+            
+            render_text(
+                text_layer,
+                self.popup_text,
+                settings.FONTS["medium"],
+                settings.VIRTUAL_WIDTH // 2,
+                30,
+                self.popup_color,
+                center=True,
+                shadowed=True
+            )
+            
+            text_layer.set_alpha(int(self.popup_alpha))
+            surface.blit(text_layer, (0, 0))
