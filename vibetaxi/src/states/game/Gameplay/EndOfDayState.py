@@ -214,15 +214,32 @@ class EndOfDayState(BaseState):
 
     def _on_save_exit(self):
         settings.SOUNDS["press"].play()
-        settings.SAVE_MANAGER.save("workday_save", {
-            "money": self.money,
-            "health": self.health,
-            "day": self.day + 1
-        })
-        from src.states.game.Menus.TitleScreenState import TitleScreenState
-        while len(self.state_machine.states) > 0:
-            self.state_machine.pop()
-        self.state_machine.push(TitleScreenState(self.state_machine))
+        
+        def execute_save():
+            settings.SAVE_MANAGER.save("workday_save", {
+                "money": self.money,
+                "health": self.health,
+                "day": self.day + 1
+            })
+            from src.states.game.Menus.TitleScreenState import TitleScreenState
+            while len(self.state_machine.states) > 0:
+                self.state_machine.pop()
+            self.state_machine.push(TitleScreenState(self.state_machine))
+            
+        def cancel_save():
+            pass
+            
+        # If this is a new run, but a save file already exists, confirm overwrite
+        if not self.is_loaded_run and settings.SAVE_MANAGER.exists("workday_save"):
+            from src.states.game.Menus.ConfirmationState import ConfirmationState
+            self.state_machine.push(ConfirmationState(
+                self.state_machine,
+                "Overwrite existing save?",
+                execute_save,
+                cancel_save
+            ))
+        else:
+            execute_save()
 
     def _on_continue(self):
         settings.SOUNDS["press"].play()

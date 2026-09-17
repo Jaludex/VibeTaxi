@@ -244,7 +244,7 @@ class PlayState(BaseState):
                 distance_traveled = math.hypot(dest_x - p.pickup_x, dest_y - p.pickup_y)
                 
                 def reach_destination():
-                    self.game_rule_strategy.on_passenger_delivered(distance_traveled)
+                    self.game_rule_strategy.on_passenger_delivered(p, distance_traveled)
                     self.active_passenger = None
                     
                     # Exit vibe if we were in it

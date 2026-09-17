@@ -37,13 +37,35 @@ class WorkdayStrategy(BaseRuleStrategy):
     def get_start_text(self) -> str:
         return f"Day {self.day}\nToday's fee: ${self.fee:.2f}"
 
-    def on_passenger_delivered(self, distance: float):
-        # Base gain is constant now
+    def on_passenger_delivered(self, passenger, distance: float):
+        # Base gain
         base_gain = 10.0
         earned = base_gain + (distance / 100.0)
+        
+        # Calculate expected time based on distance (assuming average speed)
+        # Assuming speed of ~100 units/sec, so expected time = distance / 100
+        expected_time = max(5.0, distance / 100.0)
+        
+        time_bonus = 0.0
+        if getattr(passenger, "time_riding", 999.0) < expected_time * 0.8:
+            time_bonus = 5.0 # Fast arrival bonus
+            
+        safety_bonus = 0.0
+        if getattr(passenger, "damage_taken", 1.0) == 0.0:
+            safety_bonus = 3.0 # Perfect safety bonus
+            
+        earned += time_bonus + safety_bonus
         self.money += earned
         
-        self.trigger_popup_text(f"+${earned:.2f}", (50, 255, 50))
+        # Show bonuses in popup
+        popup_text = f"+${earned:.2f}"
+        if time_bonus > 0 or safety_bonus > 0:
+            reasons = []
+            if time_bonus > 0: reasons.append("Fast!")
+            if safety_bonus > 0: reasons.append("Safe!")
+            popup_text += f" ({', '.join(reasons)})"
+            
+        self.trigger_popup_text(popup_text, (50, 255, 50))
 
     def render_ui(self, surface, font, x, y):
         from gale.text import render_text

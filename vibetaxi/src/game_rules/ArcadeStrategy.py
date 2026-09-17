@@ -18,14 +18,35 @@ class ArcadeStrategy(BaseRuleStrategy):
     def get_start_text(self) -> str:
         return "Go get them!"
 
-    def on_passenger_delivered(self, distance: float):
+    def on_passenger_delivered(self, passenger, distance: float):
         self.passengers_delivered += 1
         
-        # Grants some time based on distance (e.g., 1 second per 200 pixels, max 15 secs)
-        time_bonus = min(15.0, distance / 200.0)
-        self.time_remaining += time_bonus
+        # Base time gained
+        time_gained = 15.0
         
-        self.trigger_popup_text(f"+{time_bonus:.1f}s", (255, 255, 50))
+        # Expected time and bonuses
+        expected_time = max(5.0, distance / 100.0)
+        
+        time_bonus = 0.0
+        if getattr(passenger, "time_riding", 999.0) < expected_time * 0.8:
+            time_bonus = 5.0 # Fast arrival bonus
+            
+        safety_bonus = 0.0
+        if getattr(passenger, "damage_taken", 1.0) == 0.0:
+            safety_bonus = 3.0 # Perfect safety bonus
+            
+        total_time_gained = time_gained + time_bonus + safety_bonus
+        self.time_remaining += total_time_gained
+        
+        # Show bonuses in popup
+        popup_text = f"+{int(total_time_gained)}s"
+        if time_bonus > 0 or safety_bonus > 0:
+            reasons = []
+            if time_bonus > 0: reasons.append("Fast!")
+            if safety_bonus > 0: reasons.append("Safe!")
+            popup_text += f" ({', '.join(reasons)})"
+            
+        self.trigger_popup_text(popup_text, (255, 255, 50))
 
     def render_ui(self, surface, font, x, y):
         from gale.text import render_text
