@@ -8,7 +8,7 @@ from gale.ui.text_box import TextBox
 from gale.ui.progress_bar import ProgressBar
 from gale.ui.theme import Theme
 from gale.timer import Timer
-
+from src.definitions.comfort import COMFORT_RULES
 class PassengerHUD:
     def __init__(self):
         # 1. Progress Bar (Top-Right: 20px from top and 20px from right)
@@ -113,7 +113,7 @@ class PassengerHUD:
 
         self.passenger = None
         self.current_text = ""
-        self.last_comfort = random.randint(40, 60)
+        self.last_comfort = random.randint(int(COMFORT_RULES["initial_min"]), int(COMFORT_RULES["initial_max"]))
 
     @property
     def bar_x(self) -> float:
@@ -137,13 +137,17 @@ class PassengerHUD:
         self.text_box.x = val + 6
 
     def bind_passenger(self, passenger) -> None:
+        if getattr(self, "_clear_timer", None):
+            self._clear_timer.remove()
+            self._clear_timer = None
+            
         self.passenger = passenger
         self.last_comfort = passenger.comfort
         self.progress_bar.value = passenger.comfort
         # Slide in comfort bar
         Timer.tween(0.35, [(self, {"bar_x": self.bar_on_x})])
         # Show greeting dialogue
-        greeting = passenger.dialogues.get("enter", "¡Hola! Lléveme a mi destino.")
+        greeting = passenger.dialogues.get("enter", "Hello! Take me to my destination.")
         self.show_text(greeting)
 
     def unbind_passenger(self) -> None:
@@ -151,13 +155,16 @@ class PassengerHUD:
             return
 
         comfort = self.passenger.comfort
-        if comfort >= 50.0:
-            farewell = self.passenger.dialogues.get("exit_good", "¡Excelente servicio!")
+        if comfort >= COMFORT_RULES["exit_good_threshold"]:
+            farewell = self.passenger.dialogues.get("exit_good", "Excellent service!")
         else:
-            farewell = self.passenger.dialogues.get("exit_bad", "Pésimo viaje...")
+            farewell = self.passenger.dialogues.get("exit_bad", "Terrible ride...")
 
         self.show_text(farewell)
-        Timer.after(settings.DIALOGUE_DISPLAY_TIME + 0.35, self._clear_passenger)
+        
+        if getattr(self, "_clear_timer", None):
+            self._clear_timer.remove()
+        self._clear_timer = Timer.after(settings.DIALOGUE_DISPLAY_TIME + 0.35, self._clear_passenger)
 
     def _clear_passenger(self) -> None:
         self.passenger = None
@@ -184,7 +191,9 @@ class PassengerHUD:
         # Slide in from right
         Timer.tween(0.3, [(self, {"dialogue_x": self.dialogue_on_x})])
         # Auto-slide out to right after duration
-        Timer.after(duration, self.hide_dialogue)
+        if getattr(self, "_hide_timer", None):
+            self._hide_timer.remove()
+        self._hide_timer = Timer.after(duration, self.hide_dialogue)
 
     def hide_dialogue(self) -> None:
         Timer.tween(0.3, [(self, {"dialogue_x": self.dialogue_off_x})])
