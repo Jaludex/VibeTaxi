@@ -240,7 +240,7 @@ class PlayState(BaseState):
                     self.map_passengers.remove(p)
                     
                     import random
-                    genres = ["rock", "pop", "hiphop", "electronic", None]
+                    genres = ["rock", "pop", "hiphop", "electronic", "jazz", None]
                     p.preferred_genre = random.choice(genres)
                     p.satisfaction = 10.0
                     p.pickup_x = p.x
