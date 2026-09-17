@@ -17,26 +17,35 @@ class DrawableMixin:
         center_x, center_y = self.x, self.y
 
         if angle is not None:
-            angle_offset = getattr(self, "angle_offset", 0)
-            degrees = math.degrees(-angle) + angle_offset
+            # Prefer entity-provided helper to compute center and degrees so
+            # the rendering and collision overlay match exactly
+            try:
+                center_x, center_y, degrees = self.get_render_center_and_degrees()
+            except Exception:
+                angle_offset = getattr(self, "angle_offset", 0)
+                degrees = math.degrees(-angle) + angle_offset
+                center_x, center_y = self.x, self.y
+
             image = pygame.transform.rotate(image, degrees)
 
             pivot_x = getattr(self, "pivot_x", 0)
             pivot_y = getattr(self, "pivot_y", 0)
             
-            if pivot_x != 0 or pivot_y != 0:
-                offset = pygame.math.Vector2(pivot_x, pivot_y)
-                rotated_offset = offset.rotate(-degrees)
-                
-                center_x = (self.x + pivot_x) - rotated_offset.x
-                center_y = (self.y + pivot_y) - rotated_offset.y
+            # center_x/center_y already computed above (including pivot)
 
         elif getattr(self, "flipped", False):
             image = pygame.transform.flip(image, True, False)
 
         alpha = getattr(self, "alpha", 255)
         if alpha < 255:
-            image.set_alpha(alpha)
+            # Multiply alpha into per-pixel alpha to avoid black borders after rotate
+            try:
+                tmp = image.copy()
+                tmp.fill((255, 255, 255, alpha), None, pygame.BLEND_RGBA_MULT)
+                image = tmp
+            except Exception:
+                # Fallback
+                image.set_alpha(alpha)
 
         rect = image.get_rect(center=(center_x, center_y))
 

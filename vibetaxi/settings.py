@@ -1,23 +1,49 @@
 import pathlib
 
 import pygame
+import os
 
 from gale import frames
 from gale import input_handler
 from gale import tilemap
 
+from gale.save import SaveManager
 from src.frame_tools import generate_car_frames
 
 input_handler.InputHandler.set_keyboard_action(input_handler.KEY_ESCAPE, "quit")
 input_handler.InputHandler.set_mouse_click_action(input_handler.MOUSE_BUTTON_1, "mouse_click")
+input_handler.InputHandler.set_mouse_motion_action(None, "mouse_motion")
 input_handler.InputHandler.set_keyboard_action(input_handler.KEY_x, "brake")
 input_handler.InputHandler.set_keyboard_action(input_handler.KEY_z, "reverse")
+input_handler.InputHandler.set_keyboard_action(input_handler.KEY_LSHIFT, "drift")
 input_handler.InputHandler.set_keyboard_action(input_handler.KEY_a, "prev-song")
 input_handler.InputHandler.set_keyboard_action(input_handler.KEY_d, "next-song")
 input_handler.InputHandler.set_keyboard_action(input_handler.KEY_w, "vol-up")
 input_handler.InputHandler.set_keyboard_action(input_handler.KEY_s, "vol-down")
+input_handler.InputHandler.set_keyboard_action(input_handler.KEY_p, "pause")
+
+import string
+# Map all printable keys for TextInput, without overwriting existing game controls
+existing_keys = {
+    input_handler.KEY_a, input_handler.KEY_d, input_handler.KEY_w, input_handler.KEY_s,
+    input_handler.KEY_p, input_handler.KEY_x, input_handler.KEY_z, input_handler.KEY_LSHIFT,
+    input_handler.KEY_ESCAPE
+}
+
+for char in string.ascii_lowercase + string.digits:
+    key_const = getattr(pygame, f"K_{char}", None)
+    if key_const is not None and key_const not in existing_keys:
+        input_handler.InputHandler.set_keyboard_action(key_const, "keyboard")
+
+# Special keys for TextInput
+for key_name in ["SPACE", "BACKSPACE", "RETURN", "KP_ENTER", "DELETE", "LEFT", "RIGHT"]:
+    key_const = getattr(pygame, f"K_{key_name}", None)
+    if key_const is not None and key_const not in existing_keys:
+        input_handler.InputHandler.set_keyboard_action(key_const, "keyboard")
 
 
+
+RADIO_FADEOUT_TIME = 2.0
 
 TITLE = "Vibe Taxi"
 
@@ -82,12 +108,35 @@ TILE_HEIGHT = VIRTUAL_HEIGHT // TILE_SIZE
 
 CAMERA_FOLLOW_RATE = 8.0
 
-TILED_UPPER_LAYERS = ["overheads"]
-TILED_MIDDLE_LAYERS = ["decoration", "buildings"]
+TILED_UPPER_SHADOW_LAYERS = ["overheads"]
+TILED_UPPER_NO_SHADOW_LAYERS = ["decoration-high"]
+TILED_MIDDLE_LAYERS = ["decoration-low", "buildings"]
 TILED_GROUND_LAYERS = ["ground"]
 
 PASSENGER_DETECTION_RADIUS = 30
 PASSENGER_DELIVERY_RADIUS = 60
+
+COLOR_TRIP_SHORT = (0, 255, 0)
+COLOR_TRIP_MEDIUM = (255, 255, 0)
+COLOR_TRIP_LONG = (255, 69, 0)
+
+COLOR_PASSENGER_DELIVERY = (0, 255, 0)
+
+VIBE_COLORS = {
+    "rock": (255, 50, 50),
+    "pop": (255, 105, 180),
+    "hiphop": (255, 200, 0),
+    "electronic": (50, 255, 255),
+    "jazz": (50, 100, 255),
+    "off": (150, 255, 150)
+}
+
+TRAFFIC_SPAWN_INTERVAL = 0.2
+TRAFFIC_MAX_CARS = 20
+
+CANT_MUSIC_CHANNELS = 5
+
+PHYSICS_DEBUG = False
 
 TEXTURES = {
     "city_tiles": pygame.image.load(BASE_DIR / "assets" / "graphics" / "city_tileset.png"),
@@ -98,10 +147,11 @@ TEXTURES = {
     "button-plus": pygame.image.load(BASE_DIR / "assets" / "graphics" / "button_plus.png"),
     "button-less": pygame.image.load(BASE_DIR / "assets" / "graphics" / "button_less.png"),
     "marker": pygame.image.load(BASE_DIR / "assets" / "graphics" / "marker.png"),
-    "peds": pygame.image.load(BASE_DIR / "assets" / "graphics" / "peds.png")
+    "peds": pygame.image.load(BASE_DIR / "assets" / "graphics" / "peds.png"),
+    "arrow": pygame.image.load(BASE_DIR / "assets" / "graphics" / "arrow.png"),
+    "title_gradient": pygame.image.load(BASE_DIR / "assets" / "graphics" / "title_gradient.png"),
+    "taximeter": pygame.image.load(BASE_DIR / "assets" / "graphics" / "taximeter.png")
 }
-
-# TILESET = tilemap.Tileset(TEXTURES["tiles"], TILE_SIZE, TILE_SIZE)
 
 TILEMAPS = {
     "city": str(BASE_DIR / "assets" / "tilemaps" / "city.json")
@@ -117,56 +167,39 @@ FRAMES = {
 
 FONTS = {
     "big": pygame.font.Font(BASE_DIR / "assets" / "fonts" / "Big.ttf", 32),
+    "medium": pygame.font.Font(BASE_DIR/ "assets" / "fonts" / "Minecraft.ttf", 12),
+    "led": pygame.font.Font(BASE_DIR / "assets" / "fonts" / "led.ttf", 16),
+    "led_small": pygame.font.Font(BASE_DIR / "assets" / "fonts" / "led.ttf", 8)
     "minecraft": pygame.font.Font(BASE_DIR / "assets" / "fonts" / "Minecraft.ttf", 8),
     "minecraft_small": pygame.font.Font(BASE_DIR / "assets" / "fonts" / "Minecraft.ttf", 8),
 }
 
 SOUNDS = {
-
+    "crash_car": pygame.mixer.Sound(BASE_DIR / "assets" / "sounds" / "crash_sounds" / "crash_car.wav"),
+    "crash_mail": pygame.mixer.Sound(BASE_DIR / "assets" / "sounds" / "crash_sounds" / "crash_mail.wav"),
+    "crash_solid": pygame.mixer.Sound(BASE_DIR / "assets" / "sounds" / "crash_sounds" / "crash_solid.wav"),
+    "crash_wall": pygame.mixer.Sound(BASE_DIR / "assets" / "sounds" / "crash_sounds" / "crash_wall.wav"),
+    "engine_start": pygame.mixer.Sound(BASE_DIR / "assets" / "sounds" / "car_sounds" / "engine_start.wav"),
+    "drifting": pygame.mixer.Sound(BASE_DIR / "assets" / "sounds" / "car_sounds" / "drifting.wav"),
+    "idle_normal": pygame.mixer.Sound(BASE_DIR / "assets" / "sounds" / "car_sounds" / "idle-normal.wav"),
+    "idle_damaged": pygame.mixer.Sound(BASE_DIR / "assets" / "sounds" / "car_sounds" / "idle-damaged.wav"),
+    "engine1": pygame.mixer.Sound(BASE_DIR / "assets" / "sounds" / "car_sounds" / "engine1.wav"),
+    "engine2": pygame.mixer.Sound(BASE_DIR / "assets" / "sounds" / "car_sounds" / "engine2.wav"),
+    "into_vibe": pygame.mixer.Sound(BASE_DIR / "assets" / "sounds" / "misc" / "into_vibe.wav"),
+    "out_vibe": pygame.mixer.Sound(BASE_DIR / "assets" / "sounds" / "misc" / "out_vibe.wav"),
+    "win": pygame.mixer.Sound(BASE_DIR / "assets" / "sounds" / "misc" / "victory.wav"),
+    "honk": pygame.mixer.Sound(BASE_DIR / "assets" / "sounds" / "car_sounds" / "car_honk.wav"),
+    "money": pygame.mixer.Sound(BASE_DIR / "assets" / "sounds" / "misc" / "gain_money.wav"),
+    "fix": pygame.mixer.Sound(BASE_DIR / "assets" / "sounds" / "misc" / "fix.wav"),
+    "press": pygame.mixer.Sound(BASE_DIR / "assets" / "sounds" / "misc" / "press.wav"),
+    "game_over": pygame.mixer.Sound(BASE_DIR / "assets" / "sounds" / "misc" / "game_over.wav"),
+    "pause": pygame.mixer.Sound(BASE_DIR / "assets" / "sounds" / "misc" / "pause.wav"),
+    "unpause": pygame.mixer.Sound(BASE_DIR / "assets" / "sounds" / "misc" / "unpause.wav"),
 }
 
-CANT_MUSIC_CHANNELS = 4
-
-MUSIC_ROCK = {
-    "rock-1": str(BASE_DIR / "assets" / "music" / "bombinsound-rock-music.mp3"),
-    "rock-2": str(BASE_DIR / "assets" / "music" / "jonasblakewood-rock.mp3"),
+MUSIC = {
+    "menu": str(BASE_DIR / "assets" / "music" / "menu.ogg"),
 }
+REPAIR_COST = 40.0
 
-MUSIC_POP = {
-    "pop-1": str(BASE_DIR / "assets" / "music" / "happinessinmusic-pop-music.mp3"),
-}
-
-MUSIC_HIPHOP = {
-    "hiphop-1": str(BASE_DIR / "assets" / "music" / "kontraa-nba--hiphop-music.mp3"),
-}
-MUSIC_ELECTRONIC = {
-    "electronic-1": str(BASE_DIR / "assets" / "music" / "mondamusic-electronic-music.mp3"),
-}
-MUSIC_CHANNELS = 0
-
-
-def play_music(name: str) -> None:
-    stop_music(name)
-    MUSIC_CHANNELS[name] = SOUNDS[name].play(loops=-1)
-
-
-def stop_music(name: str) -> None:
-    channel = MUSIC_CHANNELS.get(name)
-
-    if channel is not None:
-        channel.stop()
-        MUSIC_CHANNELS[name] = None
-
-
-def pause_music(name: str) -> None:
-    channel = MUSIC_CHANNELS.get(name)
-
-    if channel is not None:
-        channel.pause()
-
-
-def resume_music(name: str) -> None:
-    channel = MUSIC_CHANNELS.get(name)
-
-    if channel is not None:
-        channel.unpause()
+SAVE_MANAGER = SaveManager(save_dir=BASE_DIR / 'saves')
