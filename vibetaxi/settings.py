@@ -10,7 +10,7 @@ from gale import tilemap
 from gale.save import SaveManager
 from src.frame_tools import generate_car_frames
 
-input_handler.InputHandler.set_keyboard_action(input_handler.KEY_ESCAPE, "quit")
+input_handler.InputHandler.set_keyboard_action(input_handler.KEY_ESCAPE, "pause")
 input_handler.InputHandler.set_mouse_click_action(input_handler.MOUSE_BUTTON_1, "mouse_click")
 input_handler.InputHandler.set_mouse_motion_action(None, "mouse_motion")
 input_handler.InputHandler.set_keyboard_action(input_handler.KEY_x, "brake")
@@ -20,13 +20,12 @@ input_handler.InputHandler.set_keyboard_action(input_handler.KEY_a, "prev-song")
 input_handler.InputHandler.set_keyboard_action(input_handler.KEY_d, "next-song")
 input_handler.InputHandler.set_keyboard_action(input_handler.KEY_w, "vol-up")
 input_handler.InputHandler.set_keyboard_action(input_handler.KEY_s, "vol-down")
-input_handler.InputHandler.set_keyboard_action(input_handler.KEY_p, "pause")
 
 import string
 # Map all printable keys for TextInput, without overwriting existing game controls
 existing_keys = {
     input_handler.KEY_a, input_handler.KEY_d, input_handler.KEY_w, input_handler.KEY_s,
-    input_handler.KEY_p, input_handler.KEY_x, input_handler.KEY_z, input_handler.KEY_LSHIFT,
+    input_handler.KEY_x, input_handler.KEY_z, input_handler.KEY_LSHIFT,
     input_handler.KEY_ESCAPE
 }
 

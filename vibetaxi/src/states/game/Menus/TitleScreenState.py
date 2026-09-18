@@ -121,6 +121,16 @@ class TitleScreenState(BaseState):
                 )
                 container.add_child(btn_records)
         
+        # Quit button
+        btn_quit = Button(
+            settings.VIRTUAL_WIDTH / 2 - 50, center_y + 80,
+            100, 30,
+            "Quit Game",
+            on_click=self._on_quit,
+            theme=BUTTON_THEME
+        )
+        container.add_child(btn_quit)
+        
         self.ui = UIManager(
             container,
             virtual_width=settings.VIRTUAL_WIDTH,
@@ -128,6 +138,11 @@ class TitleScreenState(BaseState):
             virtual_height=settings.VIRTUAL_HEIGHT,
             window_height=settings.WINDOW_HEIGHT
         )
+
+    def _on_quit(self):
+        if not getattr(self, "mode_selection_triggered", False):
+            settings.SOUNDS["press"].play()
+            pygame.event.post(pygame.event.Event(pygame.QUIT))
 
     def _on_new_game(self):
         if not getattr(self, "mode_selection_triggered", False):

@@ -20,7 +20,7 @@ class PauseState(BaseState):
         self.is_exiting = False
         
         panel_width = 200
-        panel_height = 120
+        panel_height = 155
         from src.themes import BUTTON_THEME, LABEL_THEME, PANEL_THEME
         self.panel = Panel(
             settings.VIRTUAL_WIDTH / 2 - panel_width / 2, 
@@ -48,13 +48,21 @@ class PauseState(BaseState):
         self.btn_exit = Button(
             settings.VIRTUAL_WIDTH / 2 - 60, self.panel_y + 85,
             120, 25,
-            "Exit",
+            "Main Menu",
             on_click=self.on_exit_click,
             theme=BUTTON_THEME
         )
         
+        self.btn_quit = Button(
+            settings.VIRTUAL_WIDTH / 2 - 60, self.panel_y + 120,
+            120, 25,
+            "Quit Game",
+            on_click=self.on_quit_click,
+            theme=BUTTON_THEME
+        )
+        
         self.container = Container(0, 0, settings.VIRTUAL_WIDTH, settings.VIRTUAL_HEIGHT, children=[
-            self.panel, self.label_title, self.btn_resume, self.btn_exit
+            self.panel, self.label_title, self.btn_resume, self.btn_exit, self.btn_quit
         ])
         
         self.ui = UIManager(
@@ -85,6 +93,7 @@ class PauseState(BaseState):
         self.label_title.y = self.panel_y + 20
         self.btn_resume.y = self.panel_y + 50
         self.btn_exit.y = self.panel_y + 85
+        self.btn_quit.y = self.panel_y + 120
         
     def on_resume_click(self):
         if self.is_exiting: return
@@ -114,6 +123,12 @@ class PauseState(BaseState):
             self.state_machine.push(TitleScreenState(self.state_machine))
             
         Timer.tween(0.5, [(self, {"fade_alpha": 255.0})], on_finish=exit_to_title)
+
+    def on_quit_click(self):
+        if self.is_exiting: return
+        settings.SOUNDS["press"].play()
+        self.is_exiting = True
+        pygame.event.post(pygame.event.Event(pygame.QUIT))
 
     def update(self, dt: float):
         self.update_ui_y()
