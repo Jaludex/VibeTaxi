@@ -241,7 +241,7 @@ class PlayState(BaseState):
                 
             from src.states.entity.TaxiVibeState import TaxiVibeState
             if not getattr(self.game_rule_strategy, "always_vibe", False):
-                if self.active_passenger.satisfaction >= COMFORT_RULES["vibe_threshold"]:
+                if self.active_passenger.comfort >= COMFORT_RULES["vibe_threshold"]:
                     if not isinstance(self.taxi.state_machine.current, TaxiVibeState):
                         self.taxi.state_machine.change("vibe")
                 else:
@@ -249,7 +249,7 @@ class PlayState(BaseState):
                         self.taxi.state_machine.change("drive")
 
 
-            
+
             dest_x, dest_y = self.city_map.nodes[self.active_passenger.destination]
             dx = self.taxi.x - dest_x
             dy = self.taxi.y - dest_y
@@ -299,8 +299,6 @@ class PlayState(BaseState):
                     self.active_passenger = p
                     self.map_passengers.remove(p)
                     
-
-                    p.satisfaction = 10.0
                     p.pickup_x = p.x
                     p.pickup_y = p.y
                     print(f"DEBUG: New active passenger. Preferred genre: {p.music_preference if p.music_preference else 'off'}")

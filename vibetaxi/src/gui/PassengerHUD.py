@@ -209,10 +209,7 @@ class PassengerHUD:
 
     def update(self, dt: float) -> None:
         if self.passenger:
-            # Smooth progressive change when comfort changes
-            if self.passenger.comfort != self.last_comfort:
-                self.last_comfort = self.passenger.comfort
-                Timer.tween(0.6, [(self.progress_bar, {"value": self.passenger.comfort})])
+            self.progress_bar.value = self.passenger.comfort
 
         # Dynamic color based on current interpolated progress bar value
         val = self.progress_bar.value

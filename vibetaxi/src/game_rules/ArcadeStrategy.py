@@ -40,7 +40,7 @@ class ArcadeStrategy(BaseRuleStrategy):
         self.passengers_delivered += 1
         
         # Base time gained
-        time_gained = 15.0
+        time_gained = 8.0
         
         # Expected time and bonuses
         expected_time = max(5.0, distance / 100.0)
