@@ -6,6 +6,7 @@ from gale.camera import Camera
 from gale.input_handler import InputData
 from gale.physics import BodyType
 from gale.state import BaseState
+from gale.text import render_texts
 
 import settings
 from src.world.CityMap import CityMap
@@ -16,6 +17,8 @@ from src.gui.PassengerHUD import PassengerHUD
 from gale.ui.manager import UIManager
 from gale.timer import Timer
 from src.definitions.comfort import COMFORT_RULES
+from src.mouse_tools import physical_to_virtual
+from src.ParticleEmitter import ParticleEmitter
 
 class PlayState(BaseState):
     def enter(self, **enter_params: Dict[str, Any]) -> None:
@@ -94,7 +97,6 @@ class PlayState(BaseState):
         from gale.timer import Timer
         self.danger_timer = Timer.every(0.5, self._toggle_danger_color)
         
-        # Fade in overlay and text
         self.fade_overlay_alpha = 255.0
         self.day_text_alpha = 0.0
         self.start_text = self.game_rule_strategy.get_start_text()
@@ -141,8 +143,6 @@ class PlayState(BaseState):
         if (self.taxi.health <= 0 or self.game_rule_strategy.game_over) and not getattr(self, "game_over_triggered", False):
             self.game_over_triggered = True
             
-            # Stop all PlayState sounds completely
-            import pygame
             pygame.mixer.stop()
             pygame.mixer.music.stop()
             
@@ -150,12 +150,11 @@ class PlayState(BaseState):
             return
         
         self.arrow_time = getattr(self, 'arrow_time', 0.0) + dt
+
         import math
         self.arrow_offset_y = (math.sin(self.arrow_time * 6.0) + 1.0) * 5.0
         
         if getattr(self, "_click_emitter", None) and getattr(self._click_emitter, "_is_emitting", False):
-            import pygame
-            from src.mouse_tools import physical_to_virtual
             px, py = pygame.mouse.get_pos()
             vx, vy = physical_to_virtual(px, py)
             if self.camera:
@@ -216,11 +215,9 @@ class PlayState(BaseState):
             
         if is_vibe and not was_vibe:
             settings.SOUNDS["into_vibe"].play()
-            from gale.timer import Timer
             Timer.tween(0.5, [(self, {"vibe_alpha": 40.0})])
         elif not is_vibe and was_vibe:
             settings.SOUNDS["out_vibe"].play()
-            from gale.timer import Timer
             Timer.tween(0.5, [(self, {"vibe_alpha": 0.0})])
             
         self.was_vibe = is_vibe
@@ -369,18 +366,7 @@ class PlayState(BaseState):
             if getattr(emitter, "is_ui", False):
                 emitter.render(surface, self.camera)
                 
-        if getattr(self.taxi, 'is_crashed', False):
-            from gale.text import render_text
-            render_text(
-                surface,
-                "GAME OVER - TAXI DESTROYED",
-                settings.FONTS["minecraft"],
-                settings.VIRTUAL_WIDTH // 2,
-                settings.VIRTUAL_HEIGHT // 2,
-                (255, 50, 50),
-                center=True
-            )
-        elif self.taxi.health < self.taxi.max_health * 0.15:
+        if self.taxi.health < self.taxi.max_health * 0.15:
             from gale.text import render_text
             render_text(
                 surface,
@@ -403,13 +389,11 @@ class PlayState(BaseState):
             
         text_alpha = getattr(self, "day_text_alpha", 0)
         if text_alpha > 0:
-            from gale.text import render_text
-            
             text_layer = pygame.Surface((settings.VIRTUAL_WIDTH, settings.VIRTUAL_HEIGHT), pygame.SRCALPHA)
             
             lines = getattr(self, "start_text", "").split('\n')
             center_y = settings.VIRTUAL_HEIGHT / 2
-            # Adjust starting y so the whole block is centered
+
             total_height = len(lines) * settings.FONTS["big"].get_linesize()
             start_y = center_y - total_height / 2 + settings.FONTS["big"].get_height() / 2
             
@@ -493,9 +477,6 @@ class PlayState(BaseState):
         self.taxi.on_input(input_id, input_data)
 
         if input_id == "mouse_click":
-            import pygame
-            from src.mouse_tools import physical_to_virtual
-            from src.ParticleEmitter import ParticleEmitter
             if input_data.pressed:
                 px, py = pygame.mouse.get_pos()
                 vx, vy = physical_to_virtual(px, py)

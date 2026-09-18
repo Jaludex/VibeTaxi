@@ -14,10 +14,8 @@ class CarCrashedState(BaseState):
         self.entity.is_braking = False
         if self.entity.body is not None:
             try:
-                # Amortiguación moderada para que frene gradualmente sin deslizarse eternamente
                 self.entity.body.set_damping(3.0, 5.0)
                 
-                # Fricción para que responda a choques con paredes/otros objetos
                 pm_body = getattr(self.entity.body, '_pm_body', None)
                 if pm_body is not None:
                     for s in pm_body.shapes:

@@ -11,7 +11,6 @@ from gale.timer import Timer
 from src.definitions.comfort import COMFORT_RULES
 class PassengerHUD:
     def __init__(self):
-        # 1. Progress Bar (Top-Right: 20px from top and 20px from right)
         self.bar_width = 130
         self.bar_height = 20
         self.bar_on_x = settings.VIRTUAL_WIDTH - self.bar_width - 20
@@ -19,7 +18,6 @@ class PassengerHUD:
         self.bar_y = 20
         self._bar_x = self.bar_off_x
 
-        # 2. Dialogue Box (Middle-Right: vertically centered, 20px from right)
         self.dialogue_width = 200
         self.dialogue_height = 60
         self.dialogue_on_x = settings.VIRTUAL_WIDTH - self.dialogue_width - 20
@@ -27,7 +25,6 @@ class PassengerHUD:
         self.dialogue_y = (settings.VIRTUAL_HEIGHT - self.dialogue_height) // 2
         self._dialogue_x = self.dialogue_off_x
 
-        # Themes
         self.bar_theme = Theme(
             font=settings.FONTS["minecraft"],
             text_color=pygame.Color(255, 220, 100),
@@ -62,7 +59,6 @@ class PassengerHUD:
             accent_color=pygame.Color(50, 210, 90),
         )
 
-        # Bar Widgets
         self.bar_panel = Panel(self._bar_x, self.bar_y, self.bar_width, self.bar_height, theme=self.bar_theme)
         self.bar_label = Label(self._bar_x + 6, self.bar_y + 6, "VIBE", theme=self.bar_theme)
         self.progress_bar = ProgressBar(
@@ -76,7 +72,6 @@ class PassengerHUD:
             theme=self.pb_theme,
         )
 
-        # Dialogue Widgets
         self.dialogue_panel = Panel(
             self._dialogue_x,
             self.dialogue_y,
@@ -95,21 +90,19 @@ class PassengerHUD:
             theme=self.tb_theme,
         )
 
-        # 3. Portrait Window (between progress bar and dialogue box, right-aligned)
+
         self.portrait_width = 90
         self.portrait_height = 80
         self.portrait_on_x = settings.VIRTUAL_WIDTH - self.portrait_width - 20
         self.portrait_off_x = settings.VIRTUAL_WIDTH + 20
-        # Vertically centered between bar bottom and dialogue top
+
         bar_bottom = self.bar_y + self.bar_height
         self.portrait_y = bar_bottom + (self.dialogue_y - bar_bottom - self.portrait_height) // 2
         self._portrait_x = float(self.portrait_off_x)
         
-        # Load the background car view
+
         bg_img = settings.TEXTURES.get("background_car_view")
         if bg_img:
-            # Scale or extract a portion to fit the 90x80 portrait window
-            # The original image is 450x80. A 90x80 crop fits perfectly.
             self.portrait_background = bg_img.subsurface((0, 0, 90, 80))
         else:
             self.portrait_background = pygame.Surface((90, 80))

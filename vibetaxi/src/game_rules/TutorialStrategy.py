@@ -4,6 +4,7 @@ class TutorialStrategy(BaseRuleStrategy):
     def __init__(self):
         super().__init__()
         self.passengers_delivered = 0
+        self.invincible = True
         
         from src.gui.PassengerHUD import PassengerHUD
         from gale.ui.manager import UIManager

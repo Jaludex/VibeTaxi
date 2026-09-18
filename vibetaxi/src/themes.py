@@ -12,7 +12,6 @@ DEFAULT_THEME = Theme(
     border_width=1
 )
 
-# Standard Button Theme with hover and matching focus color (prevents turning yellow)
 BUTTON_THEME = Theme(
     font=settings.FONTS["minecraft"],
     background_color=pygame.Color(100, 60, 90),
@@ -23,7 +22,6 @@ BUTTON_THEME = Theme(
     border_width=1
 )
 
-# Disabled Button Theme
 DISABLED_BUTTON_THEME = Theme(
     font=settings.FONTS["minecraft"],
     background_color=pygame.Color(60, 40, 50),
@@ -34,14 +32,12 @@ DISABLED_BUTTON_THEME = Theme(
     border_width=1
 )
 
-# Panels
 PANEL_THEME = Theme(
     background_color=pygame.Color(69, 40, 60),
     border_color=pygame.Color(255, 255, 255),
     border_width=2
 )
 
-# Labels
 LABEL_THEME = Theme(
     font=settings.FONTS["minecraft"],
     text_color=pygame.Color(255, 255, 255)

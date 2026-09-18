@@ -39,7 +39,6 @@ class ParticleEmitter:
         self._is_emitting: bool = True
         self._timer_item: Optional[Any] = None
 
-        # Immediate initial burst
         initial_count = (
             self.single_burst_count
             if self.emission_duration <= 0
