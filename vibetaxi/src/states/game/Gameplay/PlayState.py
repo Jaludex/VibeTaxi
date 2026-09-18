@@ -6,7 +6,7 @@ from gale.camera import Camera
 from gale.input_handler import InputData
 from gale.physics import BodyType
 from gale.state import BaseState
-from gale.text import render_texts
+from gale.text import render_text
 
 import settings
 from src.world.CityMap import CityMap
@@ -396,6 +396,8 @@ class PlayState(BaseState):
 
             total_height = len(lines) * settings.FONTS["big"].get_linesize()
             start_y = center_y - total_height / 2 + settings.FONTS["big"].get_height() / 2
+
+            from gale.text import render_text
             
             for i, line in enumerate(lines):
                 render_text(
