@@ -46,7 +46,21 @@ RADIO_FADEOUT_TIME = 2.0
 
 TITLE = "Vibe Taxi"
 
-SAVE_SLOTS = ["slot1", "slot2", "slot3"]
+CREDITS = (
+    "VIBE TAXI\n"
+    "A game made with Gale Engine & Pygame.\nAs Project in the course of\nVideogame Programming I (ULA)\n"
+    "Development & Design:\n"
+    "Jesús Leon (Jaludex)\nZadkiel Jiménez (Eltoti)\n\n"
+    "Music & Sound Effects:\n"
+    "opengameart.org\npixabay.com\nText blips by dmochas on itch.io\n"
+    "Graphical Assets:\n"
+    "Radio, indicator arrow and passenger UI by Eltoti\n"
+    "City Assets by nyknck on itch.io\n"
+    "Cars textures by Kia on itch.io\n"
+    "Peds texture by vimlark on itch.io\n"
+    "Fonts:\nGoogle Fonts\n\n"
+    "Thanks for playing our game!\nHope you enjoy it and have a good time!\n"
+)
 
 
 

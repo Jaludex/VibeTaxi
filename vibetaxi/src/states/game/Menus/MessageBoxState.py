@@ -16,7 +16,7 @@ class MessageBoxState(BaseState):
         super().__init__(state_machine)
         self.fade_alpha = 0.0
         self.panel_width = 320
-        self.panel_height = 110
+        self.panel_height = 124
         self.panel_y = -200
         self.target_y = settings.VIRTUAL_HEIGHT / 2 - self.panel_height / 2
         self.is_exiting = False
@@ -44,7 +44,7 @@ class MessageBoxState(BaseState):
             panel_x + 15, 
             self.panel_y + 28, 
             self.panel_width - 30, 
-            44, 
+            54, 
             message, 
             lines_per_page=4,
             on_close=self._on_ok,
@@ -53,7 +53,7 @@ class MessageBoxState(BaseState):
         
         self.btn_ok = Button(
             settings.VIRTUAL_WIDTH / 2 - 45, 
-            self.panel_y + 76, 
+            self.panel_y + 88, 
             90, 24, 
             "OK", 
             on_click=self._on_button_click,
@@ -91,7 +91,7 @@ class MessageBoxState(BaseState):
         self.panel.y = self.panel_y
         self.label_title.y = self.panel_y + 12
         self.text_box.y = self.panel_y + 28
-        self.btn_ok.y = self.panel_y + 76
+        self.btn_ok.y = self.panel_y + 88
         
     def _on_button_click(self):
         if hasattr(self.text_box, "is_typing") and self.text_box.is_typing:

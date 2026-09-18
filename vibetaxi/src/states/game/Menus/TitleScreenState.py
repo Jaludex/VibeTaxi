@@ -107,19 +107,41 @@ class TitleScreenState(BaseState):
         
         container.add_child(btn_resume)
         
-        # Records button
+        # Records & Credits buttons
         has_records = settings.SAVE_MANAGER.exists("records")
+        has_any_record = False
         if has_records:
             records = settings.SAVE_MANAGER.load("records")
             if len(records.get("workday", [])) > 0 or len(records.get("arcade", [])) > 0:
-                btn_records = Button(
-                    settings.VIRTUAL_WIDTH / 2 - 50, center_y + 40,
-                    100, 30,
-                    "Records",
-                    on_click=self._on_records,
-                    theme=BUTTON_THEME
-                )
-                container.add_child(btn_records)
+                has_any_record = True
+
+        if has_any_record:
+            btn_records = Button(
+                settings.VIRTUAL_WIDTH / 2 - 110, center_y + 40,
+                100, 30,
+                "Records",
+                on_click=self._on_records,
+                theme=BUTTON_THEME
+            )
+            container.add_child(btn_records)
+
+            btn_credits = Button(
+                settings.VIRTUAL_WIDTH / 2 + 10, center_y + 40,
+                100, 30,
+                "Credits",
+                on_click=self._on_credits,
+                theme=BUTTON_THEME
+            )
+            container.add_child(btn_credits)
+        else:
+            btn_credits = Button(
+                settings.VIRTUAL_WIDTH / 2 - 50, center_y + 40,
+                100, 30,
+                "Credits",
+                on_click=self._on_credits,
+                theme=BUTTON_THEME
+            )
+            container.add_child(btn_credits)
         
         # Quit button
         btn_quit = Button(
@@ -138,6 +160,16 @@ class TitleScreenState(BaseState):
             virtual_height=settings.VIRTUAL_HEIGHT,
             window_height=settings.WINDOW_HEIGHT
         )
+
+    def _on_credits(self):
+        if not getattr(self, "mode_selection_triggered", False):
+            settings.SOUNDS["press"].play()
+            from src.states.game.Menus.MessageBoxState import MessageBoxState
+            credits_text = getattr(settings, "CREDITS", "Vibe Taxi\nThanks for playing!")
+            self.state_machine.push(MessageBoxState(self.state_machine, "Credits", credits_text))
+
+    def reset_inputs(self):
+        self.input_cooldown = 0.25
 
     def _on_quit(self):
         if not getattr(self, "mode_selection_triggered", False):
