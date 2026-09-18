@@ -127,6 +127,7 @@ TEXTURES = {
     "title_gradient": pygame.image.load(BASE_DIR / "assets" / "graphics" / "title_gradient.png"),
     "taximeter": pygame.image.load(BASE_DIR / "assets" / "graphics" / "taximeter.png"),
     "test_someone": pygame.image.load(BASE_DIR / "assets" / "graphics" / "test_someone.png"),
+    "background_car_view": pygame.image.load(BASE_DIR / "assets" / "graphics" / "background_car_view.png")
     "game_icon": pygame.image.load(BASE_DIR / "assets" / "graphics" / "icon.png"),
 }
 
