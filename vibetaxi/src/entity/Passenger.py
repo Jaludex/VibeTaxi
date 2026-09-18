@@ -31,7 +31,6 @@ class Passenger(Entity):
         self.current_animation = None
         self.flipped = False
         
-        # new systems
         self.music_preference = definition.get("music_preference", "")
         if not self.music_preference:
             valid_genres = [station["genre"] for station in RADIO_STATIONS if station["genre"] != "off"]

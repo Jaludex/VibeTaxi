@@ -36,8 +36,6 @@ class TypewriterTextBox(TextBox):
 
     def _calculate_page_chars(self) -> None:
         if self.page_index < len(self._pages):
-            # To account for spaces in words, it's safer to use the exact line lengths.
-            # But remember that line might include spaces at the end, which are not visible.
             self.total_chars_on_page = sum(len(line) for line in self._pages[self.page_index])
         else:
             self.total_chars_on_page = 0

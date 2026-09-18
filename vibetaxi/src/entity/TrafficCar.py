@@ -24,12 +24,10 @@ class TrafficCar(Car):
         self.target_x = target_x
         self.target_y = target_y
         self.next_node_name = next_node_name
-        # point towards target initially
         self.angle = math.atan2(target_y - self.y, target_x - self.x)
         self.speed = self.max_speed * 0.5 # Start with some speed
 
     def on_collide(self, other):
-        # Crash logic only on high speed impacts
         if not self.crashed:
             my_vx = getattr(self, 'vx', 0)
             my_vy = getattr(self, 'vy', 0)

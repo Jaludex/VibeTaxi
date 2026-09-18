@@ -17,8 +17,6 @@ class DrawableMixin:
         center_x, center_y = self.x, self.y
 
         if angle is not None:
-            # Prefer entity-provided helper to compute center and degrees so
-            # the rendering and collision overlay match exactly
             try:
                 center_x, center_y, degrees = self.get_render_center_and_degrees()
             except Exception:
@@ -27,18 +25,13 @@ class DrawableMixin:
                 center_x, center_y = self.x, self.y
 
             image = pygame.transform.rotate(image, degrees)
-
-            pivot_x = getattr(self, "pivot_x", 0)
-            pivot_y = getattr(self, "pivot_y", 0)
             
-            # center_x/center_y already computed above (including pivot)
 
         elif getattr(self, "flipped", False):
             image = pygame.transform.flip(image, True, False)
 
         alpha = getattr(self, "alpha", 255)
         if alpha < 255:
-            # Multiply alpha into per-pixel alpha to avoid black borders after rotate
             try:
                 tmp = image.copy()
                 tmp.fill((255, 255, 255, alpha), None, pygame.BLEND_RGBA_MULT)

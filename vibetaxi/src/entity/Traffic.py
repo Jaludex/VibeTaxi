@@ -14,7 +14,7 @@ class TrafficSystem:
         self.spawn_timer = 0.0
         self.spawn_interval = getattr(settings, 'TRAFFIC_SPAWN_INTERVAL', 5.0)
         
-        self.camera = None # Set this to player's camera if you want distance-based spawning
+        self.camera = None
         
         self._load_traffic_nodes()
 
