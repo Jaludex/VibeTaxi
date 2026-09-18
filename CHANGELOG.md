@@ -4,6 +4,22 @@ Notable changes on the project will be documented here
 
 Format based on [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/), version format by [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 1.0.0 - 2026-09-17 Day 6 of development
+
+### Added
+ - Passenger dialogues for knowing where it's going and his music taste
+ - HUD for reading the Passenger dialogue, knowing if he's/she's happy and seeing him on the rearview
+ - TypeWriterTextBox, inherits from Gale.ui.TextBox and displays the text letter by letter for easier reading, and plays a blip sounds.
+ - Tutorial GameState and Strategy for a controlled enviroment where to learn about the game
+ - MessageBox state for display texts with a TypeWriterTextBox
+ - Fullscreen via F11
+
+### Changed
+ - Make GameOverState use a MessageBox instead of making his own panel
+
+### Fixed
+ - Remove unexpected collision in the middle of the city
+
 ## 1.0.0-beta - 2026-09-16 Day 5 of development
 
 ### Added
@@ -45,7 +61,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/), ver
  - Debug physics renders
 
 ### Deprecated
- -CollidableMixinClass
+ - CollidableMixinClass
 
 ## 1.0.0-alpha3 - 2026-09-14 Day 3 of development
 
