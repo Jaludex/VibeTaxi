@@ -152,7 +152,17 @@ class TitleScreenState(BaseState):
             theme=BUTTON_THEME
         )
         container.add_child(btn_quit)
-        
+
+        btn_usertracks = Button(
+            settings.VIRTUAL_WIDTH - 120,
+            settings.VIRTUAL_HEIGHT - 50,
+            100, 30,
+            "User Tracks",
+            on_click=self._on_user_tracks,
+            theme=BUTTON_THEME
+        )
+        container.add_child(btn_usertracks)
+
         self.ui = UIManager(
             container,
             virtual_width=settings.VIRTUAL_WIDTH,
@@ -160,6 +170,22 @@ class TitleScreenState(BaseState):
             virtual_height=settings.VIRTUAL_HEIGHT,
             window_height=settings.WINDOW_HEIGHT
         )
+
+    def _on_user_tracks(self):
+        if not getattr(self, "mode_selection_triggered", False):
+            settings.SOUNDS["press"].play()
+            self.mode_selection_triggered = True
+            self._cancel_pan_timers()
+
+            from src.os_tools import open_user_tracks_folder
+
+            def close_callback():
+                self.resume_panning()
+                open_user_tracks_folder()
+
+            user_tracks_text = getattr(settings, "USER_TRACKS_INFO", "By adding music to this folder, \nyou confirm you have the rights or licenses to use it\n. The developers assume no liability for copyrighted content.")
+            from src.states.game.Menus.MessageBoxState import MessageBoxState
+            self.state_machine.push(MessageBoxState(self.state_machine, "User Tracks", user_tracks_text, on_close=close_callback))
 
     def _on_credits(self):
         if not getattr(self, "mode_selection_triggered", False):
