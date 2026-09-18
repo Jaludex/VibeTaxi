@@ -29,6 +29,7 @@ class TitleScreenState(BaseState):
         
         self.fade_alpha = 255.0
         self._scene_alpha = 255.0
+        self.input_cooldown = 0.35
 
         self.city_map = CityMap("city")
         self.city_map.muted = True
@@ -106,19 +107,51 @@ class TitleScreenState(BaseState):
         
         container.add_child(btn_resume)
         
-        # Records button
+        # Records & Credits buttons
         has_records = settings.SAVE_MANAGER.exists("records")
+        has_any_record = False
         if has_records:
             records = settings.SAVE_MANAGER.load("records")
             if len(records.get("workday", [])) > 0 or len(records.get("arcade", [])) > 0:
-                btn_records = Button(
-                    settings.VIRTUAL_WIDTH / 2 - 50, center_y + 40,
-                    100, 30,
-                    "Records",
-                    on_click=self._on_records,
-                    theme=BUTTON_THEME
-                )
-                container.add_child(btn_records)
+                has_any_record = True
+
+        if has_any_record:
+            btn_records = Button(
+                settings.VIRTUAL_WIDTH / 2 - 110, center_y + 40,
+                100, 30,
+                "Records",
+                on_click=self._on_records,
+                theme=BUTTON_THEME
+            )
+            container.add_child(btn_records)
+
+            btn_credits = Button(
+                settings.VIRTUAL_WIDTH / 2 + 10, center_y + 40,
+                100, 30,
+                "Credits",
+                on_click=self._on_credits,
+                theme=BUTTON_THEME
+            )
+            container.add_child(btn_credits)
+        else:
+            btn_credits = Button(
+                settings.VIRTUAL_WIDTH / 2 - 50, center_y + 40,
+                100, 30,
+                "Credits",
+                on_click=self._on_credits,
+                theme=BUTTON_THEME
+            )
+            container.add_child(btn_credits)
+        
+        # Quit button
+        btn_quit = Button(
+            settings.VIRTUAL_WIDTH / 2 - 50, center_y + 80,
+            100, 30,
+            "Quit Game",
+            on_click=self._on_quit,
+            theme=BUTTON_THEME
+        )
+        container.add_child(btn_quit)
         
         self.ui = UIManager(
             container,
@@ -128,6 +161,23 @@ class TitleScreenState(BaseState):
             window_height=settings.WINDOW_HEIGHT
         )
 
+    def _on_credits(self):
+        if not getattr(self, "mode_selection_triggered", False):
+            settings.SOUNDS["press"].play()
+            self.mode_selection_triggered = True
+            self._cancel_pan_timers()
+            from src.states.game.Menus.MessageBoxState import MessageBoxState
+            credits_text = getattr(settings, "CREDITS", "Vibe Taxi\nThanks for playing!")
+            self.state_machine.push(MessageBoxState(self.state_machine, "Credits", credits_text, on_close=self.resume_panning))
+
+    def reset_inputs(self):
+        self.input_cooldown = 0.25
+
+    def _on_quit(self):
+        if not getattr(self, "mode_selection_triggered", False):
+            settings.SOUNDS["press"].play()
+            pygame.event.post(pygame.event.Event(pygame.QUIT))
+
     def _on_new_game(self):
         if not getattr(self, "mode_selection_triggered", False):
             settings.SOUNDS["press"].play()
@@ -135,6 +185,15 @@ class TitleScreenState(BaseState):
             self._cancel_pan_timers()
             from src.states.game.Menus.ModeSelectionState import ModeSelectionState
             self.state_machine.push(ModeSelectionState(self.state_machine))
+
+    def resume_panning(self):
+        self.mode_selection_triggered = False
+        if getattr(self, "_pan_phase", self.PHASE_FADE_IN) == self.PHASE_FADE_IN:
+            self._start_scene_fade_in()
+        elif getattr(self, "_pan_phase", self.PHASE_FADE_IN) == self.PHASE_PAN:
+            self._start_pan()
+        else:
+            self._start_scene_fade_out()
 
     def _on_resume(self):
         if not getattr(self, "mode_selection_triggered", False):
@@ -240,6 +299,8 @@ class TitleScreenState(BaseState):
             self.city_map.fixed_update()
 
     def update(self, dt: float):
+        if getattr(self, "input_cooldown", 0.0) > 0:
+            self.input_cooldown -= dt
         if self.city_map and self.camera:
             self.city_map.update(dt, self.camera)
             self.camera.update(dt)
@@ -248,6 +309,8 @@ class TitleScreenState(BaseState):
             self.ui.update(dt)
 
     def on_input(self, input_id, input_data):
+        if getattr(self, "input_cooldown", 0.0) > 0:
+            return
         if hasattr(self, 'ui') and self.ui:
             self.ui.on_input(input_id, input_data)
 

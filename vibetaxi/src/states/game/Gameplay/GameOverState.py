@@ -1,120 +1,37 @@
-import pygame
 import settings
-
 from typing import Dict, Any, Optional
-from gale.state import BaseState
-from gale.timer import Timer
-from gale.ui.manager import UIManager
-from gale.ui.panel import Panel
-from gale.ui.label import Label
-from gale.ui.container import Container
 
+from src.states.game.Menus.MessageBoxState import MessageBoxState
 from src.states.game.Menus.TitleScreenState import TitleScreenState
 
-class GameOverState(BaseState):
+class GameOverState(MessageBoxState):
     def __init__(self, state_machine: Any, reason: Optional[str] = None, record_data: Optional[Dict] = None) -> None:
-        super().__init__(state_machine)
-        self.fade_alpha = 0.0
-        self.panel_y = -200
-        self.target_y = settings.VIRTUAL_HEIGHT / 2 - 50
-        self.is_exiting = False
-        self.record_data = record_data
+        message = reason if reason else "Click OK to exit"
         
-        self.panel = Panel(
-            settings.VIRTUAL_WIDTH / 2 - 150, 
-            self.panel_y, 
-            300, 100
-        )
-        self.label_title = Label(
-            settings.VIRTUAL_WIDTH / 2, 
-            self.panel_y + 30, 
-            "GAME OVER", 
-            center=True
-        )
-        self.label_prompt = Label(
-            settings.VIRTUAL_WIDTH / 2, 
-            self.panel_y + 70, 
-            reason if reason else "Click to exit", 
-            center=True
-        )
-        
-        self.container = Container(0, 0, settings.VIRTUAL_WIDTH, settings.VIRTUAL_HEIGHT, children=[
-            self.panel, self.label_title, self.label_prompt
-        ])
-        
-        self.ui = UIManager(
-            self.container,
-            virtual_width=settings.VIRTUAL_WIDTH,
-            window_width=settings.WINDOW_WIDTH,
-            virtual_height=settings.VIRTUAL_HEIGHT,
-            window_height=settings.WINDOW_HEIGHT
-        )
-        
-    def enter(self, enter_params: Optional[Dict[str, Any]] = None):
-        settings.SOUNDS["game_over"].play()
-        self.fade_alpha = 0.0
-        self.exit_alpha = 0.0
-        self.panel_y = -200
-        self.is_exiting = False
-        self.update_ui_y()
-        
-        Timer.tween(1.0, [(self, {"fade_alpha": 180.0})])
-        Timer.tween(1.0, [(self, {"panel_y": self.target_y})], ease_function_name="out_cubic")
-        
-    def update_ui_y(self):
-        self.panel.y = self.panel_y
-        self.label_title.y = self.panel_y + 30
-        self.label_prompt.y = self.panel_y + 70
-        
-    def on_exit_click(self):
-        if self.is_exiting:
-            return
-        self.is_exiting = True
-        settings.SOUNDS["press"].play()
-        Timer.tween(1.0, [(self, {"exit_alpha": 255.0})], on_finish=self.handle_next_state)
-        
-    def handle_next_state(self):
-        if self.record_data:
-            from src.states.game.Gameplay.NewRecordState import NewRecordState
-            
-            def go_to_title():
-                while len(self.state_machine.states) > 0:
-                    self.state_machine.pop()
-                self.state_machine.push(TitleScreenState(self.state_machine))
+        def on_close():
+            if record_data:
+                from src.states.game.Gameplay.NewRecordState import NewRecordState
                 
-            self.state_machine.push(NewRecordState(
-                self.state_machine,
-                self.record_data["mode"],
-                self.record_data["score"],
-                self.record_data["records"],
-                go_to_title
-            ))
-        else:
-            # Pop all states properly to ensure exit() is called
-            while len(self.state_machine.states) > 0:
-                self.state_machine.pop()
-            self.state_machine.push(TitleScreenState(self.state_machine))
+                def go_to_title():
+                    while len(state_machine.states) > 0:
+                        state_machine.pop()
+                    state_machine.push(TitleScreenState(state_machine))
+                    
+                state_machine.push(NewRecordState(
+                    state_machine,
+                    record_data["mode"],
+                    record_data["score"],
+                    record_data["records"],
+                    go_to_title
+                ))
+            else:
+                while len(state_machine.states) > 0:
+                    state_machine.pop()
+                state_machine.push(TitleScreenState(state_machine))
+                
+        super().__init__(state_machine, "GAME OVER", message, on_close)
 
-    def update(self, dt: float):
-        self.update_ui_y()
-        self.ui.update(dt)
-
-    def on_input(self, input_id, input_data):
-        self.ui.on_input(input_id, input_data)
-        
-        if input_id == "mouse_click" and input_data.pressed:
-            if self.panel_y >= self.target_y:
-                self.on_exit_click()
-
-    def render(self, surface: pygame.Surface):
-        if getattr(self, "fade_alpha", 0.0) > 0:
-            fade_surf = pygame.Surface((settings.VIRTUAL_WIDTH, settings.VIRTUAL_HEIGHT), pygame.SRCALPHA)
-            fade_surf.fill((0, 0, 0, int(max(0.0, min(255.0, self.fade_alpha)))))
-            surface.blit(fade_surf, (0, 0))
-            
-        self.ui.render(surface)
-        
-        if getattr(self, "exit_alpha", 0.0) > 0:
-            exit_surf = pygame.Surface((settings.VIRTUAL_WIDTH, settings.VIRTUAL_HEIGHT), pygame.SRCALPHA)
-            exit_surf.fill((0, 0, 0, int(max(0.0, min(255.0, self.exit_alpha)))))
-            surface.blit(exit_surf, (0, 0))
+    def enter(self, enter_params: Optional[Dict[str, Any]] = None):
+        super().enter(enter_params)
+        if "game_over" in settings.SOUNDS:
+            settings.SOUNDS["game_over"].play()

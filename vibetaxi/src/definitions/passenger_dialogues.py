@@ -52,13 +52,6 @@ DIALOGUES_BANK = {
             "Drop the bass!",
             "I need some electronic dance tracks."
         ],
-        "off": [
-            "I prefer riding in silence.",
-            "Could you turn the radio off? I need to think.",
-            "No music for me today, thanks.",
-            "I have a headache, please keep it quiet.",
-            "Let's just enjoy the engine sounds."
-        ]
     },
     "reaction": {
         "good": [

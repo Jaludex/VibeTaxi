@@ -10,7 +10,7 @@ from gale import tilemap
 from gale.save import SaveManager
 from src.frame_tools import generate_car_frames
 
-input_handler.InputHandler.set_keyboard_action(input_handler.KEY_ESCAPE, "quit")
+input_handler.InputHandler.set_keyboard_action(input_handler.KEY_ESCAPE, "pause")
 input_handler.InputHandler.set_mouse_click_action(input_handler.MOUSE_BUTTON_1, "mouse_click")
 input_handler.InputHandler.set_mouse_motion_action(None, "mouse_motion")
 input_handler.InputHandler.set_keyboard_action(input_handler.KEY_x, "brake")
@@ -20,13 +20,12 @@ input_handler.InputHandler.set_keyboard_action(input_handler.KEY_a, "prev-song")
 input_handler.InputHandler.set_keyboard_action(input_handler.KEY_d, "next-song")
 input_handler.InputHandler.set_keyboard_action(input_handler.KEY_w, "vol-up")
 input_handler.InputHandler.set_keyboard_action(input_handler.KEY_s, "vol-down")
-input_handler.InputHandler.set_keyboard_action(input_handler.KEY_p, "pause")
 
 import string
 # Map all printable keys for TextInput, without overwriting existing game controls
 existing_keys = {
     input_handler.KEY_a, input_handler.KEY_d, input_handler.KEY_w, input_handler.KEY_s,
-    input_handler.KEY_p, input_handler.KEY_x, input_handler.KEY_z, input_handler.KEY_LSHIFT,
+    input_handler.KEY_x, input_handler.KEY_z, input_handler.KEY_LSHIFT,
     input_handler.KEY_ESCAPE
 }
 
@@ -47,7 +46,21 @@ RADIO_FADEOUT_TIME = 2.0
 
 TITLE = "Vibe Taxi"
 
-SAVE_SLOTS = ["slot1", "slot2", "slot3"]
+CREDITS = (
+    "VIBE TAXI\n"
+    "A game made with Gale Engine & Pygame.\nAs Project in the course of\nVideogame Programming I (ULA)\n"
+    "Development & Design:\n"
+    "Jesus Leon (Jaludex)\nZadkiel Jimenez (Eltoti)\n\n"
+    "Music & Sound Effects:\n"
+    "opengameart.org\npixabay.com\nText blips by dmochas on itch.io\n"
+    "Graphical Assets:\n"
+    "Radio, indicator arrow and passenger UI by Eltoti\n"
+    "City Assets by nyknck on itch.io\n"
+    "Cars textures by Kia on itch.io\n"
+    "Peds texture by vimlark on itch.io\n"
+    "Fonts:\nGoogle Fonts\n\n"
+    "Thanks for playing our game!\nHope you enjoy it and have a good time!\n"
+)
 
 
 
@@ -115,10 +128,12 @@ TEXTURES = {
     "taximeter": pygame.image.load(BASE_DIR / "assets" / "graphics" / "taximeter.png"),
     "test_someone": pygame.image.load(BASE_DIR / "assets" / "graphics" / "test_someone.png"),
     "background_car_view": pygame.image.load(BASE_DIR / "assets" / "graphics" / "background_car_view.png")
+    "game_icon": pygame.image.load(BASE_DIR / "assets" / "graphics" / "icon.png"),
 }
 
 TILEMAPS = {
-    "city": str(BASE_DIR / "assets" / "tilemaps" / "city.json")
+    "city": str(BASE_DIR / "assets" / "tilemaps" / "city.json"),
+    "tutorial": str(BASE_DIR / "assets" / "tilemaps" / "tutorial.json")
 }
 
 FRAMES = {
@@ -134,7 +149,7 @@ FONTS = {
     "medium": pygame.font.Font(BASE_DIR/ "assets" / "fonts" / "Minecraft.ttf", 12),
     "led": pygame.font.Font(BASE_DIR / "assets" / "fonts" / "led.ttf", 16),
     "led_small": pygame.font.Font(BASE_DIR / "assets" / "fonts" / "led.ttf", 8),
-    "minecraft": pygame.font.Font(BASE_DIR / "assets" / "fonts" / "Minecraft.ttf", 8),
+    "minecraft": pygame.font.Font(BASE_DIR / "assets" / "fonts" / "Minecraft.ttf", 12),
     "minecraft_small": pygame.font.Font(BASE_DIR / "assets" / "fonts" / "Minecraft.ttf", 8),
 }
 
@@ -159,6 +174,11 @@ SOUNDS = {
     "game_over": pygame.mixer.Sound(BASE_DIR / "assets" / "sounds" / "misc" / "game_over.wav"),
     "pause": pygame.mixer.Sound(BASE_DIR / "assets" / "sounds" / "misc" / "pause.wav"),
     "unpause": pygame.mixer.Sound(BASE_DIR / "assets" / "sounds" / "misc" / "unpause.wav"),
+    "bleep1": pygame.mixer.Sound(BASE_DIR / "assets" / "sounds" / "text_blips" / "bleep001.wav"),
+    "bleep2": pygame.mixer.Sound(BASE_DIR / "assets" / "sounds" / "text_blips" / "bleep002.wav"),
+    "bleep3": pygame.mixer.Sound(BASE_DIR / "assets" / "sounds" / "text_blips" / "bleep003.wav"),
+    "bleep4": pygame.mixer.Sound(BASE_DIR / "assets" / "sounds" / "text_blips" / "bleep004.wav"),
+    "bleep5": pygame.mixer.Sound(BASE_DIR / "assets" / "sounds" / "text_blips" / "bleep005.wav"),
 }
 
 MUSIC = {

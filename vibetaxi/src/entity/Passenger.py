@@ -88,14 +88,10 @@ class Passenger(Entity):
                 # If player didn't match the music in 4s, stay silent
                 self.has_initial_music_reacted = True
 
-        # Periodic comfort (+5 every 4s with matching song)
+        # Continuous comfort increase with matching song
         if is_correct_song:
-            self.periodic_timer += dt
-            if self.periodic_timer >= COMFORT_RULES["periodic_reaction_time"]:
-                self.comfort = min(COMFORT_RULES["max_comfort"], self.comfort + COMFORT_RULES["periodic_reaction_bonus"])
-                self.periodic_timer = 0.0
-        else:
-            self.periodic_timer = 0.0
+            rate = COMFORT_RULES.get("comfort_increase_rate", 1.25)
+            self.comfort = min(COMFORT_RULES["max_comfort"], self.comfort + rate * dt)
             
     def on_collision(self, hud=None):
         self.comfort = max(COMFORT_RULES["min_comfort"], self.comfort - COMFORT_RULES["collision_penalty"])

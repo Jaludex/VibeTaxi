@@ -133,7 +133,7 @@ class PlayState(BaseState):
             new_passengers = self.city_map.generate_passengers(spawn_chance=0.3)
             self.map_passengers.extend(new_passengers)
             
-        if getattr(self.game_rule_strategy, "invincible", False):
+        if getattr(self.game_rule_strategy, "always_vibe", False):
             from src.states.entity.TaxiVibeState import TaxiVibeState
             if not isinstance(self.taxi.state_machine.current, TaxiVibeState) and self.taxi.health > 0:
                 self.taxi.state_machine.change("vibe")
@@ -240,7 +240,7 @@ class PlayState(BaseState):
             self.active_passenger.update_comfort(dt, song_actual, self.game_rule_strategy.get_hud())
                 
             from src.states.entity.TaxiVibeState import TaxiVibeState
-            if not getattr(self.game_rule_strategy, "invincible", False):
+            if not getattr(self.game_rule_strategy, "always_vibe", False):
                 if self.active_passenger.comfort >= COMFORT_RULES["vibe_threshold"]:
                     if not isinstance(self.taxi.state_machine.current, TaxiVibeState):
                         self.taxi.state_machine.change("vibe")
@@ -249,7 +249,7 @@ class PlayState(BaseState):
                         self.taxi.state_machine.change("drive")
 
 
-            
+
             dest_x, dest_y = self.city_map.nodes[self.active_passenger.destination]
             dx = self.taxi.x - dest_x
             dy = self.taxi.y - dest_y
@@ -266,7 +266,7 @@ class PlayState(BaseState):
                     
                     # Exit vibe if we were in it, unless in Zen mode
                     from src.states.entity.TaxiVibeState import TaxiVibeState
-                    if not getattr(self.game_rule_strategy, "invincible", False):
+                    if not getattr(self.game_rule_strategy, "always_vibe", False):
                         if isinstance(self.taxi.state_machine.current, TaxiVibeState):
                             self.taxi.state_machine.change("drive")
 
@@ -511,8 +511,42 @@ class PlayState(BaseState):
                     self._click_emitter.stop()
                     self._click_emitter = None
 
+    def pause_audio(self) -> None:
+        if hasattr(self, 'soundscape_channel') and self.soundscape_channel:
+            try:
+                self.soundscape_channel.pause()
+            except Exception:
+                pass
+        if hasattr(self, 'taxi') and self.taxi:
+            self.taxi.pause_sounds()
+        pygame.mixer.music.pause()
+
+    def resume_audio(self) -> None:
+        if hasattr(self, 'soundscape_channel') and self.soundscape_channel:
+            try:
+                self.soundscape_channel.unpause()
+            except Exception:
+                pass
+        if hasattr(self, 'taxi') and self.taxi:
+            self.taxi.resume_sounds()
+        pygame.mixer.music.unpause()
+
+    def reset_inputs(self) -> None:
+        if hasattr(self, 'taxi') and self.taxi:
+            self.taxi.is_accelerating = False
+            self.taxi.is_reversing = False
+            self.taxi.is_braking = False
+            self.taxi.is_drifting = False
+            if hasattr(self.taxi, 'state_machine') and self.taxi.state_machine.current:
+                if type(self.taxi.state_machine.current).__name__ == "TaxiDriveState":
+                    self.taxi.state_machine.change("idle")
+        if getattr(self, "_click_emitter", None) is not None:
+            self._click_emitter.stop()
+            self._click_emitter = None
+
     def exit(self) -> None:
         self.exited = True
+        self.reset_inputs()
         if hasattr(self, 'danger_timer') and self.danger_timer:
             self.danger_timer.remove()
         if hasattr(self, 'soundscape_channel') and self.soundscape_channel:

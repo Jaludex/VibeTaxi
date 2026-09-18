@@ -14,12 +14,15 @@ from src.game_rules.WorkdayStrategy import WorkdayStrategy
 from src.game_rules.ArcadeStrategy import ArcadeStrategy
 from src.game_rules.ZenStrategy import ZenStrategy
 
+from src.game_rules.TutorialStrategy import TutorialStrategy
+from src.states.game.Gameplay.TutorialPlayState import TutorialPlayState
+
 class ModeSelectionState(BaseState):
     def __init__(self, state_machine: Any) -> None:
         super().__init__(state_machine)
         self.fade_alpha = 0.0
         
-        window_width = 360
+        window_width = 460
         window_height = 120
         window_x = settings.VIRTUAL_WIDTH / 2 - window_width / 2
         
@@ -31,8 +34,16 @@ class ModeSelectionState(BaseState):
         self._last_panel_y = self.panel_y
         
         # We will manually calculate widget positions relative to the window
-        self.btn_jornada = Button(
+        self.btn_tutorial = Button(
             window_x + 20,
+            self.panel_y + 75,
+            95, 30,
+            "Tutorial",
+            on_click=lambda: self.select_mode("tutorial")
+        )
+        
+        self.btn_jornada = Button(
+            window_x + 130,
             self.panel_y + 75,
             95, 30,
             "Workday",
@@ -40,7 +51,7 @@ class ModeSelectionState(BaseState):
         )
         
         self.btn_arcade = Button(
-            window_x + 132,
+            window_x + 240,
             self.panel_y + 75,
             95, 30,
             "Arcade",
@@ -48,7 +59,7 @@ class ModeSelectionState(BaseState):
         )
 
         self.btn_zen = Button(
-            window_x + 245,
+            window_x + 350,
             self.panel_y + 75,
             95, 30,
             "Zen",
@@ -68,7 +79,7 @@ class ModeSelectionState(BaseState):
             window_width, window_height,
             title="Please select a mode",
             on_close=self.on_close_click,
-            children=[self.btn_jornada, self.btn_arcade, self.btn_zen, self.desc_label]
+            children=[self.btn_tutorial, self.btn_jornada, self.btn_arcade, self.btn_zen, self.desc_label]
         )
         
         self.container = Container(0, 0, settings.VIRTUAL_WIDTH, settings.VIRTUAL_HEIGHT, children=[self.window])
@@ -127,9 +138,12 @@ class ModeSelectionState(BaseState):
         
     def return_to_title(self):
         self.state_machine.pop() # Pop ModeSelectionState
-        # Reset flag in TitleScreenState so it can be opened again
         if len(self.state_machine.states) > 0:
-            self.state_machine.states[-1].mode_selection_triggered = False
+            top_state = self.state_machine.states[-1]
+            if hasattr(top_state, "resume_panning"):
+                top_state.resume_panning()
+            else:
+                top_state.mode_selection_triggered = False
         
     def start_game(self):
         self.state_machine.pop() # Pops ModeSelectionState
@@ -137,19 +151,25 @@ class ModeSelectionState(BaseState):
         
         if self.selected_mode == "workday":
             strategy = WorkdayStrategy()
+            self.state_machine.push(PlayState(self.state_machine), game_rule_strategy=strategy)
         elif self.selected_mode == "arcade":
             strategy = ArcadeStrategy()
-        else:
+            self.state_machine.push(PlayState(self.state_machine), game_rule_strategy=strategy)
+        elif self.selected_mode == "zen":
             strategy = ZenStrategy()
-            
-        self.state_machine.push(PlayState(self.state_machine), game_rule_strategy=strategy)
+            self.state_machine.push(PlayState(self.state_machine), game_rule_strategy=strategy)
+        else: # tutorial
+            strategy = TutorialStrategy()
+            self.state_machine.push(TutorialPlayState(self.state_machine), game_rule_strategy=strategy)
 
     def update(self, dt: float):
         self.update_ui_y()
         self.ui.update(dt)
         
         # Update description text based on hover
-        if self.btn_jornada.hovered:
+        if self.btn_tutorial.hovered:
+            self.desc_label.set_text("Learn the basics of the game")
+        elif self.btn_jornada.hovered:
             self.desc_label.set_text("Win money with each trip. Use it to repare your car")
         elif self.btn_arcade.hovered:
             self.desc_label.set_text("Win as many trips as you can before time runs out")

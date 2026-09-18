@@ -67,3 +67,13 @@ INPUT_THEME = Theme(
     border_width=2,
     padding=5
 )
+
+# Text Box
+TEXTBOX_THEME = Theme(
+    font=settings.FONTS["minecraft"],
+    background_color=pygame.Color(69, 40, 60),
+    text_color=pygame.Color(255, 255, 255),
+    border_width=0,
+    padding=0
+)
+

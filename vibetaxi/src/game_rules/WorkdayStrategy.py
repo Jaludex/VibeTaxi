@@ -132,7 +132,7 @@ class WorkdayStrategy(BaseRuleStrategy):
             ))
 
         if taxi.health <= 0:
-            show_game_over()
+            show_game_over(reason="Your taxi was destroyed!")
         else:
             if self.money >= self.fee:
                 self.money -= self.fee

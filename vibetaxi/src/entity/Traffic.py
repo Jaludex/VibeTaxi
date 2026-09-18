@@ -81,17 +81,19 @@ class TrafficSystem:
         
         if self.camera:
             cam_x, cam_y = getattr(self.camera, 'x', 0), getattr(self.camera, 'y', 0)
-            spawn_min = getattr(settings, 'TRAFFIC_SPAWN_MIN_DIST', 380)
-            spawn_max = getattr(settings, 'TRAFFIC_SPAWN_MAX_DIST', 500)
-            # Filter nodes that are outside view but not too far
+            margin_x = (settings.VIRTUAL_WIDTH / 2) + 60
+            margin_y = (settings.VIRTUAL_HEIGHT / 2) + 60
+            max_dist = getattr(settings, 'TRAFFIC_SPAWN_MAX_DIST', 800)
+            
             def is_good_spawn(name):
                 nx, ny = self.nodes[name]["x"], self.nodes[name]["y"]
+                in_view = (abs(nx - cam_x) <= margin_x) and (abs(ny - cam_y) <= margin_y)
+                if in_view:
+                    return False
                 dist = math.hypot(nx - cam_x, ny - cam_y)
-                return spawn_min < dist < spawn_max
+                return dist <= max_dist
                 
-            filtered = [n for n in valid_nodes if is_good_spawn(n)]
-            if filtered:
-                valid_nodes = filtered
+            valid_nodes = [n for n in valid_nodes if is_good_spawn(n)]
                 
         if not valid_nodes:
             return

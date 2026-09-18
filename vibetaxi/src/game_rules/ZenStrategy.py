@@ -4,6 +4,7 @@ class ZenStrategy(BaseRuleStrategy):
     def __init__(self):
         super().__init__()
         self.invincible = True
+        self.always_vibe = True
         
     def should_respawn_passengers(self, current_count: int) -> bool:
         return current_count < 3

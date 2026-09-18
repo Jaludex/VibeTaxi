@@ -8,7 +8,7 @@ class BaseRuleStrategy:
     def get_start_text(self) -> str:
         return ""
 
-    def on_passenger_delivered(self, distance: float):
+    def on_passenger_delivered(self, passenger, distance: float):
         pass
 
     def should_respawn_passengers(self, current_count: int) -> bool:

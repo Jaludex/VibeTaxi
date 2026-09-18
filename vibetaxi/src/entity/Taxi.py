@@ -163,6 +163,18 @@ class Taxi(Car):
                     ch.stop()
             self.engine_channels = {}
 
+    def pause_sounds(self):
+        if hasattr(self, 'engine_channels') and self.engine_channels:
+            for ch in self.engine_channels.values():
+                if ch:
+                    ch.pause()
+
+    def resume_sounds(self):
+        if hasattr(self, 'engine_channels') and self.engine_channels:
+            for ch in self.engine_channels.values():
+                if ch:
+                    ch.unpause()
+
     def on_input(self, input_id: str, input_data: Any) -> None:
         if not self.is_crashed:
             self.command_bindings.dispatch(self, input_id, input_data)
