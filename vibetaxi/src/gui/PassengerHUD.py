@@ -95,6 +95,26 @@ class PassengerHUD:
             theme=self.tb_theme,
         )
 
+        # 3. Portrait Window (between progress bar and dialogue box, right-aligned)
+        self.portrait_width = 64
+        self.portrait_height = 72
+        self.portrait_on_x = settings.VIRTUAL_WIDTH - self.portrait_width - 20
+        self.portrait_off_x = settings.VIRTUAL_WIDTH + 20
+        # Vertically centered between bar bottom and dialogue top
+        bar_bottom = self.bar_y + self.bar_height
+        self.portrait_y = bar_bottom + (self.dialogue_y - bar_bottom - self.portrait_height) // 2
+        self._portrait_x = float(self.portrait_off_x)
+        self.portrait_surface = None
+
+        self.portrait_theme = Theme(
+            font=settings.FONTS["minecraft"],
+            text_color=pygame.Color(240, 240, 245),
+            background_color=pygame.Color(20, 22, 30, 225),
+            border_color=pygame.Color(130, 140, 170),
+            border_width=1,
+            padding=0,
+        )
+
         # Root container
         self.container = Container(
             0,
@@ -114,6 +134,14 @@ class PassengerHUD:
         self.passenger = None
         self.current_text = ""
         self.last_comfort = random.randint(int(COMFORT_RULES["initial_min"]), int(COMFORT_RULES["initial_max"]))
+
+    @property
+    def portrait_x(self) -> float:
+        return self._portrait_x
+
+    @portrait_x.setter
+    def portrait_x(self, val: float) -> None:
+        self._portrait_x = val
 
     @property
     def bar_x(self) -> float:
@@ -144,8 +172,16 @@ class PassengerHUD:
         self.passenger = passenger
         self.last_comfort = passenger.comfort
         self.progress_bar.value = passenger.comfort
-        # Slide in comfort bar
+        # Load portrait (use passenger texture or fallback to test_someone)
+        portrait_key = passenger.definition.get("portrait", "test_someone")
+        raw_img = settings.TEXTURES.get(portrait_key)
+        if raw_img:
+            self.portrait_surface = pygame.transform.scale(raw_img, (self.portrait_width, self.portrait_height))
+        else:
+            self.portrait_surface = None
+        # Slide in comfort bar and portrait
         Timer.tween(0.35, [(self, {"bar_x": self.bar_on_x})])
+        Timer.tween(0.35, [(self, {"portrait_x": float(self.portrait_on_x)})])
         # Show greeting dialogue
         greeting = passenger.dialogues.get("enter", "Hello! Take me to my destination.")
         self.show_text(greeting)
@@ -169,6 +205,7 @@ class PassengerHUD:
     def _clear_passenger(self) -> None:
         self.passenger = None
         Timer.tween(0.35, [(self, {"bar_x": self.bar_off_x})])
+        Timer.tween(0.35, [(self, {"portrait_x": float(self.portrait_off_x)})])
 
     def update(self, dt: float) -> None:
         if self.passenger:
@@ -203,4 +240,32 @@ class PassengerHUD:
         self.text_box._pages = self.text_box._paginate(text)
         self.text_box.page_index = 0
         self.text_box.visible = True
+
+    def render_portrait(self, surface) -> None:
+        if self._portrait_x >= self.portrait_off_x:
+            return
+        if self.portrait_surface is None:
+            return
+            
+        x = int(self._portrait_x)
+        y = self.portrait_y
+        w = self.portrait_width
+        h = self.portrait_height
         
+        # Draw background panel
+        bg = self.portrait_theme.background_color
+        panel_rect = pygame.Rect(x, y, w, h)
+        panel_surf = pygame.Surface((w, h), pygame.SRCALPHA)
+        panel_surf.fill(bg)
+        surface.blit(panel_surf, (x, y))
+        
+        # Draw portrait image centered inside
+        img_w, img_h = self.portrait_surface.get_size()
+        img_x = x + (w - img_w) // 2
+        img_y = y + (h - img_h) // 2
+        surface.blit(self.portrait_surface, (img_x, img_y))
+        
+        # Draw border
+        border_color = self.portrait_theme.border_color
+        border_w = self.portrait_theme.border_width
+        pygame.draw.rect(surface, border_color, panel_rect, border_w)

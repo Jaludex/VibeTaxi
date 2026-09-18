@@ -71,6 +71,7 @@ class ArcadeStrategy(BaseRuleStrategy):
         import settings
         
         self.ui.render(surface)
+        self.passenger_hud.render_portrait(surface)
         
         # Render common taximeter
         self._render_taximeter(surface, x, y)

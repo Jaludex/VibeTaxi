@@ -112,7 +112,8 @@ TEXTURES = {
     "peds": pygame.image.load(BASE_DIR / "assets" / "graphics" / "peds.png"),
     "arrow": pygame.image.load(BASE_DIR / "assets" / "graphics" / "arrow.png"),
     "title_gradient": pygame.image.load(BASE_DIR / "assets" / "graphics" / "title_gradient.png"),
-    "taximeter": pygame.image.load(BASE_DIR / "assets" / "graphics" / "taximeter.png")
+    "taximeter": pygame.image.load(BASE_DIR / "assets" / "graphics" / "taximeter.png"),
+    "test_someone": pygame.image.load(BASE_DIR / "assets" / "graphics" / "test_someone.png")
 }
 
 TILEMAPS = {
