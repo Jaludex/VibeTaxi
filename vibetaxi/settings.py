@@ -49,47 +49,9 @@ TITLE = "Vibe Taxi"
 
 SAVE_SLOTS = ["slot1", "slot2", "slot3"]
 
-#dialogos
-MUSIC_GENRES = ["rock", "pop" ,"hiphop", "electronic"]
 
-DIALOGUES_BANK = {
-    "enter": [
-        "¡Hola! Lléveme a mi destino, por favor.",
-        "Buenas, jefe. Vamos rápido, ando con prisa.",
-        "Qué tal. Espero que el viaje sea cómodo."
-    ],
-    "reaction": {
-        "good": [
-            "Esa cancion esta buenisima", 
-            "¡Temazo! Súbale a esa monda.", 
-            "Madre gusto de musica tienes."
-        ],
-        "neutral": [
-            "...", 
-            "Puede dejarla, todo bien.",
-            "Esa cancion es muy x"
-        ],
-        "bad": [
-            "¿Podría cambiar esa música, por favor?", 
-            "Qué es esa vaina, me duele la cabeza.", 
-            "Uy no coma chicuca y cambie esa mierda."
-        ]
-    },
-    "exit": {
-        "good": [
-            "¡Excelente servicio, 5 estrellas!", 
-            "Gracias, un viaje muy agradable.", 
-            "¡Nos vemos, gracias por la buena vibra!"
-        ],
-        "bad": [
-            "Pésimo viaje, me voy asqueado, spgto contigo.", 
-            "No vuelvo a subirme a este taxi.", 
-            "Al fin llegamos, qué tortura..."
-        ]
-    }
-}
 
-DIALOGUE_DISPLAY_TIME = 3.0
+DIALOGUE_DISPLAY_TIME = 5.0
 
 BASE_DIR = pathlib.Path(__file__).parent
 
@@ -150,7 +112,8 @@ TEXTURES = {
     "peds": pygame.image.load(BASE_DIR / "assets" / "graphics" / "peds.png"),
     "arrow": pygame.image.load(BASE_DIR / "assets" / "graphics" / "arrow.png"),
     "title_gradient": pygame.image.load(BASE_DIR / "assets" / "graphics" / "title_gradient.png"),
-    "taximeter": pygame.image.load(BASE_DIR / "assets" / "graphics" / "taximeter.png")
+    "taximeter": pygame.image.load(BASE_DIR / "assets" / "graphics" / "taximeter.png"),
+    "test_someone": pygame.image.load(BASE_DIR / "assets" / "graphics" / "test_someone.png")
 }
 
 TILEMAPS = {
@@ -170,7 +133,7 @@ FONTS = {
     "big": pygame.font.Font(BASE_DIR / "assets" / "fonts" / "Big.ttf", 32),
     "medium": pygame.font.Font(BASE_DIR/ "assets" / "fonts" / "Minecraft.ttf", 12),
     "led": pygame.font.Font(BASE_DIR / "assets" / "fonts" / "led.ttf", 16),
-    "led_small": pygame.font.Font(BASE_DIR / "assets" / "fonts" / "led.ttf", 8)
+    "led_small": pygame.font.Font(BASE_DIR / "assets" / "fonts" / "led.ttf", 8),
     "minecraft": pygame.font.Font(BASE_DIR / "assets" / "fonts" / "Minecraft.ttf", 8),
     "minecraft_small": pygame.font.Font(BASE_DIR / "assets" / "fonts" / "Minecraft.ttf", 8),
 }

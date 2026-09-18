@@ -18,6 +18,19 @@ class BaseRuleStrategy:
         # Allow the strategy to render its own stats (time, score, money)
         pass
         
+    def get_hud(self):
+        return None
+        
+    def bind_passenger(self, p):
+        hud = self.get_hud()
+        if hud:
+            hud.bind_passenger(p)
+            
+    def unbind_passenger(self):
+        hud = self.get_hud()
+        if hud:
+            hud.unbind_passenger()
+        
     def _render_taximeter(self, surface, x, y):
         from gale.text import render_text
         import settings

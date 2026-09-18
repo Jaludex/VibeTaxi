@@ -15,6 +15,7 @@ from src.definitions.vehicles import VEHICLE_DEFS
 from src.gui.PassengerHUD import PassengerHUD
 from gale.ui.manager import UIManager
 from gale.timer import Timer
+from src.definitions.comfort import COMFORT_RULES
 
 class PlayState(BaseState):
     def enter(self, **enter_params: Dict[str, Any]) -> None:
@@ -98,15 +99,7 @@ class PlayState(BaseState):
         self.day_text_alpha = 0.0
         self.start_text = self.game_rule_strategy.get_start_text()
         
-        self.passenger_hud = PassengerHUD()
-        self.ui = UIManager(
-            self.passenger_hud.container,
-            virtual_width=settings.VIRTUAL_WIDTH,
-            window_width=settings.WINDOW_WIDTH,
-            virtual_height=settings.VIRTUAL_HEIGHT,
-            window_height=settings.WINDOW_HEIGHT
-        )
-        
+
         def fade_out_text():
             Timer.tween(1.0, [(self, {"day_text_alpha": 0.0})])
             
@@ -129,11 +122,9 @@ class PlayState(BaseState):
             
         self.taxi.update(dt)
         self.city_map.update(dt, self.camera)
-        self.passenger_hud.update(dt)
-        self.ui.update(dt)
+
         self.camera.update(dt)
         self.radio.update(dt)
-        Timer.update(dt)
         
         
         self.game_rule_strategy.update(dt)
@@ -245,12 +236,12 @@ class PlayState(BaseState):
 
         if self.active_passenger.is_riding():
             
-            song_actual = self.radio.get_current_song()
-            self.active_passenger.update_comfort(dt, song_actual, self.passenger_hud)
+            song_actual = self.radio.get_current_genre()
+            self.active_passenger.update_comfort(dt, song_actual, self.game_rule_strategy.get_hud())
                 
             from src.states.entity.TaxiVibeState import TaxiVibeState
             if not getattr(self.game_rule_strategy, "always_vibe", False):
-                if self.active_passenger.satisfaction >= 75.0:
+                if self.active_passenger.satisfaction >= COMFORT_RULES["vibe_threshold"]:
                     if not isinstance(self.taxi.state_machine.current, TaxiVibeState):
                         self.taxi.state_machine.change("vibe")
                 else:
@@ -287,7 +278,7 @@ class PlayState(BaseState):
                     target=(dest_x, dest_y), 
                     on_arrival=reach_destination
                 )
-                self.passenger_hud.unbind_passenger()
+                self.game_rule_strategy.unbind_passenger()
 
     def update_city_passengers(self, dt: float):
         for p in self.map_passengers:
@@ -299,7 +290,7 @@ class PlayState(BaseState):
                 if distance <= settings.PASSENGER_DETECTION_RADIUS and abs(self.taxi.speed) < 5:
                     def reach_taxi():
                         p.state_machine.change("ride", taxi=self.taxi)
-                        self.passenger_hud.bind_passenger(p)
+                        self.game_rule_strategy.bind_passenger(p)
                     
                     if "honk" in settings.SOUNDS:
                         settings.SOUNDS["honk"].play()
@@ -308,14 +299,11 @@ class PlayState(BaseState):
                     self.active_passenger = p
                     self.map_passengers.remove(p)
                     
-                    if not hasattr(p, "preferred_genre"):
-                        import random
-                        genres = ["rock", "pop", "hiphop", "electronic", "jazz", None]
-                        p.preferred_genre = random.choice(genres)
+
                     p.satisfaction = 10.0
                     p.pickup_x = p.x
                     p.pickup_y = p.y
-                    print(f"DEBUG: New active passenger. Preferred genre: {p.preferred_genre if p.preferred_genre else 'off'}")
+                    print(f"DEBUG: New active passenger. Preferred genre: {p.music_preference if p.music_preference else 'off'}")
                     break
 
     def render(self, surface):
@@ -375,8 +363,6 @@ class PlayState(BaseState):
             surface.blit(filter_surf, (0, 0))
 
         self.radio.render(surface)
-        self.ui.render(surface)
-        
         if self.active_passenger and self.active_passenger.is_riding():
             dest_x, dest_y = self.city_map.nodes[self.active_passenger.destination]
             self._render_arrow(surface, dest_x, dest_y)

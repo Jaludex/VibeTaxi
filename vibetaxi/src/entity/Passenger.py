@@ -8,20 +8,14 @@ from src.entity.Entity import Entity
 from src.states.entity.PassengerWaitState import PassengerWaitState
 from src.states.entity.PassengerWalkState import PassengerWalkState
 from src.states.entity.PassengerRideState import PassengerRideState
+from src.definitions.passenger_dialogues import DIALOGUES_BANK
+from src.definitions.comfort import COMFORT_RULES
+from src.definitions.radio import RADIO_STATIONS
 
 class Passenger(Entity):
     def __init__(self, x: float, y: float, destination_node: str, destination_pos: tuple, definition: dict):
         self.destination = destination_node
         self.definition = definition
-        
-        self.dialogues = {
-            "enter": random.choice(settings.DIALOGUES_BANK["enter"]),
-            "reaction_good": random.choice(settings.DIALOGUES_BANK["reaction"]["good"]),
-            "reaction_neutral": random.choice(settings.DIALOGUES_BANK["reaction"]["neutral"]),
-            "reaction_bad": random.choice(settings.DIALOGUES_BANK["reaction"]["bad"]),
-            "exit_good": random.choice(settings.DIALOGUES_BANK["exit"]["good"]),
-            "exit_bad": random.choice(settings.DIALOGUES_BANK["exit"]["bad"])
-        }
         
         dest_x, dest_y = destination_pos
         trip_distance = math.hypot(dest_x - x, dest_y - y)
@@ -40,10 +34,26 @@ class Passenger(Entity):
         # new systems
         self.music_preference = definition.get("music_preference", "")
         if not self.music_preference:
-            self.music_preference = random.choice(settings.MUSIC_GENRES)
+            valid_genres = [station["genre"] for station in RADIO_STATIONS if station["genre"] != "off"]
+            if valid_genres:
+                self.music_preference = random.choice(valid_genres)
             self.definition["music_preference"] = self.music_preference
+            
+        base_greeting = random.choice(DIALOGUES_BANK["enter"]).format(destination=self.destination)
+        genre_hints = DIALOGUES_BANK.get("hints", {}).get(self.music_preference, [])
+        hint = random.choice(genre_hints) if genre_hints else ""
+        greeting = f"{base_greeting} {hint}".strip()
+        
+        self.dialogues = {
+            "enter": greeting,
+            "reaction_good": random.choice(DIALOGUES_BANK["reaction"]["good"]),
+            "reaction_neutral": random.choice(DIALOGUES_BANK["reaction"]["neutral"]),
+            "reaction_bad": random.choice(DIALOGUES_BANK["reaction"]["bad"]),
+            "exit_good": random.choice(DIALOGUES_BANK["exit"]["good"]),
+            "exit_bad": random.choice(DIALOGUES_BANK["exit"]["bad"])
+        }
 
-        self.comfort = float(random.randint(40, 60))
+        self.comfort = float(random.randint(int(COMFORT_RULES["initial_min"]), int(COMFORT_RULES["initial_max"])))
         self.time_riding = 0.0
         self.has_initial_music_reacted = False
         self.periodic_timer = 0.0
@@ -69,28 +79,29 @@ class Passenger(Entity):
         
         # Initial 4s window: bonus +20 if matching song is played
         if not self.has_initial_music_reacted:
-            if is_correct_song and self.time_riding <= 4.0:
-                self.comfort = min(100.0, self.comfort + 20.0)
+            if is_correct_song and self.time_riding <= COMFORT_RULES["initial_reaction_time"]:
+                self.comfort = min(COMFORT_RULES["max_comfort"], self.comfort + COMFORT_RULES["initial_reaction_bonus"])
                 self.has_initial_music_reacted = True
                 if hud:
-                    hud.show_text(random.choice(settings.DIALOGUES_BANK["reaction"]["good"]))
-            elif self.time_riding > 4.0:
+                    hud.show_text(random.choice(DIALOGUES_BANK["reaction"]["good"]))
+            elif self.time_riding > COMFORT_RULES["initial_reaction_time"]:
                 # If player didn't match the music in 4s, stay silent
                 self.has_initial_music_reacted = True
 
         # Periodic comfort (+5 every 4s with matching song)
         if is_correct_song:
             self.periodic_timer += dt
-            if self.periodic_timer >= 4.0:
-                self.comfort = min(100.0, self.comfort + 5.0)
+            if self.periodic_timer >= COMFORT_RULES["periodic_reaction_time"]:
+                self.comfort = min(COMFORT_RULES["max_comfort"], self.comfort + COMFORT_RULES["periodic_reaction_bonus"])
                 self.periodic_timer = 0.0
         else:
             self.periodic_timer = 0.0
             
     def on_collision(self, hud=None):
-        self.comfort = max(0.0, self.comfort - 25.0)
+        self.comfort = max(COMFORT_RULES["min_comfort"], self.comfort - COMFORT_RULES["collision_penalty"])
         if hud:
-            hud.show_text(random.choice(settings.DIALOGUES_BANK["reaction"]["bad"]))
+            hud.show_text(random.choice(DIALOGUES_BANK["reaction"]["bad"]))
+
         
 
     def generate_animations(self, animation_defs: dict) -> None:

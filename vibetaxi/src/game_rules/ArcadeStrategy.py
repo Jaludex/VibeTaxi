@@ -5,8 +5,26 @@ class ArcadeStrategy(BaseRuleStrategy):
         super().__init__()
         self.time_remaining = start_time
         self.passengers_delivered = passengers_delivered
+        
+        from src.gui.PassengerHUD import PassengerHUD
+        from gale.ui.manager import UIManager
+        import settings
+        self.passenger_hud = PassengerHUD()
+        self.ui = UIManager(
+            self.passenger_hud.container,
+            virtual_width=settings.VIRTUAL_WIDTH,
+            window_width=settings.WINDOW_WIDTH,
+            virtual_height=settings.VIRTUAL_HEIGHT,
+            window_height=settings.WINDOW_HEIGHT
+        )
+        
+    def get_hud(self):
+        return self.passenger_hud
 
     def update(self, dt: float):
+        self.passenger_hud.update(dt)
+        self.ui.update(dt)
+        
         if self.game_over:
             return
             
@@ -51,6 +69,9 @@ class ArcadeStrategy(BaseRuleStrategy):
     def render_ui(self, surface, font, x, y):
         from gale.text import render_text
         import settings
+        
+        self.ui.render(surface)
+        self.passenger_hud.render_portrait(surface)
         
         # Render common taximeter
         self._render_taximeter(surface, x, y)

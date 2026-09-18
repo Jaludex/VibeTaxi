@@ -13,6 +13,7 @@ from src.entity.Passenger import Passenger
 from src.definitions.props import PROPS_DEF
 from src.definitions.passengers import PASSENGER_DEFS
 from src.entity.Traffic import TrafficSystem
+from src.definitions.radio import RADIO_STATIONS
 
 
 class CityMap:
@@ -462,7 +463,8 @@ class CityMap:
                 ped_key = random.choice(list(PASSENGER_DEFS.keys()))
                 definition = PASSENGER_DEFS[ped_key].copy()
                 
-                definition["music_preference"] = random.choice(settings.MUSIC_GENRES)
+                valid_genres = [station["genre"] for station in RADIO_STATIONS if station["genre"] != "off"]
+                definition["music_preference"] = random.choice(valid_genres) if valid_genres else ""
                 
                 passenger = Passenger(x, y, destination_name, destination_pos, definition)
                 spawned_passengers.append(passenger)
