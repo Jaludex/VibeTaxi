@@ -13,7 +13,10 @@ class VibeTaxi(Game):
         icon = settings.TEXTURES.get("game_icon")
         if icon:
             pygame.display.set_icon(icon)
+
+        kwargs.setdefault("flags", pygame.SCALED | pygame.RESIZABLE)
         super().__init__(*args, **kwargs)
+        self.is_fullscreen: bool = False
 
     def init(self) -> None:
         from gale.ui.theme import set_default_theme
@@ -38,7 +41,11 @@ class VibeTaxi(Game):
         self.state_stack.render(surface)
 
     def on_input(self, input_id: str, input_data: InputData) -> None:
-        if input_id == "quit" and input_data.pressed:
+        if input_id == "toggle_fullscreen" and input_data.pressed:
+            pygame.display.toggle_fullscreen()
+            self.is_fullscreen = not self.is_fullscreen
+            return
+        elif input_id == "quit" and input_data.pressed:
             self.quit()
         else:
             self.state_stack.on_input(input_id, input_data)

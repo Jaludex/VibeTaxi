@@ -10,6 +10,7 @@ from gale import tilemap
 from gale.save import SaveManager
 from src.frame_tools import generate_car_frames
 
+input_handler.InputHandler.set_keyboard_action(input_handler.KEY_F11, "toggle_fullscreen")
 input_handler.InputHandler.set_keyboard_action(input_handler.KEY_ESCAPE, "pause")
 input_handler.InputHandler.set_mouse_click_action(input_handler.MOUSE_BUTTON_1, "mouse_click")
 input_handler.InputHandler.set_mouse_motion_action(None, "mouse_motion")
@@ -45,6 +46,8 @@ for key_name in ["SPACE", "BACKSPACE", "RETURN", "KP_ENTER", "DELETE", "LEFT", "
 RADIO_FADEOUT_TIME = 2.0
 
 TITLE = "Vibe Taxi"
+
+VERSION = "1.0.0-beta2"
 
 CREDITS = (
     "VIBE TAXI\n"

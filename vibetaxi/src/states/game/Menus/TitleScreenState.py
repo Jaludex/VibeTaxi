@@ -348,6 +348,26 @@ class TitleScreenState(BaseState):
             shadowed=True
         )
 
+        render_text(
+            surface,
+            f"Version {settings.VERSION}",
+            settings.FONTS["medium"],
+            5,
+            settings.VIRTUAL_HEIGHT - 20,
+            (255, 255, 255),
+            shadowed=True
+        )
+
+        render_text(
+                    surface,
+                    "F11 for Fullscreen",
+                    settings.FONTS["medium"],
+                    5,
+                    settings.VIRTUAL_HEIGHT - 40,
+                    (255, 255, 255),
+                    shadowed=True
+                )
+
         if hasattr(self, 'ui') and self.ui:
             self.ui.render(surface)
 
