@@ -51,7 +51,7 @@ VERSION = "1.0.0"
 
 CREDITS = (
     "VIBE TAXI\n"
-    "A game made with Gale Engine & Pygame.\nAs Project in the course of\nVideogame Programming I (ULA)\n"
+    "A game made with Gale & Pygame.\nAs Project in the course of\nVideogame Programming I (ULA)\n"
     "Development & Design:\n"
     "Jesus Leon (Jaludex)\nZadkiel Jimenez (Eltoti)\n\n"
     "Music & Sound Effects:\n"
@@ -68,7 +68,7 @@ CREDITS = (
 USER_TRACKS_INFO = (
     "You can add your own music \ntracks to the game!\n"
     "After this message, a folder will\nopen where you can place your files.\n"
-    "The game supports .mp3, .ogg and .wav files.\nAfter adding song, restart the game\nto load them\n"
+    "The game supports .mp3, .ogg and .wav files.\nAfter adding songs, restart the game\nto load them\n"
     "By adding music to this folder, you confirm\nyou have the rights or licenses to use it\nThe developers assume no liability for copyrighted content."
 )
 
