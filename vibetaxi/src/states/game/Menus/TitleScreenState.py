@@ -164,9 +164,11 @@ class TitleScreenState(BaseState):
     def _on_credits(self):
         if not getattr(self, "mode_selection_triggered", False):
             settings.SOUNDS["press"].play()
+            self.mode_selection_triggered = True
+            self._cancel_pan_timers()
             from src.states.game.Menus.MessageBoxState import MessageBoxState
             credits_text = getattr(settings, "CREDITS", "Vibe Taxi\nThanks for playing!")
-            self.state_machine.push(MessageBoxState(self.state_machine, "Credits", credits_text))
+            self.state_machine.push(MessageBoxState(self.state_machine, "Credits", credits_text, on_close=self.resume_panning))
 
     def reset_inputs(self):
         self.input_cooldown = 0.25
@@ -183,6 +185,15 @@ class TitleScreenState(BaseState):
             self._cancel_pan_timers()
             from src.states.game.Menus.ModeSelectionState import ModeSelectionState
             self.state_machine.push(ModeSelectionState(self.state_machine))
+
+    def resume_panning(self):
+        self.mode_selection_triggered = False
+        if getattr(self, "_pan_phase", self.PHASE_FADE_IN) == self.PHASE_FADE_IN:
+            self._start_scene_fade_in()
+        elif getattr(self, "_pan_phase", self.PHASE_FADE_IN) == self.PHASE_PAN:
+            self._start_pan()
+        else:
+            self._start_scene_fade_out()
 
     def _on_resume(self):
         if not getattr(self, "mode_selection_triggered", False):

@@ -138,9 +138,12 @@ class ModeSelectionState(BaseState):
         
     def return_to_title(self):
         self.state_machine.pop() # Pop ModeSelectionState
-        # Reset flag in TitleScreenState so it can be opened again
         if len(self.state_machine.states) > 0:
-            self.state_machine.states[-1].mode_selection_triggered = False
+            top_state = self.state_machine.states[-1]
+            if hasattr(top_state, "resume_panning"):
+                top_state.resume_panning()
+            else:
+                top_state.mode_selection_triggered = False
         
     def start_game(self):
         self.state_machine.pop() # Pops ModeSelectionState

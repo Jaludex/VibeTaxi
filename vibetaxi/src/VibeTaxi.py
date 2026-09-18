@@ -8,6 +8,13 @@ from src.states.game.Menus.OpeningState import OpeningState
 
 
 class VibeTaxi(Game):
+    def __init__(self, *args, **kwargs):
+        import settings
+        icon = settings.TEXTURES.get("game_icon")
+        if icon:
+            pygame.display.set_icon(icon)
+        super().__init__(*args, **kwargs)
+
     def init(self) -> None:
         from gale.ui.theme import set_default_theme
         from src.themes import DEFAULT_THEME

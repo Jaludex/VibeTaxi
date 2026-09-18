@@ -50,7 +50,7 @@ CREDITS = (
     "VIBE TAXI\n"
     "A game made with Gale Engine & Pygame.\nAs Project in the course of\nVideogame Programming I (ULA)\n"
     "Development & Design:\n"
-    "Jesús Leon (Jaludex)\nZadkiel Jiménez (Eltoti)\n\n"
+    "Jesus Leon (Jaludex)\nZadkiel Jimenez (Eltoti)\n\n"
     "Music & Sound Effects:\n"
     "opengameart.org\npixabay.com\nText blips by dmochas on itch.io\n"
     "Graphical Assets:\n"
@@ -126,7 +126,8 @@ TEXTURES = {
     "arrow": pygame.image.load(BASE_DIR / "assets" / "graphics" / "arrow.png"),
     "title_gradient": pygame.image.load(BASE_DIR / "assets" / "graphics" / "title_gradient.png"),
     "taximeter": pygame.image.load(BASE_DIR / "assets" / "graphics" / "taximeter.png"),
-    "test_someone": pygame.image.load(BASE_DIR / "assets" / "graphics" / "test_someone.png")
+    "test_someone": pygame.image.load(BASE_DIR / "assets" / "graphics" / "test_someone.png"),
+    "game_icon": pygame.image.load(BASE_DIR / "assets" / "graphics" / "icon.png"),
 }
 
 TILEMAPS = {
