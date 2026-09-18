@@ -43,8 +43,9 @@ class TutorialPlayState(PlayState):
             spawn_x, spawn_y = self.city_map.nodes["City Entrance"]
             dest_name = "Cornered C.O"
             dest_pos = self.city_map.nodes[dest_name]
-            p1 = Passenger(spawn_x, spawn_y, dest_name, dest_pos, PASSENGER_DEFS["pedestrian_1"])
-            p1.music_preference = ""
+            def1 = PASSENGER_DEFS["pedestrian_1"].copy()
+            def1["music_preference"] = "pop"
+            p1 = Passenger(spawn_x, spawn_y, dest_name, dest_pos, def1)
             passengers.append(p1)
             
         # 2. Pasajero en Long Avenue -> City Endhole
@@ -52,8 +53,9 @@ class TutorialPlayState(PlayState):
             spawn_x, spawn_y = self.city_map.nodes["Long Avenue"]
             dest_name = "City Endhole"
             dest_pos = self.city_map.nodes[dest_name]
-            p2 = Passenger(spawn_x, spawn_y, dest_name, dest_pos, PASSENGER_DEFS["pedestrian_2"])
-            p2.music_preference = "rock"
+            def2 = PASSENGER_DEFS["pedestrian_2"].copy()
+            def2["music_preference"] = "rock"
+            p2 = Passenger(spawn_x, spawn_y, dest_name, dest_pos, def2)
             passengers.append(p2)
             
         return passengers
