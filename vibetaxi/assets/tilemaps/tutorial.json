@@ -1132,7 +1132,7 @@
                         {
                          "name":"message",
                          "type":"string",
-                         "value":"Try moving around this area. Move the mouse cursor to turn, use \"x\" to  brake and \"z\" to go in reverse"
+                         "value":"Try moving around this area. Move the mouse cursor to turn, use \"x\" to  brake and \"z\" to go in reverse. Pause with ESC"
                         }],
                  "rotation":0,
                  "type":"",

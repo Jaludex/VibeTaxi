@@ -170,8 +170,6 @@ class CityMap:
                 
                 if is_a_taxi or is_b_taxi:
                     play_crash_sound("crash_car", 0.3)
-                else:
-                    play_crash_sound("crash_car", 0.09)
                     
                 if is_a_taxi: a.damage(10)
                 if is_b_taxi: b.damage(10)
