@@ -298,7 +298,8 @@ class PlayState(BaseState):
                     
                     p.pickup_x = p.x
                     p.pickup_y = p.y
-                    print(f"DEBUG: New active passenger. Preferred genre: {p.music_preference if p.music_preference else 'off'}")
+                    if settings.PHYSICS_DEBUG:
+                        print(f"DEBUG: New active passenger. Preferred genre: {p.music_preference if p.music_preference else 'off'}")
                     break
 
     def render(self, surface):
