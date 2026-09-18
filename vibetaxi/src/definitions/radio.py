@@ -1,14 +1,19 @@
 from pathlib import Path
+
+import pygame
 import settings
 
 USERTRACKS_DIR = Path.home() / "Vibe Taxi User Tracks"
 SUPPORTED_AUDIO_EXTENSIONS = {".mp3", ".ogg", ".wav"}
 
+def is_valid_audio(file_path: Path) -> bool:
+    try:
+        pygame.mixer.music.load(str(file_path))
+        return True
+    except pygame.error:
+        return False
+
 def get_station_tracks(genre: str, base_tracks: list) -> list:
-    """
-    Scans the corresponding genre subfolder inside USERTRACKS_DIR.
-    Creates the directory if it doesn't exist and merges base tracks with user tracks.
-    """
     if genre == "off":
         return []
 
@@ -20,7 +25,8 @@ def get_station_tracks(genre: str, base_tracks: list) -> list:
     
     for file in genre_dir.iterdir():
         if file.is_file() and file.suffix.lower() in SUPPORTED_AUDIO_EXTENSIONS:
-            user_tracks.append(str(file))
+            if is_valid_audio(file):
+                user_tracks.append(str(file))
 
     return base_tracks + user_tracks
 
