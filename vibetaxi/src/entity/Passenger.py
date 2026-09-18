@@ -101,6 +101,8 @@ class Passenger(Entity):
         self.comfort = max(COMFORT_RULES["min_comfort"], self.comfort - COMFORT_RULES["collision_penalty"])
         if hud:
             hud.show_text(random.choice(DIALOGUES_BANK["reaction"]["bad"]))
+            if hasattr(hud, "trigger_crash"):
+                hud.trigger_crash()
 
         
 

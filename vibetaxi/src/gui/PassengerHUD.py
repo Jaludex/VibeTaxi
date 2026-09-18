@@ -96,15 +96,31 @@ class PassengerHUD:
         )
 
         # 3. Portrait Window (between progress bar and dialogue box, right-aligned)
-        self.portrait_width = 64
-        self.portrait_height = 72
+        self.portrait_width = 90
+        self.portrait_height = 80
         self.portrait_on_x = settings.VIRTUAL_WIDTH - self.portrait_width - 20
         self.portrait_off_x = settings.VIRTUAL_WIDTH + 20
         # Vertically centered between bar bottom and dialogue top
         bar_bottom = self.bar_y + self.bar_height
         self.portrait_y = bar_bottom + (self.dialogue_y - bar_bottom - self.portrait_height) // 2
         self._portrait_x = float(self.portrait_off_x)
-        self.portrait_surface = None
+        
+        # Load the background car view
+        bg_img = settings.TEXTURES.get("background_car_view")
+        if bg_img:
+            # Scale or extract a portion to fit the 90x80 portrait window
+            # The original image is 450x80. A 90x80 crop fits perfectly.
+            self.portrait_background = bg_img.subsurface((0, 0, 90, 80))
+        else:
+            self.portrait_background = pygame.Surface((90, 80))
+            self.portrait_background.fill((50, 50, 50))
+
+        # Passenger interior state
+        self.passenger_state = "idle" # boarding, riding, crashed, exiting
+        self.passenger_inner_x = 0.0
+        self.passenger_inner_y = 0.0
+        self.passenger_target_x = (self.portrait_width // 2) - 1 # Center of window
+        self.passenger_timer = 0.0
 
         self.portrait_theme = Theme(
             font=settings.FONTS["minecraft"],
@@ -172,19 +188,23 @@ class PassengerHUD:
         self.passenger = passenger
         self.last_comfort = passenger.comfort
         self.progress_bar.value = passenger.comfort
-        # Load portrait (use passenger texture or fallback to test_someone)
-        portrait_key = passenger.definition.get("portrait", "test_someone")
-        raw_img = settings.TEXTURES.get(portrait_key)
-        if raw_img:
-            self.portrait_surface = pygame.transform.scale(raw_img, (self.portrait_width, self.portrait_height))
-        else:
-            self.portrait_surface = None
+        
+        # Start boarding animation from left side of portrait window
+        self.passenger_state = "boarding"
+        self.passenger_inner_x = -40
+        self.passenger_timer = 0.0
+        
         # Slide in comfort bar and portrait
         Timer.tween(0.35, [(self, {"bar_x": self.bar_on_x})])
         Timer.tween(0.35, [(self, {"portrait_x": float(self.portrait_on_x)})])
         # Show greeting dialogue
         greeting = passenger.dialogues.get("enter", "Hello! Take me to my destination.")
         self.show_text(greeting)
+        
+    def trigger_crash(self) -> None:
+        if self.passenger:
+            self.passenger_state = "crashed"
+            self.passenger_timer = 0.0
 
     def unbind_passenger(self) -> None:
         if self.passenger is None:
@@ -198,6 +218,9 @@ class PassengerHUD:
 
         self.show_text(farewell)
         
+        self.passenger_state = "exiting"
+        self.passenger_timer = 0.0
+        
         if getattr(self, "_clear_timer", None):
             self._clear_timer.remove()
         self._clear_timer = Timer.after(settings.DIALOGUE_DISPLAY_TIME + 0.35, self._clear_passenger)
@@ -208,11 +231,47 @@ class PassengerHUD:
         Timer.tween(0.35, [(self, {"portrait_x": float(self.portrait_off_x)})])
 
     def update(self, dt: float) -> None:
+        import math
+        
         if self.passenger:
             # Smooth progressive change when comfort changes
             if self.passenger.comfort != self.last_comfort:
                 self.last_comfort = self.passenger.comfort
                 Timer.tween(0.6, [(self.progress_bar, {"value": self.passenger.comfort})])
+                
+            # Passenger interior animation logic
+            self.passenger_timer += dt
+            
+            if self.passenger_state == "boarding":
+                progress = min(1.0, self.passenger_timer / 1.0)
+                # Move from -40 to target_x
+                self.passenger_inner_x = -40 + (self.passenger_target_x + 40) * progress
+                # Jump using absolute sine wave
+                self.passenger_inner_y = -abs(math.sin(self.passenger_timer * 15)) * 10
+                if progress >= 1.0:
+                    self.passenger_state = "riding"
+                    
+            elif self.passenger_state == "riding":
+                self.passenger_inner_x = self.passenger_target_x
+                # Slight bobbing
+                self.passenger_inner_y = math.sin(self.passenger_timer * 3) * 2
+                
+            elif self.passenger_state == "crashed":
+                progress = self.passenger_timer / 1.0
+                if progress >= 1.0:
+                    self.passenger_state = "riding"
+                else:
+                    # Wobble erratically
+                    self.passenger_inner_x = self.passenger_target_x + math.sin(self.passenger_timer * 30) * 8 * (1.0 - progress)
+                    self.passenger_inner_y = math.cos(self.passenger_timer * 35) * 8 * (1.0 - progress)
+                    
+            elif self.passenger_state == "exiting":
+                progress = min(1.0, self.passenger_timer / 1.0)
+                # Move from target_x to right off-screen
+                distance = (self.portrait_width + 40) - self.passenger_target_x
+                self.passenger_inner_x = self.passenger_target_x + distance * progress
+                # Jump using absolute sine wave
+                self.passenger_inner_y = -abs(math.sin(self.passenger_timer * 15)) * 10
 
         # Dynamic color based on current interpolated progress bar value
         val = self.progress_bar.value
@@ -244,8 +303,6 @@ class PassengerHUD:
     def render_portrait(self, surface) -> None:
         if self._portrait_x >= self.portrait_off_x:
             return
-        if self.portrait_surface is None:
-            return
             
         x = int(self._portrait_x)
         y = self.portrait_y
@@ -257,13 +314,43 @@ class PassengerHUD:
         panel_rect = pygame.Rect(x, y, w, h)
         panel_surf = pygame.Surface((w, h), pygame.SRCALPHA)
         panel_surf.fill(bg)
-        surface.blit(panel_surf, (x, y))
         
-        # Draw portrait image centered inside
-        img_w, img_h = self.portrait_surface.get_size()
-        img_x = x + (w - img_w) // 2
-        img_y = y + (h - img_h) // 2
-        surface.blit(self.portrait_surface, (img_x, img_y))
+        # Draw the background_car_view image
+        if self.portrait_background:
+            panel_surf.blit(self.portrait_background, (0, 0))
+        
+        # Draw passenger sprite if boarding/riding/crashed/exiting
+        if self.passenger and self.passenger_state != "idle":
+            texture_key = self.passenger.definition.get("texture", "peds")
+            frames = settings.FRAMES.get(texture_key)
+            texture_sheet = settings.TEXTURES.get(texture_key)
+            
+            if frames and texture_sheet and hasattr(self.passenger, "frame_index"):
+                frame_rect = frames[self.passenger.frame_index]
+                # Extract the frame surface from the sprite sheet
+                frame_img = texture_sheet.subsurface(frame_rect)
+                
+                # Scale: half height, half width - 2
+                target_w = (w // 2) - 2
+                target_h = h // 2
+                scaled_img = pygame.transform.scale(frame_img, (target_w, target_h))
+                
+                # Flipped if exiting
+                if self.passenger_state == "exiting":
+                    scaled_img = pygame.transform.flip(scaled_img, True, False)
+                elif hasattr(self.passenger, "flipped") and self.passenger.flipped:
+                    scaled_img = pygame.transform.flip(scaled_img, True, False)
+                    
+                # The x,y from update logic
+                p_x = int(self.passenger_inner_x - target_w // 2)
+                # target_y should place passenger near the bottom or middle.
+                # If target_h is 40, we place them at the bottom.
+                base_y = h - target_h - 5 # 5 px from bottom
+                p_y = int(base_y + self.passenger_inner_y)
+                
+                panel_surf.blit(scaled_img, (p_x, p_y))
+        
+        surface.blit(panel_surf, (x, y))
         
         # Draw border
         border_color = self.portrait_theme.border_color
