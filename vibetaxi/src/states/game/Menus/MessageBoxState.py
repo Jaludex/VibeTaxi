@@ -7,7 +7,7 @@ from gale.timer import Timer
 from gale.ui.button import Button
 from gale.ui.container import Container
 from gale.ui.label import Label
-from gale.ui.text_box import TextBox
+from src.gui.TypewriterTextBox import TypewriterTextBox
 from gale.ui.manager import UIManager
 from gale.ui.panel import Panel
 
@@ -40,7 +40,7 @@ class MessageBoxState(BaseState):
             center=True
         )
         
-        self.text_box = TextBox(
+        self.text_box = TypewriterTextBox(
             panel_x + 15, 
             self.panel_y + 28, 
             self.panel_width - 30, 
@@ -94,7 +94,9 @@ class MessageBoxState(BaseState):
         self.btn_ok.y = self.panel_y + 76
         
     def _on_button_click(self):
-        if self.text_box.has_next_page:
+        if hasattr(self.text_box, "is_typing") and self.text_box.is_typing:
+            self.text_box.advance()
+        elif self.text_box.has_next_page:
             self.text_box.next_page()
         else:
             self._on_ok()

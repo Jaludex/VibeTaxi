@@ -13,6 +13,8 @@ class VibeTaxi(Game):
         from src.themes import DEFAULT_THEME
         set_default_theme(DEFAULT_THEME)
         
+        pygame.mixer.set_num_channels(32)
+        
         self.state_stack = StateStack()
         self.state_stack.push(OpeningState(self.state_stack))
 

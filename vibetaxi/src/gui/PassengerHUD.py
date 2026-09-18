@@ -4,7 +4,7 @@ import random
 from gale.ui.container import Container
 from gale.ui.panel import Panel
 from gale.ui.label import Label
-from gale.ui.text_box import TextBox
+from src.gui.TypewriterTextBox import TypewriterTextBox
 from gale.ui.progress_bar import ProgressBar
 from gale.ui.theme import Theme
 from gale.timer import Timer
@@ -84,7 +84,7 @@ class PassengerHUD:
             self.dialogue_height,
             theme=self.dialogue_theme,
         )
-        self.text_box = TextBox(
+        self.text_box = TypewriterTextBox(
             self._dialogue_x + 6,
             self.dialogue_y + 6,
             self.dialogue_width - 12,
@@ -208,6 +208,7 @@ class PassengerHUD:
         Timer.tween(0.35, [(self, {"portrait_x": float(self.portrait_off_x)})])
 
     def update(self, dt: float) -> None:
+        self.container.update(dt)
         if self.passenger:
             self.progress_bar.value = self.passenger.comfort
 
@@ -234,9 +235,7 @@ class PassengerHUD:
 
     def set_text(self, text: str) -> None:
         self.current_text = text
-        self.text_box._pages = self.text_box._paginate(text)
-        self.text_box.page_index = 0
-        self.text_box.visible = True
+        self.text_box.set_text(text)
 
     def render_portrait(self, surface) -> None:
         if self._portrait_x >= self.portrait_off_x:

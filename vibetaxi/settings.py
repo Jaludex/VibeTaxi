@@ -134,7 +134,7 @@ FONTS = {
     "medium": pygame.font.Font(BASE_DIR/ "assets" / "fonts" / "Minecraft.ttf", 12),
     "led": pygame.font.Font(BASE_DIR / "assets" / "fonts" / "led.ttf", 16),
     "led_small": pygame.font.Font(BASE_DIR / "assets" / "fonts" / "led.ttf", 8),
-    "minecraft": pygame.font.Font(BASE_DIR / "assets" / "fonts" / "Minecraft.ttf", 8),
+    "minecraft": pygame.font.Font(BASE_DIR / "assets" / "fonts" / "Minecraft.ttf", 12),
     "minecraft_small": pygame.font.Font(BASE_DIR / "assets" / "fonts" / "Minecraft.ttf", 8),
 }
 
@@ -159,6 +159,11 @@ SOUNDS = {
     "game_over": pygame.mixer.Sound(BASE_DIR / "assets" / "sounds" / "misc" / "game_over.wav"),
     "pause": pygame.mixer.Sound(BASE_DIR / "assets" / "sounds" / "misc" / "pause.wav"),
     "unpause": pygame.mixer.Sound(BASE_DIR / "assets" / "sounds" / "misc" / "unpause.wav"),
+    "bleep1": pygame.mixer.Sound(BASE_DIR / "assets" / "sounds" / "text_blips" / "bleep001.wav"),
+    "bleep2": pygame.mixer.Sound(BASE_DIR / "assets" / "sounds" / "text_blips" / "bleep002.wav"),
+    "bleep3": pygame.mixer.Sound(BASE_DIR / "assets" / "sounds" / "text_blips" / "bleep003.wav"),
+    "bleep4": pygame.mixer.Sound(BASE_DIR / "assets" / "sounds" / "text_blips" / "bleep004.wav"),
+    "bleep5": pygame.mixer.Sound(BASE_DIR / "assets" / "sounds" / "text_blips" / "bleep005.wav"),
 }
 
 MUSIC = {
