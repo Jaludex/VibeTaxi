@@ -12,7 +12,7 @@ DIALOGUES_BANK = {
             "Put on something heavy, man.",
             "Got any classic rock?",
             "I feel like headbanging right now.",
-            "I need some distortion and a good drum solo.",
+            "I need some distortion and a good guitar solo.",
             "Let's hear some riffs, driver.",
             "I want to listen to a real band, not a computer."
         ],
@@ -31,7 +31,7 @@ DIALOGUES_BANK = {
             "I'd love some nice background piano or jazz.",
             "Put on some jazz if you have it.",
             "I want to vibe to some old rhythms.",
-            "Let's listen to some bluesy, jazzy tunes.",
+            "Let's listen to some jazzy tunes.",
             "Nothing beats a good brass section."
         ],
         "hiphop": [
@@ -47,9 +47,9 @@ DIALOGUES_BANK = {
             "I want to hear some heavy synths.",
             "Put on some EDM or techno, please.",
             "I need a fast BPM to get going.",
-            "Got any house music?",
+            "Got any club music?",
             "I want to feel like I'm in a club.",
-            "Drop the bass!",
+            "Man i love Synths",
             "I need some electronic dance tracks."
         ],
     },
