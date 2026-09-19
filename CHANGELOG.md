@@ -4,6 +4,16 @@ Notable changes on the project will be documented here
 
 Format based on [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/), version format by [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 1.1.0 - 2026-09-18 Day 7 of development
+
+### Added
+ - User Tracks Function, allow the player to load his own songs to each radio station
+ - Pause hint on the tutorial
+
+### Fixed
+ - Leftover debug prints
+ - Not having invincibility on the tutorial
+
 ## 1.0.0 - 2026-09-17 Day 6 of development
 
 ### Added
