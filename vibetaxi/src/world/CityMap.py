@@ -237,7 +237,7 @@ class CityMap:
     def get_taxi_spawn_position(self, default: tuple = (400, 300)) -> tuple:
         spawner_layer = self.tilemap.object_layers.get("taxi-spawns", [])
         if spawner_layer:
-            obj = spawner_layer[0]
+            obj = random.choice(spawner_layer)
             center_x = obj.x + getattr(obj, "width", 0) / 2
             center_y = obj.y + getattr(obj, "height", 0) / 2
             return (center_x, center_y)
