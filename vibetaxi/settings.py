@@ -47,7 +47,7 @@ RADIO_FADEOUT_TIME = 2.0
 
 TITLE = "Vibe Taxi"
 
-VERSION = "1.0.0"
+VERSION = "1.2.0"
 
 CREDITS = (
     "VIBE TAXI\n"
