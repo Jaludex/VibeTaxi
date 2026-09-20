@@ -9,6 +9,9 @@ Format based on [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/), ver
 ## Added
  - Finished south part of the city
 
+## Changed
+ - Game Logo
+
 ## Fixed
  - Fix duplicated tile objects ID from work in parallel with the same map
  - Fix Soutch city spawn having a passenger spawning right by it's side
