@@ -143,6 +143,7 @@ class PassengerHUD:
         self.passenger = None
         self.current_text = ""
         self.last_comfort = random.randint(int(COMFORT_RULES["initial_min"]), int(COMFORT_RULES["initial_max"]))
+        self.page_wait_timer = 0.0
 
     @property
     def portrait_x(self) -> float:
@@ -209,14 +210,15 @@ class PassengerHUD:
         else:
             farewell = self.passenger.dialogues.get("exit_bad", "Terrible ride...")
 
-        self.show_text(farewell)
+        total_time = self.show_text(farewell)
         
         self.passenger_state = "exiting"
         self.passenger_timer = 0.0
         
         if getattr(self, "_clear_timer", None):
             self._clear_timer.remove()
-        self._clear_timer = Timer.after(settings.DIALOGUE_DISPLAY_TIME + 0.35, self._clear_passenger)
+
+        self._clear_timer = Timer.after(total_time + 0.35, self._clear_passenger)
 
     def _clear_passenger(self) -> None:
         self.passenger = None
@@ -278,14 +280,37 @@ class PassengerHUD:
         else:
             self.progress_bar._color = pygame.Color(220, 60, 60)
 
-    def show_text(self, text: str, duration: float = settings.DIALOGUE_DISPLAY_TIME) -> None:
+        if self.text_box.visible and not self.text_box.is_typing and self.text_box.has_next_page:
+            self.page_wait_timer += dt
+            if self.page_wait_timer >= settings.PASSENGER_NEXT_PAGE_TIME:
+                self.text_box.next_page()
+                self.page_wait_timer = 0.0
+        elif self.text_box.is_typing:
+            self.page_wait_timer = 0.0
+
+    def show_text(self, text: str, duration: float = settings.DIALOGUE_DISPLAY_TIME) -> float:
         self.set_text(text)
+        self.page_wait_timer = 0.0
+        
+        total_time = 0.0
+        for i, page in enumerate(self.text_box._pages):
+            chars_on_page = sum(len(line) for line in page)
+            type_time = chars_on_page / self.text_box.chars_per_second
+            total_time += type_time
+            if i < len(self.text_box._pages) - 1:
+                total_time += settings.PASSENGER_NEXT_PAGE_TIME
+            else:
+                total_time += duration
+
         # Slide in from right
         Timer.tween(0.3, [(self, {"dialogue_x": self.dialogue_on_x})])
-        # Auto-slide out to right after duration
+        
+        # Auto-slide out to right after total_time
         if getattr(self, "_hide_timer", None):
             self._hide_timer.remove()
-        self._hide_timer = Timer.after(duration, self.hide_dialogue)
+        self._hide_timer = Timer.after(total_time, self.hide_dialogue)
+        
+        return total_time
 
     def hide_dialogue(self) -> None:
         Timer.tween(0.3, [(self, {"dialogue_x": self.dialogue_off_x})])

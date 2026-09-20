@@ -4,7 +4,17 @@ Notable changes on the project will be documented here
 
 Format based on [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/), version format by [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## 1.1.0 - 2026-09-18 Day 7 of development
+## 1.2.0 - 2026-09-19
+
+## Added
+ - Finished south part of the city
+
+## Fixed
+ - Fix duplicated tile objects ID from work in parallel with the same map
+ - Fix Soutch city spawn having a passenger spawning right by it's side
+ - Fix Passenger dialogue pagination not... paginating
+
+## 1.1.0 - 2026-09-18 Day 7 of development. Project send to the teacher, waiting our score
 
 ### Added
  - User Tracks Function, allow the player to load his own songs to each radio station
