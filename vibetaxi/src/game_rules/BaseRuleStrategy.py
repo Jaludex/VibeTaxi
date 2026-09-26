@@ -48,7 +48,7 @@ class BaseRuleStrategy:
         
         render_text(
             surface, "TIME", settings.FONTS["minecraft"],
-            x + 40, y + 7, (170, 170, 170), center=True
+            x + 40, y + 6, (170, 170, 170), center=True
         )
         
         render_text(

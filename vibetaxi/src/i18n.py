@@ -74,6 +74,17 @@ texts = {
         # Confirmation
         "confirm_quit": "Are you sure you want to quit?",
         
+        # Tutorial
+        "tutorial_title": "Tutorial",
+        "tutorial_completed_title": "Tutorial Completed!",
+        "tutorial_completed_msg": "You have completed the tutorial. Ready for the real work!",
+        "tutorial_msg_welcome": "Welcome to VibeTaxi, in this game you will become the best taxi driver by finding the music your passengers love. Use the mouse click to drive",
+        "tutorial_msg_controls": "Try moving around this area. Move the mouse cursor to turn, use \"x\" to  brake and \"z\" to go in reverse. Pause with ESC",
+        "tutorial_msg_pickup": "Now try picking up that client. Get close to him and brake, then take him to his destination",
+        "tutorial_msg_radio": "Now lets try with this another client, listen to him. Use WASD to change the radio station and volume, try playing something he/she likes",
+        "tutorial_msg_obstacles": "Now try getting to the end of this section, try avoiding the cones and traffic and get the client to his destination. Good Luck!",
+        "tutorial_msg_vibe": "Great, you're in Vibe Mode, now you can drift to keep your speed. Drift with SHIFT",
+        
         # --- Passenger Dialogues ---
         "dialogues": {
             "enter": [
@@ -243,6 +254,17 @@ texts = {
         
         # Confirmation
         "confirm_quit": "¿Estás seguro de que quieres salir?",
+        
+        # Tutorial
+        "tutorial_title": "Tutorial",
+        "tutorial_completed_title": "¡Tutorial Completado!",
+        "tutorial_completed_msg": "¡Has completado el tutorial! Listo para el trabajo real.",
+        "tutorial_msg_welcome": "Bienvenido a VibeTaxi, en este juego te convertirás en el mejor taxista encontrando la música que les encanta a tus pasajeros. Usa el clic del ratón para conducir.",
+        "tutorial_msg_controls": "Intenta moverte por esta zona. Mueve el cursor del ratón para girar, usa \"x\" para frenar y \"z\" para ir en reversa. Pausa con ESC.",
+        "tutorial_msg_pickup": "Ahora intenta recoger a ese cliente. Acércate a él y frena, luego llévalo a su destino.",
+        "tutorial_msg_radio": "Ahora probemos con este otro cliente, escúchalo. Usa WASD para cambiar la estación de radio y el volumen, intenta poner algo que le guste.",
+        "tutorial_msg_obstacles": "Ahora intenta llegar al final de esta sección, esquivando los conos y el tráfico y llevando al cliente a su destino. ¡Buena suerte!",
+        "tutorial_msg_vibe": "Genial, estás en Modo Vibe, ahora puedes derrapar para mantener tu velocidad. Derrapa con SHIFT.",
         
         # --- Passenger Dialogues ---
         "dialogues": {

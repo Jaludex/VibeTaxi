@@ -1114,7 +1114,7 @@
                         {
                          "name":"message",
                          "type":"string",
-                         "value":"Welcome to VibeTaxi, in this game you will become the best taxi driver by finding the music your passengers love. Use the mouse click to drive"
+                         "value":"tutorial_msg_welcome"
                         }],
                  "rotation":0,
                  "type":"",
@@ -1132,7 +1132,7 @@
                         {
                          "name":"message",
                          "type":"string",
-                         "value":"Try moving around this area. Move the mouse cursor to turn, use \"x\" to  brake and \"z\" to go in reverse. Pause with ESC"
+                         "value":"tutorial_msg_controls"
                         }],
                  "rotation":0,
                  "type":"",
@@ -1150,7 +1150,7 @@
                         {
                          "name":"message",
                          "type":"string",
-                         "value":"Now try picking up that client. Get close to him and brake, then take him to his destination"
+                         "value":"tutorial_msg_pickup"
                         }],
                  "rotation":0,
                  "type":"",
@@ -1173,7 +1173,7 @@
                         {
                          "name":"message",
                          "type":"string",
-                         "value":"Now lets try with this another client, listen to him. Use WASD to change the radio station and volume, try playing something he\/she likes"
+                         "value":"tutorial_msg_radio"
                         }],
                  "rotation":0,
                  "type":"",
@@ -1191,7 +1191,7 @@
                         {
                          "name":"message",
                          "type":"string",
-                         "value":"Now try getting to the end of this section, try avoiding the cones and traffic and get the client to his destination. Good Luck!"
+                         "value":"tutorial_msg_obstacles"
                         }],
                  "rotation":0,
                  "type":"",
@@ -1214,7 +1214,7 @@
                         {
                          "name":"message",
                          "type":"string",
-                         "value":"Great, you're in Vibe Mode, now you can drift to keep your speed. Drift with SHIFT"
+                         "value":"tutorial_msg_vibe"
                         }],
                  "rotation":0,
                  "type":"",

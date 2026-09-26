@@ -9,6 +9,7 @@ from src.states.game.Menus.MessageBoxState import MessageBoxState
 from src.states.game.Menus.TitleScreenState import TitleScreenState
 from src.entity.Passenger import Passenger
 from src.definitions.passengers import PASSENGER_DEFS
+from src.i18n import tr
 import settings
 
 class TutorialPlayState(PlayState):
@@ -111,8 +112,8 @@ class TutorialPlayState(PlayState):
                     
                     self.state_machine.push(MessageBoxState(
                         self.state_machine, 
-                        "Tutorial", 
-                        trigger["message"], 
+                        tr("tutorial_title", default="Tutorial"), 
+                        tr(trigger["message"]), 
                         on_close=on_close
                     ))
                 else:
@@ -180,8 +181,8 @@ class TutorialPlayState(PlayState):
                 
             self.state_machine.push(MessageBoxState(
                 self.state_machine,
-                "Tutorial Completed!",
-                "You have completed the tutorial. Ready for the real work!",
+                tr("tutorial_completed_title", default="Tutorial Completed!"),
+                tr("tutorial_completed_msg", default="You have completed the tutorial. Ready for the real work!"),
                 on_close=return_to_title
             ))
 

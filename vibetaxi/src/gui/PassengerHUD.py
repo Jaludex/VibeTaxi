@@ -60,7 +60,7 @@ class PassengerHUD:
         )
 
         self.bar_panel = Panel(self._bar_x, self.bar_y, self.bar_width, self.bar_height, theme=self.bar_theme)
-        self.bar_label = Label(self._bar_x + 6, self.bar_y + 6, "VIBE", theme=self.bar_theme)
+        self.bar_label = Label(self._bar_x + 6, self.bar_y + 2, "VIBE", theme=self.bar_theme)
         self.progress_bar = ProgressBar(
             self._bar_x + 36,
             self.bar_y + 6,

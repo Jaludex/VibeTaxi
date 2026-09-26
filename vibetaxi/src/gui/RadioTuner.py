@@ -91,7 +91,7 @@ class Radio:
             f"{self.songs[self.ind_song]}",
             settings.FONTS["minecraft"],
             self.x + 240,
-            self.y + 8,
+            self.y + 6,
             (0, 0, 0),
             center=True
         )
