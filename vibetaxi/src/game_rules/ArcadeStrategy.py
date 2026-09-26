@@ -35,7 +35,7 @@ class ArcadeStrategy(BaseRuleStrategy):
             self.game_over = True
 
     def get_start_text(self) -> str:
-        return "Go get them!"
+        return tr("mode_arcade_initial_text")
 
     def on_passenger_delivered(self, passenger, distance: float):
         self.passengers_delivered += 1

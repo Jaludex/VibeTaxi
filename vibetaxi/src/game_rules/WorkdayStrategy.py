@@ -54,7 +54,7 @@ class WorkdayStrategy(BaseRuleStrategy):
             self.game_over = True
 
     def get_start_text(self) -> str:
-        return f"Day {self.day}\nToday's fee: ${self.fee:.2f}"
+        return tr("mode_workday_initial_text", day=self.day, fee=self.fee)
 
     def on_passenger_delivered(self, passenger, distance: float):
         # Base gain

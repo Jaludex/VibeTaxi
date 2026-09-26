@@ -48,6 +48,10 @@ texts = {
         "mode_workday_desc": "Win money with each trip. Use it to repare your car",
         "mode_arcade_desc": "Win as many trips as you can before time runs out",
         "mode_zen_desc": "No damage, no limits. Just chill and drive.",
+
+        "mode_workday_initial_text": "Day {self.day}\nToday's fee: ${self.fee:.2f}",
+        "mode_arcade_initial_text": "Go get them!",
+        "mode_zen_initial_text": "Relax and enjoy the ride.",
         
         "records_title": "Hall of Fame",
         "records_workday_format": "{i}. {name} - Day {score}",
@@ -229,6 +233,10 @@ texts = {
         "mode_workday_desc": "Gana dinero con cada viaje. Úsalo para reparar tu auto.",
         "mode_arcade_desc": "Completa la mayor cantidad de viajes antes de que se acabe el tiempo.",
         "mode_zen_desc": "Sin daños, sin límites. Solo relájate y conduce.",
+
+        "mode_workday_initial_text": "Día {day}\nPago de hoy: ${fee:.2f}",
+        "mode_arcade_initial_text": "Empieza a recoger clientes!",
+        "mode_zen_initial_text": "Relajate y disfruta el viaje.",
         
         "records_title": "Salón de la Fama",
         "records_workday_format": "{i}. {name} - Día {score}",

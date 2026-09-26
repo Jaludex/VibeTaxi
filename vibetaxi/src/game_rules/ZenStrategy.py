@@ -11,7 +11,7 @@ class ZenStrategy(BaseRuleStrategy):
         return current_count < 3
         
     def get_start_text(self) -> str:
-        return "Relax and enjoy the ride."
+        return tr("mode_zen_initial_text")
         
     def render_ui(self, surface, font, x, y):
         import settings
