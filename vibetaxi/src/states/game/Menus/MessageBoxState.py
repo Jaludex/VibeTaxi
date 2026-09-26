@@ -11,6 +11,8 @@ from src.gui.TypewriterTextBox import TypewriterTextBox
 from gale.ui.manager import UIManager
 from gale.ui.panel import Panel
 
+from src.i18n import tr
+
 class MessageBoxState(BaseState):
     def __init__(self, state_machine: Any, title: str, message: str, on_close: Callable = None) -> None:
         super().__init__(state_machine)
@@ -55,7 +57,7 @@ class MessageBoxState(BaseState):
             settings.VIRTUAL_WIDTH / 2 - 45, 
             self.panel_y + 88, 
             90, 24, 
-            "OK", 
+            tr("btn_ok"), 
             on_click=self._on_button_click,
             theme=BUTTON_THEME
         )
@@ -122,9 +124,9 @@ class MessageBoxState(BaseState):
     def update(self, dt: float):
         self.update_ui_y()
         if self.text_box.has_next_page:
-            self.btn_ok.text = "Next"
+            self.btn_ok.text = tr("btn_next", default="Next")
         else:
-            self.btn_ok.text = "OK"
+            self.btn_ok.text = tr("btn_ok")
         self.ui.update(dt)
 
     def on_input(self, input_id, input_data):
@@ -137,3 +139,4 @@ class MessageBoxState(BaseState):
             surface.blit(fade_surf, (0, 0))
             
         self.ui.render(surface)
+

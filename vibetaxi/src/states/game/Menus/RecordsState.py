@@ -1,3 +1,4 @@
+from src.i18n import tr
 import pygame
 import settings
 from typing import Dict, Any, Optional
@@ -31,7 +32,7 @@ class RecordsState(BaseState):
         btn_back = Button(
             settings.VIRTUAL_WIDTH / 2 - 50, settings.VIRTUAL_HEIGHT - 40,
             100, 25,
-            "Back",
+            tr("btn_back"),
             on_click=self.on_back_click,
             theme=BUTTON_THEME
         )
@@ -45,7 +46,7 @@ class RecordsState(BaseState):
             window_height=settings.WINDOW_HEIGHT
         )
         
-    def enter(self, enter_params: Optional[Dict[str, Any]] = None):
+    def enter(self, enter_params=None):
         Timer.tween(0.5, [(self, {"fade_alpha": 0.0})])
         
     def on_back_click(self):
@@ -70,7 +71,7 @@ class RecordsState(BaseState):
         
         render_text(
             surface,
-            "Hall of Fame",
+            tr("records_title", default="Hall of Fame"),
             settings.FONTS["medium"],
             settings.VIRTUAL_WIDTH / 2,
             20,
@@ -82,7 +83,7 @@ class RecordsState(BaseState):
         # Workday records (Left)
         render_text(
             surface,
-            "Workday",
+            tr("btn_workday"),
             settings.FONTS["minecraft"],
             settings.VIRTUAL_WIDTH * 0.25,
             50,
@@ -90,7 +91,7 @@ class RecordsState(BaseState):
             center=True
         )
         for i, rec in enumerate(self.records.get("workday", [])):
-            text = f"{i+1}. {rec['name']} - Day {rec['score']}"
+            text = tr("records_workday_format", default="{i}. {name} - Day {score}", i=i+1, name=rec["name"], score=rec["score"])
             render_text(
                 surface, text, settings.FONTS["minecraft"],
                 settings.VIRTUAL_WIDTH * 0.25, 70 + (i * 15),
@@ -100,7 +101,7 @@ class RecordsState(BaseState):
         # Arcade records (Right)
         render_text(
             surface,
-            "Arcade",
+            tr("btn_arcade"),
             settings.FONTS["minecraft"],
             settings.VIRTUAL_WIDTH * 0.75,
             50,
@@ -108,7 +109,7 @@ class RecordsState(BaseState):
             center=True
         )
         for i, rec in enumerate(self.records.get("arcade", [])):
-            text = f"{i+1}. {rec['name']} - {rec['score']} fares"
+            text = tr("records_arcade_format", default="{i}. {name} - {score} fares", i=i+1, name=rec["name"], score=rec["score"])
             render_text(
                 surface, text, settings.FONTS["minecraft"],
                 settings.VIRTUAL_WIDTH * 0.75, 70 + (i * 15),

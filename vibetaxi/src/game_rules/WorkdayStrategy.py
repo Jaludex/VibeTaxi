@@ -1,3 +1,4 @@
+from src.i18n import tr
 from src.game_rules.BaseRuleStrategy import BaseRuleStrategy
 
 class WorkdayStrategy(BaseRuleStrategy):
@@ -97,7 +98,7 @@ class WorkdayStrategy(BaseRuleStrategy):
         
         # Use bigger font for the label
         big_font = settings.FONTS["medium"]
-        render_text(surface, f"Money: ${self.money:.2f}", big_font, x, y + 45, (100, 255, 100), shadowed=True)
+        render_text(surface, tr("hud_money", money=self.money), big_font, x, y + 45, (100, 255, 100), shadowed=True)
         
         self._render_popup_text(surface)
 

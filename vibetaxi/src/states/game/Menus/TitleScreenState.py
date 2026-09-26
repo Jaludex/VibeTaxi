@@ -11,6 +11,7 @@ from gale.text import render_text
 
 from src.world.CityMap import CityMap
 from src.states.game.Gameplay.PlayState import PlayState
+from src.i18n import tr
 
 
 class TitleScreenState(BaseState):
@@ -78,7 +79,7 @@ class TitleScreenState(BaseState):
         btn_new_game = Button(
             settings.VIRTUAL_WIDTH / 2 - 160, center_y,
             150, 30,
-            "New Game",
+            tr("btn_new_game"),
             on_click=self._on_new_game,
             theme=BUTTON_THEME
         )
@@ -91,7 +92,7 @@ class TitleScreenState(BaseState):
             btn_resume = Button(
                 settings.VIRTUAL_WIDTH / 2 + 10, center_y,
                 150, 30,
-                f"Resume Work. Day: {day}",
+                tr("btn_resume_work_day", day=day),
                 on_click=self._on_resume,
                 theme=BUTTON_THEME
             )
@@ -99,7 +100,7 @@ class TitleScreenState(BaseState):
             btn_resume = Button(
                 settings.VIRTUAL_WIDTH / 2 + 10, center_y,
                 150, 30,
-                "Resume Work",
+                tr("btn_resume_work"),
                 on_click=lambda: None,
                 theme=DISABLED_BUTTON_THEME
             )
@@ -119,7 +120,7 @@ class TitleScreenState(BaseState):
             btn_records = Button(
                 settings.VIRTUAL_WIDTH / 2 - 110, center_y + 40,
                 100, 30,
-                "Records",
+                tr("btn_records"),
                 on_click=self._on_records,
                 theme=BUTTON_THEME
             )
@@ -128,7 +129,7 @@ class TitleScreenState(BaseState):
             btn_credits = Button(
                 settings.VIRTUAL_WIDTH / 2 + 10, center_y + 40,
                 100, 30,
-                "Credits",
+                tr("btn_credits"),
                 on_click=self._on_credits,
                 theme=BUTTON_THEME
             )
@@ -137,7 +138,7 @@ class TitleScreenState(BaseState):
             btn_credits = Button(
                 settings.VIRTUAL_WIDTH / 2 - 50, center_y + 40,
                 100, 30,
-                "Credits",
+                tr("btn_credits"),
                 on_click=self._on_credits,
                 theme=BUTTON_THEME
             )
@@ -147,7 +148,7 @@ class TitleScreenState(BaseState):
         btn_quit = Button(
             settings.VIRTUAL_WIDTH / 2 - 50, center_y + 80,
             100, 30,
-            "Quit Game",
+            tr("btn_quit_game"),
             on_click=self._on_quit,
             theme=BUTTON_THEME
         )
@@ -155,13 +156,23 @@ class TitleScreenState(BaseState):
 
         btn_usertracks = Button(
             settings.VIRTUAL_WIDTH - 120,
-            settings.VIRTUAL_HEIGHT - 50,
+            settings.VIRTUAL_HEIGHT - 80,
             100, 30,
-            "User Tracks",
+            tr("btn_user_tracks"),
             on_click=self._on_user_tracks,
             theme=BUTTON_THEME
         )
         container.add_child(btn_usertracks)
+
+        btn_language = Button(
+            settings.VIRTUAL_WIDTH - 120,
+            settings.VIRTUAL_HEIGHT - 40,
+            100, 30,
+            tr("btn_language"),
+            on_click=self._on_language,
+            theme=BUTTON_THEME
+        )
+        container.add_child(btn_language)
 
         self.ui = UIManager(
             container,
@@ -170,6 +181,20 @@ class TitleScreenState(BaseState):
             virtual_height=settings.VIRTUAL_HEIGHT,
             window_height=settings.WINDOW_HEIGHT
         )
+
+    def _on_language(self):
+        if not getattr(self, "mode_selection_triggered", False):
+            settings.SOUNDS["press"].play()
+            self.mode_selection_triggered = True
+            self._cancel_pan_timers()
+
+            def close_callback():
+                self.resume_panning()
+                # Re-setup UI to refresh languages
+                self._setup_ui()
+
+            from src.states.game.Menus.LanguageSelectionState import LanguageSelectionState
+            self.state_machine.push(LanguageSelectionState(self.state_machine, on_close=close_callback))
 
     def _on_user_tracks(self):
         if not getattr(self, "mode_selection_triggered", False):
@@ -183,9 +208,9 @@ class TitleScreenState(BaseState):
                 self.resume_panning()
                 open_user_tracks_folder()
 
-            user_tracks_text = getattr(settings, "USER_TRACKS_INFO", "By adding music to this folder, \nyou confirm you have the rights or licenses to use it\n. The developers assume no liability for copyrighted content.")
+            user_tracks_text = tr("msg_user_tracks_info")
             from src.states.game.Menus.MessageBoxState import MessageBoxState
-            self.state_machine.push(MessageBoxState(self.state_machine, "User Tracks", user_tracks_text, on_close=close_callback))
+            self.state_machine.push(MessageBoxState(self.state_machine, tr("msg_user_tracks_title"), user_tracks_text, on_close=close_callback))
 
     def _on_credits(self):
         if not getattr(self, "mode_selection_triggered", False):
@@ -193,8 +218,8 @@ class TitleScreenState(BaseState):
             self.mode_selection_triggered = True
             self._cancel_pan_timers()
             from src.states.game.Menus.MessageBoxState import MessageBoxState
-            credits_text = getattr(settings, "CREDITS", "Vibe Taxi\nThanks for playing!")
-            self.state_machine.push(MessageBoxState(self.state_machine, "Credits", credits_text, on_close=self.resume_panning))
+            credits_text = tr("msg_credits_text")
+            self.state_machine.push(MessageBoxState(self.state_machine, tr("msg_credits_title"), credits_text, on_close=self.resume_panning))
 
     def reset_inputs(self):
         self.input_cooldown = 0.25
@@ -365,7 +390,7 @@ class TitleScreenState(BaseState):
         # Title
         render_text(
             surface,
-            "Vibe Taxi",
+            tr("game_title"),
             settings.FONTS["big"],
             settings.VIRTUAL_WIDTH / 2,
             settings.VIRTUAL_HEIGHT / 2 - 40,
@@ -376,7 +401,7 @@ class TitleScreenState(BaseState):
 
         render_text(
             surface,
-            f"Version {settings.VERSION}",
+            tr("version", version=settings.VERSION),
             settings.FONTS["medium"],
             5,
             settings.VIRTUAL_HEIGHT - 20,
@@ -386,7 +411,7 @@ class TitleScreenState(BaseState):
 
         render_text(
                     surface,
-                    "F11 for Fullscreen",
+                    tr("fullscreen_hint"),
                     settings.FONTS["medium"],
                     5,
                     settings.VIRTUAL_HEIGHT - 40,
@@ -402,3 +427,4 @@ class TitleScreenState(BaseState):
             fade_surf = pygame.Surface((settings.VIRTUAL_WIDTH, settings.VIRTUAL_HEIGHT), pygame.SRCALPHA)
             fade_surf.fill((0, 0, 0, int(max(0.0, min(255.0, self.fade_alpha)))))
             surface.blit(fade_surf, (0, 0))
+

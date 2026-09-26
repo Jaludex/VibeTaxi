@@ -1,3 +1,4 @@
+from src.i18n import tr
 from typing import Dict, Any
 import pygame
 from gale.input_handler import InputData
@@ -63,12 +64,12 @@ class EndOfDayState(BaseState):
         container.add_child(panel)
 
         # Labels
-        day_label = Label(0, 10, f"End of Day {self.day}", theme=LABEL_THEME)
+        day_label = Label(0, 10, tr("end_of_day_title_format", default="End of Day {day}", day=self.day), theme=LABEL_THEME)
         day_label.x = panel.x + (panel.width - day_label.width) // 2
         day_label.y = panel.y + 10
         container.add_child(day_label)
 
-        self.money_label = Label(0, 30, f"Money Left: ${self.money:.2f}", theme=LABEL_GREEN_THEME)
+        self.money_label = Label(0, 30, tr("end_of_day_money", money=self.money), theme=LABEL_GREEN_THEME)
         self.money_label.x = panel.x + (panel.width - self.money_label.width) // 2
         self.money_label.y = panel.y + 30
         container.add_child(self.money_label)
@@ -78,7 +79,7 @@ class EndOfDayState(BaseState):
             panel.x + 20,
             panel.y + 65,
             110, 30,
-            f"Repair - ${settings.REPAIR_COST}",
+            tr("btn_repair_taxi_cost", cost=settings.REPAIR_COST),
             on_click=self._on_repair,
             theme=BUTTON_THEME
         )
@@ -123,7 +124,7 @@ class EndOfDayState(BaseState):
         btn_exit = Button(
             start_x, panel.y + panel_height - 40,
             btn_width, 25,
-            "Exit",
+            tr("btn_exit_menu"),
             on_click=self._on_exit,
             theme=BUTTON_THEME
         )
@@ -132,7 +133,7 @@ class EndOfDayState(BaseState):
         btn_save = Button(
             start_x + btn_width + btn_spacing, panel.y + panel_height - 40,
             btn_width, 25,
-            "Save & Exit",
+            tr("btn_save_quit"),
             on_click=self._on_save_exit,
             theme=BUTTON_THEME
         )
@@ -141,7 +142,7 @@ class EndOfDayState(BaseState):
         btn_continue = Button(
             start_x + (btn_width + btn_spacing) * 2, panel.y + panel_height - 40,
             btn_width, 25,
-            "Continue",
+            tr("btn_continue"),
             on_click=self._on_continue,
             theme=BUTTON_THEME
         )
@@ -171,7 +172,7 @@ class EndOfDayState(BaseState):
             self.health = self.max_health
             
             # Update UI
-            self.money_label.text = f"Money Left: ${self.money:.2f}"
+            self.money_label.text = tr("end_of_day_money", money=self.money)
             self.health_bar.value = self.health
             self.health_bar.theme.accent_color = self._get_health_color(self.health, self.max_health)
             self._update_repair_button()
@@ -207,7 +208,7 @@ class EndOfDayState(BaseState):
             from src.states.game.Menus.ConfirmationState import ConfirmationState
             self.state_machine.push(ConfirmationState(
                 self.state_machine,
-                "Overwrite existing save?",
+                tr("confirm_overwrite", default="Overwrite existing save?"),
                 execute_save,
                 cancel_save
             ))

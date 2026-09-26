@@ -1,3 +1,4 @@
+from src.i18n import tr
 from typing import Any, Callable, Dict, Optional
 import pygame
 
@@ -41,7 +42,7 @@ class ConfirmationState(BaseState):
             settings.VIRTUAL_WIDTH / 2 - 110, 
             self.panel_y + 60, 
             100, 25, 
-            "Yes", 
+            tr("btn_yes", default="Yes"), 
             on_click=self._on_yes,
             theme=BUTTON_THEME
         )
@@ -50,7 +51,7 @@ class ConfirmationState(BaseState):
             settings.VIRTUAL_WIDTH / 2 + 10, 
             self.panel_y + 60, 
             100, 25, 
-            "No", 
+            tr("btn_no", default="No"), 
             on_click=self._on_no,
             theme=BUTTON_THEME
         )
@@ -67,7 +68,7 @@ class ConfirmationState(BaseState):
             window_height=settings.WINDOW_HEIGHT
         )
         
-    def enter(self, enter_params: Optional[Dict[str, Any]] = None):
+    def enter(self, enter_params=None):
         self.fade_alpha = 0.0
         self.panel_y = -200
         self.is_exiting = False

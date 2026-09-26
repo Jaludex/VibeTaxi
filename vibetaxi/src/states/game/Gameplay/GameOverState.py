@@ -1,3 +1,4 @@
+from src.i18n import tr
 import settings
 from typing import Dict, Any, Optional
 
@@ -31,7 +32,7 @@ class GameOverState(MessageBoxState):
                 
         super().__init__(state_machine, "GAME OVER", message, on_close)
 
-    def enter(self, enter_params: Optional[Dict[str, Any]] = None):
+    def enter(self, enter_params=None):
         super().enter(enter_params)
         if "game_over" in settings.SOUNDS:
             settings.SOUNDS["game_over"].play()

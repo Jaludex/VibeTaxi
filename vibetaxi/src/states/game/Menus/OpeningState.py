@@ -95,7 +95,19 @@ class OpeningState(BaseState):
         self._cancel_timers()
         
         self.state_machine.pop()
-        self.state_machine.push(TitleScreenState(self.state_machine))
+        
+        if settings.LANGUAGE is None:
+            from src.states.game.Menus.LanguageSelectionState import LanguageSelectionState
+            from src.states.game.Menus.TitleScreenState import TitleScreenState
+            
+            def on_lang_close():
+                # Now push title screen state
+                self.state_machine.push(TitleScreenState(self.state_machine))
+                    
+            self.state_machine.push(LanguageSelectionState(self.state_machine, on_close=on_lang_close))
+        else:
+            from src.states.game.Menus.TitleScreenState import TitleScreenState
+            self.state_machine.push(TitleScreenState(self.state_machine))
 
     def on_input(self, input_id: str, input_data: InputData) -> None:
         if getattr(input_data, "pressed", False):

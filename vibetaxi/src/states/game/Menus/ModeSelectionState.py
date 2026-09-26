@@ -17,6 +17,8 @@ from src.game_rules.ZenStrategy import ZenStrategy
 from src.game_rules.TutorialStrategy import TutorialStrategy
 from src.states.game.Gameplay.TutorialPlayState import TutorialPlayState
 
+from src.i18n import tr
+
 class ModeSelectionState(BaseState):
     def __init__(self, state_machine: Any) -> None:
         super().__init__(state_machine)
@@ -38,7 +40,7 @@ class ModeSelectionState(BaseState):
             window_x + 20,
             self.panel_y + 75,
             95, 30,
-            "Tutorial",
+            tr("btn_tutorial"),
             on_click=lambda: self.select_mode("tutorial")
         )
         
@@ -46,7 +48,7 @@ class ModeSelectionState(BaseState):
             window_x + 130,
             self.panel_y + 75,
             95, 30,
-            "Workday",
+            tr("btn_workday"),
             on_click=lambda: self.select_mode("workday")
         )
         
@@ -54,7 +56,7 @@ class ModeSelectionState(BaseState):
             window_x + 240,
             self.panel_y + 75,
             95, 30,
-            "Arcade",
+            tr("btn_arcade"),
             on_click=lambda: self.select_mode("arcade")
         )
 
@@ -62,14 +64,14 @@ class ModeSelectionState(BaseState):
             window_x + 350,
             self.panel_y + 75,
             95, 30,
-            "Zen",
+            tr("btn_zen"),
             on_click=lambda: self.select_mode("zen")
         )
         
         self.desc_label = Label(
             settings.VIRTUAL_WIDTH / 2,
             self.panel_y + 45,
-            "Choose a game mode",
+            tr("mode_selection_title"),
             center=True
         )
         
@@ -77,7 +79,7 @@ class ModeSelectionState(BaseState):
             window_x, 
             self.panel_y, 
             window_width, window_height,
-            title="Please select a mode",
+            title=tr("mode_selection_title"),
             on_close=self.on_close_click,
             children=[self.btn_tutorial, self.btn_jornada, self.btn_arcade, self.btn_zen, self.desc_label]
         )
@@ -168,15 +170,15 @@ class ModeSelectionState(BaseState):
         
         # Update description text based on hover
         if self.btn_tutorial.hovered:
-            self.desc_label.set_text("Learn the basics of the game")
+            self.desc_label.set_text(tr("mode_tutorial_desc", default="Learn the basics of the game"))
         elif self.btn_jornada.hovered:
-            self.desc_label.set_text("Win money with each trip. Use it to repare your car")
+            self.desc_label.set_text(tr("mode_workday_desc", default="Win money with each trip. Use it to repare your car"))
         elif self.btn_arcade.hovered:
-            self.desc_label.set_text("Win as many trips as you can before time runs out")
+            self.desc_label.set_text(tr("mode_arcade_desc", default="Win as many trips as you can before time runs out"))
         elif self.btn_zen.hovered:
-            self.desc_label.set_text("No damage, no limits. Just chill and drive.")
+            self.desc_label.set_text(tr("mode_zen_desc", default="No damage, no limits. Just chill and drive."))
         else:
-            self.desc_label.set_text("Choose a game mode.")
+            self.desc_label.set_text(tr("mode_selection_title", default="Choose a game mode."))
 
     def on_input(self, input_id, input_data):
         self.ui.on_input(input_id, input_data)

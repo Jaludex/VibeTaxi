@@ -1,3 +1,4 @@
+from src.i18n import tr
 import pygame
 import settings
 from typing import Dict, Any, Optional
@@ -38,7 +39,7 @@ class NewRecordState(BaseState):
         self.label_title = Label(
             settings.VIRTUAL_WIDTH / 2, 
             self.panel_y + 20, 
-            "New Record!", 
+            tr("new_record_title"), 
             theme=LABEL_GOLD_THEME,
             center=True
         )
@@ -46,7 +47,7 @@ class NewRecordState(BaseState):
         self.label_score = Label(
             settings.VIRTUAL_WIDTH / 2, 
             self.panel_y + 50, 
-            f"Score: {self.score}", 
+            tr("new_record_score", default="Score: {score}", score=self.score), 
             theme=LABEL_THEME,
             center=True
         )
@@ -61,7 +62,7 @@ class NewRecordState(BaseState):
         self.btn_submit = Button(
             settings.VIRTUAL_WIDTH / 2 - 40, self.panel_y + 115,
             80, 25,
-            "Save",
+            tr("btn_submit", default="Save"),
             on_click=self.on_submit_click,
             theme=BUTTON_THEME
         )
@@ -78,7 +79,7 @@ class NewRecordState(BaseState):
             window_height=settings.WINDOW_HEIGHT
         )
         
-    def enter(self, enter_params: Optional[Dict[str, Any]] = None):
+    def enter(self, enter_params=None):
         self.fade_alpha = 0.0
         self.panel_y = -300
         self.is_exiting = False

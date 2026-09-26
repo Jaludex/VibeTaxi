@@ -49,30 +49,6 @@ TITLE = "Vibe Taxi"
 
 VERSION = "1.2.0"
 
-CREDITS = (
-    "VIBE TAXI\n"
-    "A game made with Gale & Pygame.\nAs Project in the course of\nVideogame Programming I (ULA)\n"
-    "Development & Design:\n"
-    "Jesus Leon (Jaludex)\nZadkiel Jimenez (Eltoti)\n\n"
-    "Music & Sound Effects:\n"
-    "opengameart.org\npixabay.com\nText blips by dmochas on itch.io\n"
-    "Graphical Assets:\n"
-    "Radio, indicator arrow and passenger UI by Eltoti\n"
-    "City Assets by nyknck on itch.io\n"
-    "Cars textures by Kia on itch.io\n"
-    "Peds texture by vimlark on itch.io\n"
-    "Fonts:\nGoogle Fonts\n\n"
-    "Thanks for playing our game!\nHope you enjoy it and have a good time!\n"
-)
-
-USER_TRACKS_INFO = (
-    "You can add your own music \ntracks to the game!\n"
-    "After this message, a folder will\nopen where you can place your files.\n"
-    "The game supports .mp3, .ogg and .wav files.\nAfter adding songs, restart the game\nto load them\n"
-    "By adding music to this folder, you confirm\nyou have the rights or licenses to use it\nThe developers assume no liability for copyrighted content."
-)
-
-
 
 DIALOGUE_DISPLAY_TIME = 5.0
 
@@ -198,3 +174,8 @@ MUSIC = {
 REPAIR_COST = 40.0
 
 SAVE_MANAGER = SaveManager(save_dir=BASE_DIR / 'saves')
+
+LANGUAGE = None
+if SAVE_MANAGER.exists("config"):
+    _config = SAVE_MANAGER.load("config")
+    LANGUAGE = _config.get("language")

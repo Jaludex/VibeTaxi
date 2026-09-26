@@ -8,7 +8,8 @@ from src.entity.Entity import Entity
 from src.states.entity.PassengerWaitState import PassengerWaitState
 from src.states.entity.PassengerWalkState import PassengerWalkState
 from src.states.entity.PassengerRideState import PassengerRideState
-from src.definitions.passenger_dialogues import DIALOGUES_BANK
+from src.i18n import texts
+import settings
 from src.definitions.comfort import COMFORT_RULES
 from src.definitions.radio import RADIO_STATIONS
 
@@ -38,18 +39,19 @@ class Passenger(Entity):
                 self.music_preference = random.choice(valid_genres)
             self.definition["music_preference"] = self.music_preference
             
-        base_greeting = random.choice(DIALOGUES_BANK["enter"]).format(destination=self.destination)
-        genre_hints = DIALOGUES_BANK.get("hints", {}).get(self.music_preference, [])
+        dialogues = texts[getattr(settings, 'LANGUAGE', 'en')]['dialogues']
+        base_greeting = random.choice(dialogues["enter"]).format(destination=self.destination)
+        genre_hints = dialogues.get("hints", {}).get(self.music_preference, [])
         hint = random.choice(genre_hints) if genre_hints else ""
         greeting = f"{base_greeting} {hint}".strip()
         
         self.dialogues = {
             "enter": greeting,
-            "reaction_good": random.choice(DIALOGUES_BANK["reaction"]["good"]),
-            "reaction_neutral": random.choice(DIALOGUES_BANK["reaction"]["neutral"]),
-            "reaction_bad": random.choice(DIALOGUES_BANK["reaction"]["bad"]),
-            "exit_good": random.choice(DIALOGUES_BANK["exit"]["good"]),
-            "exit_bad": random.choice(DIALOGUES_BANK["exit"]["bad"])
+            "reaction_good": random.choice(dialogues["reaction"]["good"]),
+            "reaction_neutral": random.choice(dialogues["reaction"]["neutral"]),
+            "reaction_bad": random.choice(dialogues["reaction"]["bad"]),
+            "exit_good": random.choice(dialogues["exit"]["good"]),
+            "exit_bad": random.choice(dialogues["exit"]["bad"])
         }
 
         self.comfort = float(random.randint(int(COMFORT_RULES["initial_min"]), int(COMFORT_RULES["initial_max"])))
@@ -82,7 +84,7 @@ class Passenger(Entity):
                 self.comfort = min(COMFORT_RULES["max_comfort"], self.comfort + COMFORT_RULES["initial_reaction_bonus"])
                 self.has_initial_music_reacted = True
                 if hud:
-                    hud.show_text(random.choice(DIALOGUES_BANK["reaction"]["good"]))
+                    hud.show_text(random.choice(texts[getattr(settings, 'LANGUAGE', 'en')]['dialogues']["reaction"]["good"]))
             elif self.time_riding > COMFORT_RULES["initial_reaction_time"]:
                 # If player didn't match the music in 4s, stay silent
                 self.has_initial_music_reacted = True
@@ -95,7 +97,7 @@ class Passenger(Entity):
     def on_collision(self, hud=None):
         self.comfort = max(COMFORT_RULES["min_comfort"], self.comfort - COMFORT_RULES["collision_penalty"])
         if hud:
-            hud.show_text(random.choice(DIALOGUES_BANK["reaction"]["bad"]))
+            hud.show_text(random.choice(texts[getattr(settings, 'LANGUAGE', 'en')]['dialogues']["reaction"]["bad"]))
             if hasattr(hud, "trigger_crash"):
                 hud.trigger_crash()
 

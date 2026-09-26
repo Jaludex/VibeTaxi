@@ -1,3 +1,4 @@
+from src.i18n import tr
 import pygame
 import settings
 from typing import Dict, Any, Optional
@@ -32,7 +33,7 @@ class PauseState(BaseState):
         self.label_title = Label(
             settings.VIRTUAL_WIDTH / 2, 
             self.panel_y + 20, 
-            "Paused", 
+            tr("pause_title", default="Paused"), 
             theme=LABEL_THEME,
             center=True
         )
@@ -40,7 +41,7 @@ class PauseState(BaseState):
         self.btn_resume = Button(
             settings.VIRTUAL_WIDTH / 2 - 60, self.panel_y + 50,
             120, 25,
-            "Continue",
+            tr("btn_resume", default="Continue"),
             on_click=self.on_resume_click,
             theme=BUTTON_THEME
         )
@@ -48,7 +49,7 @@ class PauseState(BaseState):
         self.btn_exit = Button(
             settings.VIRTUAL_WIDTH / 2 - 60, self.panel_y + 85,
             120, 25,
-            "Main Menu",
+            tr("btn_exit_menu", default="Main Menu"),
             on_click=self.on_exit_click,
             theme=BUTTON_THEME
         )
@@ -56,7 +57,7 @@ class PauseState(BaseState):
         self.btn_quit = Button(
             settings.VIRTUAL_WIDTH / 2 - 60, self.panel_y + 120,
             120, 25,
-            "Quit Game",
+            tr("btn_quit_desktop", default="Quit Game"),
             on_click=self.on_quit_click,
             theme=BUTTON_THEME
         )
@@ -73,7 +74,7 @@ class PauseState(BaseState):
             window_height=settings.WINDOW_HEIGHT
         )
         
-    def enter(self, enter_params: Optional[Dict[str, Any]] = None):
+    def enter(self, enter_params=None):
         self.fade_alpha = 0.0
         self.panel_y = -200
         self.is_exiting = False

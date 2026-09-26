@@ -1,3 +1,4 @@
+from src.i18n import tr
 from src.game_rules.BaseRuleStrategy import BaseRuleStrategy
 
 class ZenStrategy(BaseRuleStrategy):
@@ -17,6 +18,6 @@ class ZenStrategy(BaseRuleStrategy):
         from gale.text import render_text
         
         big_font = settings.FONTS["medium"]
-        render_text(surface, "ZEN", big_font, x + 40, y + 20, (200, 255, 200), center=True, shadowed=True)
+        render_text(surface, tr("hud_zen"), big_font, x + 40, y + 20, (200, 255, 200), center=True, shadowed=True)
         
         self._render_popup_text(surface)

@@ -1,3 +1,4 @@
+from src.i18n import tr
 from src.game_rules.BaseRuleStrategy import BaseRuleStrategy
 
 class ArcadeStrategy(BaseRuleStrategy):
@@ -77,7 +78,7 @@ class ArcadeStrategy(BaseRuleStrategy):
         self._render_taximeter(surface, x, y)
             
         big_font = settings.FONTS["medium"]
-        render_text(surface, f"Score: {self.passengers_delivered}", big_font, x, y + 45, (255, 200, 50), shadowed=True)
+        render_text(surface, tr("hud_score", score=self.passengers_delivered), big_font, x, y + 45, (255, 200, 50), shadowed=True)
         
         self._render_popup_text(surface)
 
