@@ -85,6 +85,17 @@ ARCADE_BASE_SCORE = 150
 ARCADE_TIME_BONUS_SCORE = 50
 ARCADE_SAFETY_BONUS_SCORE = 50
 
+# Ranks
+RANKS = [
+    {"name": "F", "color": (150, 150, 150), "workday_min": 0, "arcade_min": 0},
+    {"name": "E", "color": (200, 100, 100), "workday_min": 1, "arcade_min": 350},
+    {"name": "D", "color": (200, 150, 50),  "workday_min": 2, "arcade_min": 700},
+    {"name": "C", "color": (200, 200, 50),  "workday_min": 3, "arcade_min": 1050},
+    {"name": "B", "color": (100, 200, 100), "workday_min": 4, "arcade_min": 1400},
+    {"name": "A", "color": (50, 200, 255),  "workday_min": 6, "arcade_min": 1750},
+    {"name": "VIBE", "color": (255, 50, 255), "workday_min": 8, "arcade_min": 2100},
+]
+
 COLOR_TRIP_SHORT = (0, 255, 0)
 COLOR_TRIP_MEDIUM = (255, 255, 0)
 COLOR_TRIP_LONG = (255, 69, 0)

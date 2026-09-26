@@ -151,7 +151,7 @@ class WorkdayStrategy(BaseRuleStrategy):
         def show_game_over(reason=None):
             delete_save_if_loaded()
             from src.states.game.Gameplay.GameOverState import GameOverState
-            state_machine.push(GameOverState(state_machine, reason=reason, record_data=get_record_data(self.day)))
+            state_machine.push(GameOverState(state_machine, reason=reason, record_data=get_record_data(self.day), mode="workday", score=self.day))
 
         def show_end_of_day():
             from src.states.game.Gameplay.EndOfDayState import EndOfDayState

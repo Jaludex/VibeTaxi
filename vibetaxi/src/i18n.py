@@ -78,6 +78,7 @@ texts = {
         "bonus_safe": "Safe!",
         "hud_tutorial": "TUTORIAL",
         "hud_zen": "ZEN",
+        "game_over_rank_label": "RANK",
         
         # Confirmation
         "confirm_quit": "Are you sure you want to quit?",
@@ -267,6 +268,7 @@ texts = {
         "bonus_safe": "¡Seguro!",
         "hud_tutorial": "TUTORIAL",
         "hud_zen": "ZEN",
+        "game_over_rank_label": "RANGO",
         
         # Confirmation
         "confirm_quit": "¿Estás seguro de que quieres salir?",
