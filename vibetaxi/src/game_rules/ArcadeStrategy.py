@@ -78,6 +78,8 @@ class ArcadeStrategy(BaseRuleStrategy):
             if time_bonus > 0: reasons.append(tr("bonus_fast", default="Fast!"))
             if safety_bonus > 0: reasons.append(tr("bonus_safe", default="Safe!"))
             self.score_popup_text += f"\n({', '.join(reasons)})"
+            if "bonus" in settings.SOUNDS:
+                settings.SOUNDS["bonus"].play()
             
         self.score_popup_alpha = 0.0
         self.score_popup_y_offset = 0.0

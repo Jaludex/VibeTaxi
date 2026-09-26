@@ -172,6 +172,7 @@ SOUNDS = {
     "bleep3": pygame.mixer.Sound(BASE_DIR / "assets" / "sounds" / "text_blips" / "bleep003.wav"),
     "bleep4": pygame.mixer.Sound(BASE_DIR / "assets" / "sounds" / "text_blips" / "bleep004.wav"),
     "bleep5": pygame.mixer.Sound(BASE_DIR / "assets" / "sounds" / "text_blips" / "bleep005.wav"),
+    "bonus": pygame.mixer.Sound(BASE_DIR / "assets" / "sounds" / "misc" / "bonus.wav"),
 }
 
 MUSIC = {

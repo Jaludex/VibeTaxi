@@ -49,7 +49,7 @@ texts = {
         "mode_arcade_desc": "Win as many trips as you can before time runs out",
         "mode_zen_desc": "No damage, no limits. Just chill and drive.",
 
-        "mode_workday_initial_text": "Day {self.day}\nToday's fee: ${self.fee:.2f}",
+        "mode_workday_initial_text": "Day {day}\nToday's fee: ${fee:.2f}",
         "mode_arcade_initial_text": "Go get them!",
         "mode_zen_initial_text": "Relax and enjoy the ride.",
         
