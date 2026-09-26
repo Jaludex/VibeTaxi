@@ -133,11 +133,11 @@ FRAMES = {
 
 FONTS = {
     "big": pygame.font.Font(BASE_DIR / "assets" / "fonts" / "Big.ttf", 32),
-    "medium": pygame.font.Font(BASE_DIR/ "assets" / "fonts" / "Minecraft.ttf", 12),
+    "medium": pygame.font.Font(BASE_DIR/ "assets" / "fonts" / "medium.ttf", 14),
     "led": pygame.font.Font(BASE_DIR / "assets" / "fonts" / "led.ttf", 16),
     "led_small": pygame.font.Font(BASE_DIR / "assets" / "fonts" / "led.ttf", 8),
-    "minecraft": pygame.font.Font(BASE_DIR / "assets" / "fonts" / "Minecraft.ttf", 12),
-    "minecraft_small": pygame.font.Font(BASE_DIR / "assets" / "fonts" / "Minecraft.ttf", 8),
+    "minecraft": pygame.font.Font(BASE_DIR / "assets" / "fonts" / "medium.ttf", 14),
+    "minecraft_small": pygame.font.Font(BASE_DIR / "assets" / "fonts" / "medium.ttf", 11),
 }
 
 SOUNDS = {
