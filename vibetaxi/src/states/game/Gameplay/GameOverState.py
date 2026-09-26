@@ -65,8 +65,9 @@ class GameOverState(MessageBoxState):
         def show_rank():
             if self.rank:
                 Timer.tween(0.4, [(self, {"rank_alpha": 255.0})])
-                # If you find a sound for the rank, you can play it here:
-                # if "rank_reveal" in settings.SOUNDS: settings.SOUNDS["rank_reveal"].play()
+                sound_key = self.rank.get("sound")
+                if sound_key and sound_key in settings.SOUNDS:
+                    settings.SOUNDS[sound_key].play()
                 
         # Wait 1 second after panel finishes dropping (0.5s drop + 1s wait = 1.5s)
         Timer.after(1.5, show_rank)
@@ -92,11 +93,10 @@ class GameOverState(MessageBoxState):
             # Create a transparent surface for the rank text
             rank_surf = pygame.Surface((settings.VIRTUAL_WIDTH, settings.VIRTUAL_HEIGHT), pygame.SRCALPHA)
             
-            # Draw Rank Value (big)
             render_text(
                 rank_surf, 
                 self.rank['name'], 
-                settings.FONTS["big"], 
+                settings.FONTS["rank"], 
                 settings.VIRTUAL_WIDTH / 2, 
                 self.panel_y + 90, 
                 self.rank["color"], 

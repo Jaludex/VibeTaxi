@@ -87,13 +87,13 @@ ARCADE_SAFETY_BONUS_SCORE = 50
 
 # Ranks
 RANKS = [
-    {"name": "F", "color": (150, 150, 150), "workday_min": 0, "arcade_min": 0},
-    {"name": "E", "color": (200, 100, 100), "workday_min": 1, "arcade_min": 350},
-    {"name": "D", "color": (200, 150, 50),  "workday_min": 2, "arcade_min": 700},
-    {"name": "C", "color": (200, 200, 50),  "workday_min": 3, "arcade_min": 1050},
-    {"name": "B", "color": (100, 200, 100), "workday_min": 4, "arcade_min": 1400},
-    {"name": "A", "color": (50, 200, 255),  "workday_min": 6, "arcade_min": 1750},
-    {"name": "VIBE", "color": (255, 50, 255), "workday_min": 8, "arcade_min": 2100},
+    {"name": "F", "color": (150, 150, 150), "workday_min": 1, "arcade_min": 0, "sound": "fatal"},
+    {"name": "E", "color": (200, 100, 100), "workday_min": 2, "arcade_min": 350, "sound": "bad"},
+    {"name": "D", "color": (200, 150, 50),  "workday_min": 3, "arcade_min": 700, "sound": "bad"},
+    {"name": "C", "color": (200, 200, 50),  "workday_min": 4, "arcade_min": 1050, "sound": "good"},
+    {"name": "B", "color": (100, 200, 100), "workday_min": 5, "arcade_min": 1400, "sound": "good"},
+    {"name": "A", "color": (50, 200, 255),  "workday_min": 6, "arcade_min": 1750, "sound": "awesome"},
+    {"name": "VIBE", "color": (255, 50, 255), "workday_min": 8, "arcade_min": 2100, "sound": "vibe"},
 ]
 
 COLOR_TRIP_SHORT = (0, 255, 0)
@@ -149,6 +149,7 @@ FRAMES = {
 }
 
 FONTS = {
+    "rank": pygame.font.Font(BASE_DIR / "assets" / "fonts" / "Big.ttf", 64),
     "big": pygame.font.Font(BASE_DIR / "assets" / "fonts" / "Big.ttf", 32),
     "medium": pygame.font.Font(BASE_DIR/ "assets" / "fonts" / "medium.ttf", 14),
     "led": pygame.font.Font(BASE_DIR / "assets" / "fonts" / "led.ttf", 16),
@@ -184,6 +185,11 @@ SOUNDS = {
     "bleep4": pygame.mixer.Sound(BASE_DIR / "assets" / "sounds" / "text_blips" / "bleep004.wav"),
     "bleep5": pygame.mixer.Sound(BASE_DIR / "assets" / "sounds" / "text_blips" / "bleep005.wav"),
     "bonus": pygame.mixer.Sound(BASE_DIR / "assets" / "sounds" / "misc" / "bonus.wav"),
+    "fatal": pygame.mixer.Sound(BASE_DIR / "assets" / "sounds" / "ranks" / "fatal.ogg"),
+    "bad": pygame.mixer.Sound(BASE_DIR / "assets" / "sounds" / "ranks" / "bad.wav"),
+    "good": pygame.mixer.Sound(BASE_DIR / "assets" / "sounds" / "ranks" / "good.ogg"),
+    "awesome": pygame.mixer.Sound(BASE_DIR / "assets" / "sounds" / "ranks" / "awesome.wav"),
+    "vibe": pygame.mixer.Sound(BASE_DIR / "assets" / "sounds" / "ranks" / "vibe.wav"),
 }
 
 MUSIC = {
