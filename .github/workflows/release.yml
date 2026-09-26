@@ -11,7 +11,13 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
+        include:
+          - os: windows-latest
+            channel: windows
+          - os: ubuntu-latest
+            channel: linux
+          - os: macos-latest
+            channel: osx
 
     steps:
     - name: Checkout code
@@ -35,25 +41,36 @@ jobs:
     - name: Zip build (Windows)
       if: matrix.os == 'windows-latest'
       working-directory: vibetaxi
-      run: Compress-Archive -Path dist/main/* -DestinationPath ../VibeTaxi-Windows.zip
+      run: Compress-Archive -Path dist/main/* -DestinationPath "../VibeTaxi-${{ github.ref_name }}-Windows.zip"
 
     - name: Zip build (Linux)
       if: matrix.os == 'ubuntu-latest'
       working-directory: vibetaxi
       run: |
         cd dist/main
-        zip -r ../../../VibeTaxi-ubuntu-latest.zip .
+        zip -r "../../../VibeTaxi-${{ github.ref_name }}-Linux.zip" .
 
     - name: Zip build (macOS)
       if: matrix.os == 'macos-latest'
       working-directory: vibetaxi
       run: |
         cd dist
-        zip -r -y ../../VibeTaxi-macos-latest.zip VibeTaxi.app
+        zip -r -y "../../VibeTaxi-${{ github.ref_name }}-macOS.zip" VibeTaxi.app
 
-    - name: Upload Release
+    - name: Upload Release to GitHub
       uses: softprops/action-gh-release@v2
       if: startsWith(github.ref, 'refs/tags/')
       with:
         files: VibeTaxi-*.zip
         generate_release_notes: false
+
+    # ITCH.IO BUTLER
+    - name: Push to Itch.io
+      uses: manleydev/butler-publish-itchio-action@master
+      env:
+        BUTLER_CREDENTIALS: ${{ secrets.BUTLER_API_KEY }}
+        ITCH_USER: jaludex
+        ITCH_GAME: vibe-taxi
+        CHANNEL: ${{ matrix.channel }}
+        PACKAGE: ${{ matrix.os == 'macos-latest' && 'vibetaxi/dist/VibeTaxi.app' || 'vibetaxi/dist/main' }}
+        VERSION: ${{ github.ref_name }}
