@@ -295,6 +295,8 @@ class PlayState(BaseState):
                         p.state_machine.change("ride", taxi=self.taxi)
                         self.game_rule_strategy.bind_passenger(p)
                         self._prev_taxi_health = self.taxi.health  # baseline for crash detection
+                        self.arrow_radius_progress = 0.0
+                        Timer.tween(0.7, [(self, {"arrow_radius_progress": 1.0})], ease_function_name="out_cubic")
                     
                     if "honk" in settings.SOUNDS:
                         settings.SOUNDS["honk"].play()
@@ -465,7 +467,13 @@ class PlayState(BaseState):
             if math.sin(angle) != 0:
                 r_y = abs(half_h / math.sin(angle))
                 
-            r = min(r_x, r_y)
+            target_r = min(r_x, r_y)
+            
+            # Animate radius outward using arrow_radius_progress
+            progress = getattr(self, 'arrow_radius_progress', 1.0)
+            
+            # Start near the taxi (radius 40) and travel to the edge
+            r = 40 + (target_r - 40) * progress
             
             screen_pos_x = (cam_w / 2) + r * math.cos(angle)
             screen_pos_y = (cam_h / 2) + r * math.sin(angle)
