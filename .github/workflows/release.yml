@@ -10,6 +10,7 @@ jobs:
     name: Build on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
+      fail-fast: false
       matrix:
         include:
           - os: windows-latest
@@ -41,21 +42,21 @@ jobs:
     - name: Zip build (Windows)
       if: matrix.os == 'windows-latest'
       working-directory: vibetaxi
-      run: Compress-Archive -Path dist/main/* -DestinationPath "../VibeTaxi-${{ github.ref_name }}-Windows.zip"
+      run: Compress-Archive -Path dist/main/* -DestinationPath "${{ github.workspace }}/VibeTaxi-${{ github.ref_name }}-Windows.zip"
 
     - name: Zip build (Linux)
       if: matrix.os == 'ubuntu-latest'
       working-directory: vibetaxi
       run: |
         cd dist/main
-        zip -r "../../../VibeTaxi-${{ github.ref_name }}-Linux.zip" .
+        zip -r "${{ github.workspace }}/VibeTaxi-${{ github.ref_name }}-Linux.zip" .
 
     - name: Zip build (macOS)
       if: matrix.os == 'macos-latest'
       working-directory: vibetaxi
       run: |
         cd dist
-        zip -r -y "../../VibeTaxi-${{ github.ref_name }}-macOS.zip" VibeTaxi.app
+        zip -r -y "${{ github.workspace }}/VibeTaxi-${{ github.ref_name }}-macOS.zip" VibeTaxi.app
 
     - name: Upload Release to GitHub
       uses: softprops/action-gh-release@v2
@@ -64,13 +65,62 @@ jobs:
         files: VibeTaxi-*.zip
         generate_release_notes: false
 
-    # ITCH.IO BUTLER
-    - name: Push to Itch.io
-      uses: manleydev/butler-publish-itchio-action@master
-      env:
-        BUTLER_CREDENTIALS: ${{ secrets.BUTLER_API_KEY }}
-        ITCH_USER: jaludex
-        ITCH_GAME: vibe-taxi
-        CHANNEL: ${{ matrix.channel }}
-        PACKAGE: ${{ matrix.os == 'macos-latest' && 'vibetaxi/dist/VibeTaxi.app' || 'vibetaxi/dist/main' }}
-        VERSION: ${{ github.ref_name }}
+    - name: Upload Artifact for Itch.io
+      uses: actions/upload-artifact@v4
+      with:
+        name: build-${{ matrix.channel }}
+        path: VibeTaxi-*.zip
+        retention-days: 1
+
+  publish-itch:
+    name: Publish to Itch.io
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download Windows Build
+        uses: actions/download-artifact@v4
+        with:
+          name: build-windows
+          path: itchio-builds
+
+      - name: Download Linux Build
+        uses: actions/download-artifact@v4
+        with:
+          name: build-linux
+          path: itchio-builds
+
+      - name: Download macOS Build
+        uses: actions/download-artifact@v4
+        with:
+          name: build-osx
+          path: itchio-builds
+
+      - name: Push Windows to Itch.io
+        uses: manleydev/butler-publish-itchio-action@master
+        env:
+          BUTLER_CREDENTIALS: ${{ secrets.BUTLER_API_KEY }}
+          ITCH_USER: jaludex
+          ITCH_GAME: vibe-taxi
+          CHANNEL: windows
+          PACKAGE: itchio-builds/VibeTaxi-${{ github.ref_name }}-Windows.zip
+          VERSION: ${{ github.ref_name }}
+
+      - name: Push Linux to Itch.io
+        uses: manleydev/butler-publish-itchio-action@master
+        env:
+          BUTLER_CREDENTIALS: ${{ secrets.BUTLER_API_KEY }}
+          ITCH_USER: jaludex
+          ITCH_GAME: vibe-taxi
+          CHANNEL: linux
+          PACKAGE: itchio-builds/VibeTaxi-${{ github.ref_name }}-Linux.zip
+          VERSION: ${{ github.ref_name }}
+
+      - name: Push macOS to Itch.io
+        uses: manleydev/butler-publish-itchio-action@master
+        env:
+          BUTLER_CREDENTIALS: ${{ secrets.BUTLER_API_KEY }}
+          ITCH_USER: jaludex
+          ITCH_GAME: vibe-taxi
+          CHANNEL: osx
+          PACKAGE: itchio-builds/VibeTaxi-${{ github.ref_name }}-macOS.zip
+          VERSION: ${{ github.ref_name }}
