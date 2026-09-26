@@ -75,8 +75,8 @@ class ArcadeStrategy(BaseRuleStrategy):
         self.score_popup_text = f"+{total_score_gained} pts"
         if time_bonus > 0 or safety_bonus > 0:
             reasons = []
-            if time_bonus > 0: reasons.append("Fast!")
-            if safety_bonus > 0: reasons.append("Safe!")
+            if time_bonus > 0: reasons.append(tr("bonus_fast", default="Fast!"))
+            if safety_bonus > 0: reasons.append(tr("bonus_safe", default="Safe!"))
             self.score_popup_text += f"\n({', '.join(reasons)})"
             
         self.score_popup_alpha = 0.0
@@ -102,17 +102,24 @@ class ArcadeStrategy(BaseRuleStrategy):
         # Render common taximeter
         self._render_taximeter(surface, x, y)
             
-        big_font = settings.FONTS["medium"]
-        score_str = tr("hud_score", score=int(getattr(self, "display_score", self.score)))
-        render_text(surface, score_str, big_font, x, y + 45, (255, 200, 50), shadowed=True)
+        val_font = settings.FONTS["big"]
+        lbl_font = settings.FONTS["medium"]
+        
+        val_str = tr("hud_score_value", score=int(getattr(self, "display_score", self.score)))
+        lbl_str = tr("hud_score_label")
+        
+        center_x = x + 40
+        render_text(surface, val_str, val_font, center_x, y + 55, (255, 200, 50), shadowed=True, center=True)
+        render_text(surface, lbl_str, lbl_font, center_x, y + 80, (255, 200, 50), shadowed=True, center=True)
         
         if getattr(self, "score_popup_alpha", 0) > 0:
-            text_w, _ = big_font.size(score_str)
+            text_w, _ = val_font.size(val_str)
+            popup_x = center_x + (text_w / 2) + 10
             popup_surf = pygame.Surface((settings.VIRTUAL_WIDTH, settings.VIRTUAL_HEIGHT), pygame.SRCALPHA)
             
             lines = self.score_popup_text.split('\n')
             for i, line in enumerate(lines):
-                render_text(popup_surf, line, settings.FONTS["minecraft"], x + text_w + 10, y + 45 + self.score_popup_y_offset + i*15, (255, 255, 50), shadowed=True)
+                render_text(popup_surf, line, settings.FONTS["minecraft"], popup_x, y + 45 + self.score_popup_y_offset + i*15, (255, 255, 50), shadowed=True)
                 
             popup_surf.set_alpha(int(self.score_popup_alpha))
             surface.blit(popup_surf, (0, 0))

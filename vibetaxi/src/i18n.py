@@ -70,8 +70,12 @@ texts = {
         "confirm_overwrite": "Overwrite existing save?",
         
         # Gameplay
-        "hud_score": "Score: {score}",
-        "hud_money": "Money: ${money:.2f}",
+        "hud_score_label": "SCORE",
+        "hud_score_value": "{score}",
+        "hud_money_label": "MONEY",
+        "hud_money_value": "${money:.2f}",
+        "bonus_fast": "Fast!",
+        "bonus_safe": "Safe!",
         "hud_tutorial": "TUTORIAL",
         "hud_zen": "ZEN",
         
@@ -255,8 +259,12 @@ texts = {
         "confirm_overwrite": "¿Sobrescribir partida existente?",
         
         # Gameplay
-        "hud_score": "Puntuación: {score}",
-        "hud_money": "Dinero: ${money:.2f}",
+        "hud_score_label": "PUNTOS",
+        "hud_score_value": "{score}",
+        "hud_money_label": "DINERO",
+        "hud_money_value": "${money:.2f}",
+        "bonus_fast": "¡Rápido!",
+        "bonus_safe": "¡Seguro!",
         "hud_tutorial": "TUTORIAL",
         "hud_zen": "ZEN",
         

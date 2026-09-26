@@ -84,8 +84,8 @@ class WorkdayStrategy(BaseRuleStrategy):
         self.money_popup_text = f"+${earned:.2f}"
         if time_bonus > 0 or safety_bonus > 0:
             reasons = []
-            if time_bonus > 0: reasons.append("Fast!")
-            if safety_bonus > 0: reasons.append("Safe!")
+            if time_bonus > 0: reasons.append(tr("bonus_fast", default="Fast!"))
+            if safety_bonus > 0: reasons.append(tr("bonus_safe", default="Safe!"))
             self.money_popup_text += f"\n({', '.join(reasons)})"
             
         self.money_popup_alpha = 0.0
@@ -107,18 +107,24 @@ class WorkdayStrategy(BaseRuleStrategy):
         # Render common taximeter
         self._render_taximeter(surface, x, y)
         
-        # Use bigger font for the label
-        big_font = settings.FONTS["medium"]
-        money_str = tr("hud_money", money=getattr(self, "display_money", self.money))
-        render_text(surface, money_str, big_font, x, y + 45, (100, 255, 100), shadowed=True)
+        val_font = settings.FONTS["big"]
+        lbl_font = settings.FONTS["medium"]
+        
+        val_str = tr("hud_money_value", money=getattr(self, "display_money", self.money))
+        lbl_str = tr("hud_money_label")
+        
+        center_x = x + 40
+        render_text(surface, val_str, val_font, center_x, y + 55, (100, 255, 100), shadowed=True, center=True)
+        render_text(surface, lbl_str, lbl_font, center_x, y + 80, (100, 255, 100), shadowed=True, center=True)
         
         if getattr(self, "money_popup_alpha", 0) > 0:
-            text_w, _ = big_font.size(money_str)
+            text_w, _ = val_font.size(val_str)
+            popup_x = center_x + (text_w / 2) + 10
             popup_surf = pygame.Surface((settings.VIRTUAL_WIDTH, settings.VIRTUAL_HEIGHT), pygame.SRCALPHA)
             
             lines = self.money_popup_text.split('\n')
             for i, line in enumerate(lines):
-                render_text(popup_surf, line, settings.FONTS["minecraft"], x + text_w + 10, y + 45 + self.money_popup_y_offset + i*15, (50, 255, 50), shadowed=True)
+                render_text(popup_surf, line, settings.FONTS["minecraft"], popup_x, y + 45 + self.money_popup_y_offset + i*15, (50, 255, 50), shadowed=True)
                 
             popup_surf.set_alpha(int(self.money_popup_alpha))
             surface.blit(popup_surf, (0, 0))
