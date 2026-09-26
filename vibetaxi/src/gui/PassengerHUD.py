@@ -198,7 +198,7 @@ class PassengerHUD:
     def trigger_crash(self) -> None:
         if self.passenger:
             self.passenger_state = "crashed"
-            self.passenger_timer = 0.0
+            self.crash_start_time = self.passenger_timer  # snapshot the moment of impact
 
     def unbind_passenger(self) -> None:
         if self.passenger is None:
@@ -252,13 +252,14 @@ class PassengerHUD:
                 self.passenger_inner_y = math.sin(self.passenger_timer * 3) * 2
                 
             elif self.passenger_state == "crashed":
-                progress = self.passenger_timer / 1.0
+                elapsed = self.passenger_timer - getattr(self, "crash_start_time", self.passenger_timer)
+                progress = elapsed / 1.0
                 if progress >= 1.0:
                     self.passenger_state = "riding"
                 else:
                     # Wobble erratically
-                    self.passenger_inner_x = self.passenger_target_x + math.sin(self.passenger_timer * 30) * 8 * (1.0 - progress)
-                    self.passenger_inner_y = math.cos(self.passenger_timer * 35) * 8 * (1.0 - progress)
+                    self.passenger_inner_x = self.passenger_target_x + math.sin(elapsed * 30) * 8 * (1.0 - progress)
+                    self.passenger_inner_y = math.cos(elapsed * 35) * 8 * (1.0 - progress)
                     
             elif self.passenger_state == "exiting":
                 progress = min(1.0, self.passenger_timer / 1.0)

@@ -15,6 +15,5 @@ class PassengerRideState(BaseEntityState):
         if self.taxi:
             self.entity.x = self.taxi.x
             self.entity.y = self.taxi.y
-            self.entity.time_riding += dt
             if hasattr(self.entity, "initial_taxi_health"):
                 self.entity.damage_taken = max(0, self.entity.initial_taxi_health - self.taxi.health)

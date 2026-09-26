@@ -78,7 +78,7 @@ class Passenger(Entity):
         self.time_riding += dt
         is_correct_song = (current_song == self.music_preference)
         
-        # Initial 4s window: bonus +20 if matching song is played
+        # Initial reaction window: bonus +20 if matching song is played in time
         if not self.has_initial_music_reacted:
             if is_correct_song and self.time_riding <= COMFORT_RULES["initial_reaction_time"]:
                 self.comfort = min(COMFORT_RULES["max_comfort"], self.comfort + COMFORT_RULES["initial_reaction_bonus"])
@@ -86,13 +86,20 @@ class Passenger(Entity):
                 if hud:
                     hud.show_text(random.choice(texts[getattr(settings, 'LANGUAGE', 'en')]['dialogues']["reaction"]["good"]))
             elif self.time_riding > COMFORT_RULES["initial_reaction_time"]:
-                # If player didn't match the music in 4s, stay silent
+                # Missed the window, no reaction
                 self.has_initial_music_reacted = True
 
         # Continuous comfort increase with matching song
         if is_correct_song:
+            self.bad_music_timer = 0.0
             rate = COMFORT_RULES.get("comfort_increase_rate", 1.25)
             self.comfort = min(COMFORT_RULES["max_comfort"], self.comfort + rate * dt)
+        else:
+            # Wrong or no song: accumulate bad music timer, then penalize
+            self.bad_music_timer = getattr(self, "bad_music_timer", 0.0) + dt
+            if self.bad_music_timer >= settings.BAD_MUSIC_PENALTY_TIME:
+                rate = COMFORT_RULES.get("comfort_decrease_rate", 1.25)
+                self.comfort = max(COMFORT_RULES["min_comfort"], self.comfort - rate * dt)
             
     def on_collision(self, hud=None):
         self.comfort = max(COMFORT_RULES["min_comfort"], self.comfort - COMFORT_RULES["collision_penalty"])

@@ -172,7 +172,7 @@ class EndOfDayState(BaseState):
             self.health = self.max_health
             
             # Update UI
-            self.money_label.text = tr("end_of_day_money", money=self.money)
+            self.money_label.set_text(tr("end_of_day_money", money=self.money))
             self.health_bar.value = self.health
             self.health_bar.theme.accent_color = self._get_health_color(self.health, self.max_health)
             self._update_repair_button()

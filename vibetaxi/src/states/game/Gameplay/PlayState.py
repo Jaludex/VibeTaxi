@@ -235,6 +235,12 @@ class PlayState(BaseState):
             
             song_actual = self.radio.get_current_genre()
             self.active_passenger.update_comfort(dt, song_actual, self.game_rule_strategy.get_hud())
+
+            # Detect taxi damage since last frame and notify passenger
+            prev_health = getattr(self, "_prev_taxi_health", self.taxi.health)
+            if self.taxi.health < prev_health:
+                self.active_passenger.on_collision(hud=self.game_rule_strategy.get_hud())
+            self._prev_taxi_health = self.taxi.health
                 
             from src.states.entity.TaxiVibeState import TaxiVibeState
             if not getattr(self.game_rule_strategy, "always_vibe", False):
@@ -288,6 +294,7 @@ class PlayState(BaseState):
                     def reach_taxi():
                         p.state_machine.change("ride", taxi=self.taxi)
                         self.game_rule_strategy.bind_passenger(p)
+                        self._prev_taxi_health = self.taxi.health  # baseline for crash detection
                     
                     if "honk" in settings.SOUNDS:
                         settings.SOUNDS["honk"].play()

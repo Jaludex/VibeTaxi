@@ -161,11 +161,11 @@ texts = {
                     "I don't mind this track."
                 ],
                 "bad": [
-                    "Could you change that music, please?", 
-                    "What is this noise? My head hurts.", 
-                    "Turn that garbage off right now.",
-                    "I can't stand this genre.",
-                    "This is awful, change the station!"
+                    "Hey! Be more careful!", 
+                    "My head hurts.", 
+                    "You're not carrying potatos, are you?",
+                    "I can't stand this shaking",
+                    "Wait a minute, are you drunk?"
                 ]
             },
             "exit": {
@@ -242,7 +242,7 @@ texts = {
         "records_workday_format": "{i}. {name} - Día {score}",
         "records_arcade_format": "{i}. {name} - {score} viajes",
         
-        "pause_title": "Pausado",
+        "pause_title": "Pausa",
         "game_over_title": "Fin del Juego",
         "game_over_money": "Dinero Ganado: ${score:.2f}",
         "game_over_pax": "Pasajeros: {score}",
@@ -346,11 +346,11 @@ texts = {
                     "No me molesta esta canción."
                 ],
                 "bad": [
-                    "¿Podrías cambiar esa música, por favor?", 
-                    "¿Qué es este ruido? Me duele la cabeza.", 
-                    "Apaga esa basura ahora mismo.",
-                    "No soporto este género.",
-                    "Esto es horrible, ¡cambia de emisora!"
+                    "Ey! Ten mas cuidado!", 
+                    "Me duele la cabeza.", 
+                    "No estas llevando papas ¿Verdad?",
+                    "No aguanto este ajetreo",
+                    "Espera un momento, ¿Estás borracho?"
                 ]
             },
             "exit": {
