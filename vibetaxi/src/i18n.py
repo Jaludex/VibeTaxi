@@ -170,7 +170,178 @@ texts = {
                 ]
             }
         }
+    },
+    "es": {
+        "language_name": "Español",
+
+        # --- UI & Menus ---
+        "game_title": "Vibe Taxi",
+        "version": "Versión {version}",
+        "fullscreen_hint": "F11 para Pantalla Completa",
+        
+        # Buttons
+        "btn_new_game": "Nueva Partida",
+        "btn_resume_work_day": "Reanudar Jornada. Día: {day}",
+        "btn_resume_work": "Reanudar Jornada",
+        "btn_records": "Puntuaciones",
+        "btn_credits": "Créditos",
+        "btn_quit_game": "Salir del Juego",
+        "btn_user_tracks": "Música Propia",
+        "btn_language": "Idioma",
+        "btn_tutorial": "Tutorial",
+        "btn_workday": "Jornada",
+        "btn_arcade": "Arcade",
+        "btn_zen": "Zen",
+        "btn_yes": "Sí",
+        "btn_no": "No",
+        "btn_ok": "Aceptar",
+        "btn_next": "Siguiente",
+        "btn_resume": "Continuar",
+        "btn_exit_menu": "Menú Principal",
+        "btn_quit_desktop": "Salir al Escritorio",
+        "btn_repair_taxi": "Reparar Taxi",
+        "btn_repair_taxi_cost": "Reparar - ${cost}",
+        "btn_save_quit": "Guardar y Salir",
+        "btn_continue": "Continuar",
+        "btn_submit": "Guardar",
+        "btn_back": "Volver",
+        
+        # Messages & Texts
+        "msg_user_tracks_title": "Música Propia",
+        "msg_user_tracks_info": "¡Puedes añadir tu propia música \nal juego!\nDespués de este mensaje, se abrirá una\ncarpeta donde puedes poner tus archivos.\nEl juego soporta archivos .mp3, .ogg y .wav.\nDespués de añadir canciones, reinicia el juego\npara cargarlas.\nAl añadir música a esta carpeta, confirmas\nque tienes los derechos o licencias para usarla.\nLos desarrolladores no asumen responsabilidad por contenido con derechos de autor.",
+        "msg_credits_title": "Créditos",
+        "msg_credits_text": "VIBE TAXI\nUn juego hecho con Gale y Pygame.\nComo Proyecto en el curso de\nProgramación de Videojuegos I (ULA)\nDesarrollo y Diseño:\nJesús León (Jaludex)\nZadkiel Jiménez (Eltoti)\n\nMúsica y Efectos de Sonido:\nopengameart.org\npixabay.com\nPitidos de texto por dmochas en itch.io\nRecursos Gráficos:\nInterfaz de radio, flecha indicadora y pasajeros por Eltoti\nRecursos de Ciudad por nyknck en itch.io\nTextura de peatones por vimlark en itch.io\nFuentes:\nGoogle Fonts\n\n¡Gracias por jugar nuestro juego!\n¡Esperamos que lo disfrutes y pases un buen rato!\n",
+        "msg_lang_title": "Seleccionar Idioma",
+        
+        "mode_selection_title": "Seleccionar Modo",
+        "mode_tutorial_desc": "Aprende los conceptos básicos del juego",
+        "mode_workday_desc": "Gana dinero con cada viaje. Úsalo para reparar tu auto.",
+        "mode_arcade_desc": "Completa la mayor cantidad de viajes antes de que se acabe el tiempo.",
+        "mode_zen_desc": "Sin daños, sin límites. Solo relájate y conduce.",
+        
+        "records_title": "Salón de la Fama",
+        "records_workday_format": "{i}. {name} - Día {score}",
+        "records_arcade_format": "{i}. {name} - {score} viajes",
+        
+        "pause_title": "Pausado",
+        "game_over_title": "Fin del Juego",
+        "game_over_money": "Dinero Ganado: ${score:.2f}",
+        "game_over_pax": "Pasajeros: {score}",
+        "end_of_day_title_format": "Fin del Día {day}",
+        "end_of_day_money": "Dinero Restante: ${money:.2f}",
+        
+        "new_record_title": "¡Nuevo Récord!",
+        "new_record_score": "Puntuación: {score}",
+        
+        "confirm_overwrite": "¿Sobrescribir partida existente?",
+        
+        # Gameplay
+        "hud_score": "Puntuación: {score}",
+        "hud_money": "Dinero: ${money:.2f}",
+        "hud_tutorial": "TUTORIAL",
+        "hud_zen": "ZEN",
+        
+        # Confirmation
+        "confirm_quit": "¿Estás seguro de que quieres salir?",
+        
+        # --- Passenger Dialogues ---
+        "dialogues": {
+            "enter": [
+                "¡Hola! Llévame a {destination}, por favor.",
+                "Qué tal jefe. Vamos a {destination}, tengo prisa.",
+                "Hola. Necesito llegar a {destination}.",
+                "Buen día. Déjeme en {destination}.",
+                "Oye. A {destination}, ¡acelera!"
+            ],
+            "hints": {
+                "rock": [
+                    "Necesito unas guitarras ruidosas para despertar.",
+                    "Pon algo pesado, amigo.",
+                    "¿Tienes algo de rock clásico?",
+                    "Me apetece mover la cabeza con el ritmo un rato.",
+                    "Necesito algo de distorsión y un buen solo de guitarra.",
+                    "A ver esos riffs, conductor.",
+                    "Quiero escuchar una banda real, no una computadora."
+                ],
+                "pop": [
+                    "Quiero escuchar algo pegadizo.",
+                    "Pon los éxitos del momento, por favor.",
+                    "Necesito una voz alegre para cantar a la par.",
+                    "¿Tienes algo de pop comercial?",
+                    "Estoy de humor para algo divertido y popular.",
+                    "Pon algo de lo que todos se sepan la letra.",
+                    "Me encantan las canciones que son número uno."
+                ],
+                "jazz": [
+                    "Necesito algo suave y relajante.",
+                    "¿Hay algún saxofón en la radio?",
+                    "Me encantaría un buen piano de fondo o jazz.",
+                    "Pon algo de jazz si tienes.",
+                    "Quiero disfrutar de unos ritmos antiguos.",
+                    "Escuchemos algunas melodías de jazz.",
+                    "No hay nada como una buena sección de vientos."
+                ],
+                "hiphop": [
+                    "Pon unos buenos beats, conductor.",
+                    "Necesito unas buenas rimas para animarme.",
+                    "¿Tienes alguna emisora de rap?",
+                    "Escuchemos algo de hip-hop.",
+                    "Sube los bajos y pon a algunos MCs.",
+                    "Quiero escuchar un buen flow.",
+                    "Pon algunas pistas urbanas."
+                ],
+                "electronic": [
+                    "Quiero escuchar unos buenos sintetizadores.",
+                    "Pon algo de EDM o techno, por favor.",
+                    "Necesito un BPM rápido para activarme.",
+                    "¿Tienes música de club?",
+                    "Quiero sentir que estoy en una discoteca.",
+                    "Amigo, me encantan los sintetizadores.",
+                    "Necesito unas buenas pistas de electrónica para bailar."
+                ],
+            },
+            "reaction": {
+                "good": [
+                    "¡Esta canción es increíble!", 
+                    "¡Qué temazo! Súbele al volumen.", 
+                    "Tienes un gusto musical excelente.",
+                    "Esto es exactamente lo que quería escuchar.",
+                    "¡Excelentes vibras, conductor!"
+                ],
+                "neutral": [
+                    "...", 
+                    "Puedes dejar esto, está bien.",
+                    "Esta canción está pasable.",
+                    "No es mi favorita, pero no está mal.",
+                    "No me molesta esta canción."
+                ],
+                "bad": [
+                    "¿Podrías cambiar esa música, por favor?", 
+                    "¿Qué es este ruido? Me duele la cabeza.", 
+                    "Apaga esa basura ahora mismo.",
+                    "No soporto este género.",
+                    "Esto es horrible, ¡cambia de emisora!"
+                ]
+            },
+            "exit": {
+                "good": [
+                    "¡Excelente servicio, 5 estrellas!", 
+                    "Gracias, fue un viaje muy agradable.", 
+                    "¡Nos vemos! ¡Gracias por la buena vibra!",
+                    "Conducción perfecta, sigue así.",
+                    "Definitivamente recomendaré este taxi."
+                ],
+                "bad": [
+                    "Viaje terrible. Estoy indignado.", 
+                    "No me vuelvo a subir a este taxi.", 
+                    "Al fin llegamos, qué tortura...",
+                    "La peor experiencia en taxi de mi vida.",
+                    "No te daré propina por esto."
+                ]
+            }
+        }
     }
+    
 }
 
 def tr(key: str, default: str = None, **kwargs):
