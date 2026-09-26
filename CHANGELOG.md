@@ -4,6 +4,31 @@ Notable changes on the project will be documented here
 
 Format based on [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/), version format by [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 1.3.0 - 2026-09-26
+
+### Added
+ - Full localization and internationalization system (i18n) supporting English and Spanish across menus, HUD, dialogues, records, and tutorial maps
+ - Performance ranking system (F, E, D, C, B, A, VIBE) for Game Over screen with custom colors, thresholds, reveal animations, and dedicated rank reveal sound effects
+ - Arcade mode scoring overhaul based on fares, fast arrival bonuses, and safe driving bonuses
+ - Animated roll-up tween for score and money counters in Arcade and Workday modes
+ - Dynamic floating bonus popups next to HUD counters upon delivering passengers
+ - New bonus sound effect played when achieving fast or safe arrival bonuses
+ - Passenger rear-view portrait shake effect when crashing the taxi
+ - Destination arrow animation tweening from the taxi towards the screen edge when a passenger boards
+ - Passenger comfort drain mechanism when listening to disliked music stations for too long
+
+### Changed
+ - Redesigned HUD to display large numeric score/money values with centered descriptive labels below the taximeter
+ - Game Over panel resized and redesigned to display performance ranks with delayed opacity tweening
+ - Centralized game balance parameters, scoring constants, and ranking thresholds in `settings.py`
+
+### Fixed
+ - Fix repair cost in EndOfDayState not updating the money label after vehicle repairs
+ - Fix passenger wobble animation duration reset on collision
+ - Fix passenger ride time double-incrementing per frame
+ - Fix tutorial tilemap strings by converting them to translation keys
+ - Fix string formatting KeyError in Workday initial day text
+
 ## 1.2.0 - 2026-09-19
 
 ## Added
