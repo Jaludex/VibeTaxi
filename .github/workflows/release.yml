@@ -1,0 +1,59 @@
+name: Build and Release VibeTaxi
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build:
+    name: Build on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install pyinstaller
+
+    - name: Build with PyInstaller
+      working-directory: vibetaxi
+      run: pyinstaller main.spec
+
+    - name: Zip build (Windows)
+      if: matrix.os == 'windows-latest'
+      working-directory: vibetaxi
+      run: Compress-Archive -Path dist/main/* -DestinationPath ../VibeTaxi-Windows.zip
+
+    - name: Zip build (Linux)
+      if: matrix.os == 'ubuntu-latest'
+      working-directory: vibetaxi
+      run: |
+        cd dist/main
+        zip -r ../../../VibeTaxi-ubuntu-latest.zip .
+
+    - name: Zip build (macOS)
+      if: matrix.os == 'macos-latest'
+      working-directory: vibetaxi
+      run: |
+        cd dist
+        zip -r -y ../../VibeTaxi-macos-latest.zip VibeTaxi.app
+
+    - name: Upload Release
+      uses: softprops/action-gh-release@v2
+      if: startsWith(github.ref, 'refs/tags/')
+      with:
+        files: VibeTaxi-*.zip
+        generate_release_notes: false
