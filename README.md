@@ -14,7 +14,7 @@ Made as Project for the course of Videogame Programming I I2026 semester at the 
 
 The application is developed in **Python**, with [Pygame](https://www.pygame.org/news) and [GALE](https://github.com/R3mmurd/Gale/tree/main) as the main dependencies.
 
-Soon will be uploaded to itch.io
+Available on [itch.io](https://jaludex.itch.io/vibe-taxi)
 
   
 
