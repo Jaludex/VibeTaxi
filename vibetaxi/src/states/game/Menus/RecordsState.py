@@ -109,7 +109,7 @@ class RecordsState(BaseState):
             center=True
         )
         for i, rec in enumerate(self.records.get("arcade", [])):
-            text = tr("records_arcade_format", default="{i}. {name} - {score} fares", i=i+1, name=rec["name"], score=rec["score"])
+            text = tr("records_arcade_format", default="{i}. {name} - {score} pts", i=i+1, name=rec["name"], score=rec["score"])
             render_text(
                 surface, text, settings.FONTS["minecraft"],
                 settings.VIRTUAL_WIDTH * 0.75, 70 + (i * 15),

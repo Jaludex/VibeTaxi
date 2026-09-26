@@ -55,7 +55,7 @@ texts = {
         
         "records_title": "Hall of Fame",
         "records_workday_format": "{i}. {name} - Day {score}",
-        "records_arcade_format": "{i}. {name} - {score} fares",
+        "records_arcade_format": "{i}. {name} - {score} pts",
         
         "pause_title": "Paused",
         "game_over_title": "Game Over",
@@ -240,7 +240,7 @@ texts = {
         
         "records_title": "Salón de la Fama",
         "records_workday_format": "{i}. {name} - Día {score}",
-        "records_arcade_format": "{i}. {name} - {score} viajes",
+        "records_arcade_format": "{i}. {name} - {score} pts",
         
         "pause_title": "Pausa",
         "game_over_title": "Fin del Juego",

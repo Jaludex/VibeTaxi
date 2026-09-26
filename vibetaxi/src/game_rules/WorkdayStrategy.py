@@ -6,6 +6,7 @@ class WorkdayStrategy(BaseRuleStrategy):
         super().__init__()
         self.time_remaining = time_limit
         self.money = money
+        self.display_money = float(money)
         self.day = day
         self.is_loaded_run = is_loaded_run
         self.fee = 80.0 + (self.day - 1) * 15.0
@@ -76,19 +77,29 @@ class WorkdayStrategy(BaseRuleStrategy):
         earned += time_bonus + safety_bonus
         self.money += earned
         
-        # Show bonuses in popup
-        popup_text = f"+${earned:.2f}"
+        from gale.timer import Timer
+        Timer.tween(1.0, [(self, {"display_money": float(self.money)})], ease_function_name="out_cubic")
+        
+        # Show bonuses in popup next to label
+        self.money_popup_text = f"+${earned:.2f}"
         if time_bonus > 0 or safety_bonus > 0:
             reasons = []
             if time_bonus > 0: reasons.append("Fast!")
             if safety_bonus > 0: reasons.append("Safe!")
-            popup_text += f" ({', '.join(reasons)})"
+            self.money_popup_text += f"\n({', '.join(reasons)})"
             
-        self.trigger_popup_text(popup_text, (50, 255, 50))
+        self.money_popup_alpha = 0.0
+        self.money_popup_y_offset = 0.0
+        
+        def fade_out_money():
+            Timer.tween(0.5, [(self, {"money_popup_alpha": 0.0})])
+            
+        Timer.tween(0.3, [(self, {"money_popup_alpha": 255.0, "money_popup_y_offset": -20.0})], ease_function_name="out_cubic", on_finish=lambda: Timer.after(1.0, fade_out_money))
 
     def render_ui(self, surface, font, x, y):
         from gale.text import render_text
         import settings
+        import pygame
         
         self.ui.render(surface)
         self.passenger_hud.render_portrait(surface)
@@ -98,7 +109,19 @@ class WorkdayStrategy(BaseRuleStrategy):
         
         # Use bigger font for the label
         big_font = settings.FONTS["medium"]
-        render_text(surface, tr("hud_money", money=self.money), big_font, x, y + 45, (100, 255, 100), shadowed=True)
+        money_str = tr("hud_money", money=getattr(self, "display_money", self.money))
+        render_text(surface, money_str, big_font, x, y + 45, (100, 255, 100), shadowed=True)
+        
+        if getattr(self, "money_popup_alpha", 0) > 0:
+            text_w, _ = big_font.size(money_str)
+            popup_surf = pygame.Surface((settings.VIRTUAL_WIDTH, settings.VIRTUAL_HEIGHT), pygame.SRCALPHA)
+            
+            lines = self.money_popup_text.split('\n')
+            for i, line in enumerate(lines):
+                render_text(popup_surf, line, settings.FONTS["minecraft"], x + text_w + 10, y + 45 + self.money_popup_y_offset + i*15, (50, 255, 50), shadowed=True)
+                
+            popup_surf.set_alpha(int(self.money_popup_alpha))
+            surface.blit(popup_surf, (0, 0))
         
         self._render_popup_text(surface)
 
