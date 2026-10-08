@@ -57,6 +57,16 @@ _last_nav_time = 0
 
 def handle_menu_navigation(ui, input_id, input_data):
     global _axis_state, _last_nav_time
+    import settings
+    from gale.input_handler import KeyboardData, GamepadButtonData, GamepadAxisData, MouseMotionData, MouseClickData
+    
+    if isinstance(input_data, (GamepadButtonData, GamepadAxisData)):
+        settings.LAST_INPUT_DEVICE = "gamepad"
+    elif isinstance(input_data, KeyboardData):
+        settings.LAST_INPUT_DEVICE = "keyboard"
+    elif isinstance(input_data, (MouseMotionData, MouseClickData)):
+        settings.LAST_INPUT_DEVICE = "mouse"
+
     if not ui or not ui.root:
         return False
         

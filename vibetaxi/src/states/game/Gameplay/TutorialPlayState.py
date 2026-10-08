@@ -79,6 +79,23 @@ class TutorialPlayState(PlayState):
         print(f"Unknown tutorial condition: {condition}")
         return True # Default to passing if unknown
         
+    def _get_formatted_tutorial_message(self, message_key: str) -> str:
+        raw_msg = tr(message_key)
+        
+        active_strategy = getattr(self.taxi, "input_strategy", None)
+        
+        if active_strategy and hasattr(active_strategy, "get_binding_texts"):
+            bindings = active_strategy.get_binding_texts()
+        else:
+            # Fallback bindings if strategy is somehow missing
+            from src.input_strategies import MouseInputStrategy
+            bindings = MouseInputStrategy().get_binding_texts()
+            
+        try:
+            return raw_msg.format(**bindings)
+        except KeyError:
+            return raw_msg
+
     def _check_tutorial_triggers(self):
         if self.tutorial_paused:
             return
@@ -113,7 +130,7 @@ class TutorialPlayState(PlayState):
                     self.state_machine.push(MessageBoxState(
                         self.state_machine, 
                         tr("tutorial_title", default="Tutorial"), 
-                        tr(trigger["message"]), 
+                        self._get_formatted_tutorial_message(trigger["message"]), 
                         on_close=on_close
                     ))
                 else:

@@ -12,6 +12,18 @@ class MouseInputStrategy:
             return camera.screen_to_world((vx, vy))
         return vx, vy
 
+    def get_binding_texts(self) -> dict:
+        from src.i18n import tr
+        return {
+            "drive_btn": tr("input_mouse_drive", default="Left Click"),
+            "steer_btn": tr("input_mouse_steer", default="the Mouse Cursor"),
+            "brake_btn": tr("input_kb_brake", default="\"X\""),
+            "pause_btn": tr("input_kb_pause", default="ESC"),
+            "radio_vol": tr("input_kb_radio_vol", default="W/S"),
+            "radio_station": tr("input_kb_radio_station", default="A/D"),
+            "drift_btn": tr("input_kb_drift", default="SHIFT")
+        }
+
 class KeyboardInputStrategy:
     def get_target_position(self, entity, dt):
         dx = 0
@@ -29,6 +41,18 @@ class KeyboardInputStrategy:
         angle = math.atan2(dy, dx)
         max_dist = getattr(settings, 'MOUSE_MAX_SPEED_RADIUS', 80)
         return entity.x + math.cos(angle) * max_dist, entity.y + math.sin(angle) * max_dist
+
+    def get_binding_texts(self) -> dict:
+        from src.i18n import tr
+        return {
+            "drive_btn": tr("input_key_drive", default="the Arrow Keys"),
+            "steer_btn": tr("input_key_steer", default="the Arrow Keys"),
+            "brake_btn": tr("input_kb_brake", default="\"X\""),
+            "pause_btn": tr("input_kb_pause", default="ESC"),
+            "radio_vol": tr("input_kb_radio_vol", default="W/S"),
+            "radio_station": tr("input_kb_radio_station", default="A/D"),
+            "drift_btn": tr("input_kb_drift", default="SHIFT")
+        }
 
 class GamepadInputStrategy:
     def get_target_position(self, entity, dt):
@@ -51,4 +75,16 @@ class GamepadInputStrategy:
         angle = math.atan2(dy, dx)
         max_dist = getattr(settings, 'MOUSE_MAX_SPEED_RADIUS', 80)
         return entity.x + math.cos(angle) * max_dist * dist_ratio, entity.y + math.sin(angle) * max_dist * dist_ratio
+
+    def get_binding_texts(self) -> dict:
+        from src.i18n import tr
+        return {
+            "drive_btn": tr("input_pad_drive", default="the Left Stick"),
+            "steer_btn": tr("input_pad_steer", default="the Left Stick"),
+            "brake_btn": tr("input_pad_brake", default="L2/LT"),
+            "pause_btn": tr("input_pad_pause", default="START"),
+            "radio_vol": tr("input_pad_radio_vol", default="D-PAD Up/Down"),
+            "radio_station": tr("input_pad_radio_station", default="L1/R1 RB/LB"),
+            "drift_btn": tr("input_pad_drift", default="R2/RT")
+        }
 

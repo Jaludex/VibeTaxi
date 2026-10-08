@@ -24,8 +24,17 @@ class Taxi(Car):
             'crashed': lambda sm: CarCrashedState(self, sm)
         })
         
-        from src.input_strategies import MouseInputStrategy
-        self.input_strategy = MouseInputStrategy()
+        import settings
+        last_device = getattr(settings, "LAST_INPUT_DEVICE", "mouse")
+        if last_device == "gamepad":
+            from src.input_strategies import GamepadInputStrategy
+            self.input_strategy = GamepadInputStrategy()
+        elif last_device == "keyboard":
+            from src.input_strategies import KeyboardInputStrategy
+            self.input_strategy = KeyboardInputStrategy()
+        else:
+            from src.input_strategies import MouseInputStrategy
+            self.input_strategy = MouseInputStrategy()
         
         from gale.command import CommandBindings
         from src import commands
