@@ -18,6 +18,7 @@ class TutorialPlayState(PlayState):
         if "city_map" not in enter_params or enter_params["city_map"] is None:
             enter_params["city_map"] = CityMap("tutorial")
             
+        self.next_strategy = enter_params.get("next_strategy", None)
         super().enter(**enter_params)
         
         # Custom tutorial passengers setup
@@ -174,16 +175,22 @@ class TutorialPlayState(PlayState):
                     pass
             self.taxi.state_machine.change('idle')
             
-            def return_to_title():
-                while len(self.state_machine.states) > 0:
-                    self.state_machine.pop()
-                self.state_machine.push(TitleScreenState(self.state_machine))
+            def return_to_title_or_next_mode():
+                if getattr(self, "next_strategy", None) is not None:
+                    next_strat = self.next_strategy
+                    while len(self.state_machine.states) > 0:
+                        self.state_machine.pop()
+                    self.state_machine.push(PlayState(self.state_machine), game_rule_strategy=next_strat)
+                else:
+                    while len(self.state_machine.states) > 0:
+                        self.state_machine.pop()
+                    self.state_machine.push(TitleScreenState(self.state_machine))
                 
             self.state_machine.push(MessageBoxState(
                 self.state_machine,
                 tr("tutorial_completed_title", default="Tutorial Completed!"),
                 tr("tutorial_completed_msg", default="You have completed the tutorial. Ready for the real work!"),
-                on_close=return_to_title
+                on_close=return_to_title_or_next_mode
             ))
 
     def update(self, dt: float):

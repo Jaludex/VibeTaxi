@@ -151,12 +151,22 @@ class ModeSelectionState(BaseState):
         self.state_machine.pop() # Pops ModeSelectionState
         self.state_machine.pop() # Pops TitleScreenState
         
+        tutorial_active = getattr(settings, "TUTORIAL_ENABLED", False)
+        
         if self.selected_mode == "workday":
             strategy = WorkdayStrategy()
-            self.state_machine.push(PlayState(self.state_machine), game_rule_strategy=strategy)
+            if tutorial_active:
+                tut_strategy = TutorialStrategy()
+                self.state_machine.push(TutorialPlayState(self.state_machine), game_rule_strategy=tut_strategy, next_strategy=strategy)
+            else:
+                self.state_machine.push(PlayState(self.state_machine), game_rule_strategy=strategy)
         elif self.selected_mode == "arcade":
             strategy = ArcadeStrategy()
-            self.state_machine.push(PlayState(self.state_machine), game_rule_strategy=strategy)
+            if tutorial_active:
+                tut_strategy = TutorialStrategy()
+                self.state_machine.push(TutorialPlayState(self.state_machine), game_rule_strategy=tut_strategy, next_strategy=strategy)
+            else:
+                self.state_machine.push(PlayState(self.state_machine), game_rule_strategy=strategy)
         elif self.selected_mode == "zen":
             strategy = ZenStrategy()
             self.state_machine.push(PlayState(self.state_machine), game_rule_strategy=strategy)

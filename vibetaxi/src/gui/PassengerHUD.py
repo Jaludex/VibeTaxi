@@ -253,13 +253,14 @@ class PassengerHUD:
                 
             elif self.passenger_state == "crashed":
                 elapsed = self.passenger_timer - getattr(self, "crash_start_time", self.passenger_timer)
-                progress = elapsed / 1.0
+                progress = elapsed / 1.2
                 if progress >= 1.0:
                     self.passenger_state = "riding"
                 else:
-                    # Wobble erratically
-                    self.passenger_inner_x = self.passenger_target_x + math.sin(elapsed * 30) * 8 * (1.0 - progress)
-                    self.passenger_inner_y = math.cos(elapsed * 35) * 8 * (1.0 - progress)
+                    # Bounces across the whole window on impact
+                    decay = max(0.0, 1.0 - progress)
+                    self.passenger_inner_x = self.passenger_target_x + math.sin(elapsed * 25) * 26 * decay
+                    self.passenger_inner_y = math.sin(elapsed * 32) * 18 * decay - abs(math.cos(elapsed * 16)) * 12 * decay
                     
             elif self.passenger_state == "exiting":
                 progress = min(1.0, self.passenger_timer / 1.0)
@@ -363,9 +364,8 @@ class PassengerHUD:
                     
                 # The x,y from update logic
                 p_x = int(self.passenger_inner_x - target_w // 2)
-                # target_y should place passenger near the bottom or middle.
-                # If target_h is 40, we place them at the bottom.
-                base_y = h - target_h - 5 # 5 px from bottom
+                # target_y should place passenger resting properly on the seat at the bottom
+                base_y = h - target_h + 2
                 p_y = int(base_y + self.passenger_inner_y)
                 
                 panel_surf.blit(scaled_img, (p_x, p_y))

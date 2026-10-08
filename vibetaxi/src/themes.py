@@ -22,6 +22,16 @@ BUTTON_THEME = Theme(
     border_width=1
 )
 
+BUTTON_ACTIVE_THEME = Theme(
+    font=settings.FONTS["minecraft"],
+    background_color=pygame.Color(145, 90, 130),
+    hover_color=pygame.Color(175, 115, 155),
+    focus_color=pygame.Color(175, 115, 155),
+    text_color=pygame.Color(255, 255, 220),
+    border_color=pygame.Color(255, 245, 160),
+    border_width=2
+)
+
 DISABLED_BUTTON_THEME = Theme(
     font=settings.FONTS["minecraft"],
     background_color=pygame.Color(60, 40, 50),

@@ -70,7 +70,7 @@ class TitleScreenState(BaseState):
         from gale.ui.manager import UIManager
         from gale.ui.button import Button
         from gale.ui.container import Container
-        from src.themes import BUTTON_THEME, DISABLED_BUTTON_THEME
+        from src.themes import BUTTON_THEME, DISABLED_BUTTON_THEME, BUTTON_ACTIVE_THEME
 
         container = Container(0, 0, settings.VIRTUAL_WIDTH, settings.VIRTUAL_HEIGHT)
 
@@ -154,6 +154,17 @@ class TitleScreenState(BaseState):
         )
         container.add_child(btn_quit)
 
+        is_tut_active = getattr(settings, "TUTORIAL_ENABLED", False)
+        self.btn_tutorial_toggle = Button(
+            settings.VIRTUAL_WIDTH - 110,
+            settings.VIRTUAL_HEIGHT - 112,
+            80, 24,
+            tr("btn_tutorial"),
+            on_click=self._on_toggle_tutorial,
+            theme=BUTTON_ACTIVE_THEME if is_tut_active else BUTTON_THEME
+        )
+        container.add_child(self.btn_tutorial_toggle)
+
         btn_usertracks = Button(
             settings.VIRTUAL_WIDTH - 120,
             settings.VIRTUAL_HEIGHT - 80,
@@ -181,6 +192,19 @@ class TitleScreenState(BaseState):
             virtual_height=settings.VIRTUAL_HEIGHT,
             window_height=settings.WINDOW_HEIGHT
         )
+
+    def _on_toggle_tutorial(self):
+        settings.SOUNDS["press"].play()
+        settings.TUTORIAL_ENABLED = not getattr(settings, "TUTORIAL_ENABLED", False)
+        self._update_tutorial_btn_theme()
+
+    def _update_tutorial_btn_theme(self):
+        if hasattr(self, "btn_tutorial_toggle") and self.btn_tutorial_toggle:
+            from src.themes import BUTTON_THEME, BUTTON_ACTIVE_THEME
+            if getattr(settings, "TUTORIAL_ENABLED", False):
+                self.btn_tutorial_toggle.theme = BUTTON_ACTIVE_THEME
+            else:
+                self.btn_tutorial_toggle.theme = BUTTON_THEME
 
     def _on_language(self):
         if not getattr(self, "mode_selection_triggered", False):

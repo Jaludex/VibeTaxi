@@ -51,6 +51,7 @@ VERSION = "1.3.0"
 
 
 DIALOGUE_DISPLAY_TIME = 5.0
+TUTORIAL_ENABLED = False
 
 BASE_DIR = pathlib.Path(__file__).parent
 
