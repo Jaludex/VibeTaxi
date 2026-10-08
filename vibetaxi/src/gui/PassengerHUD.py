@@ -144,6 +144,9 @@ class PassengerHUD:
         self.current_text = ""
         self.last_comfort = random.randint(int(COMFORT_RULES["initial_min"]), int(COMFORT_RULES["initial_max"]))
         self.page_wait_timer = 0.0
+        
+        self.notes = []
+        self._note_timer = 0.0
 
     @property
     def portrait_x(self) -> float:
@@ -288,6 +291,39 @@ class PassengerHUD:
                 self.page_wait_timer = 0.0
         elif self.text_box.is_typing:
             self.page_wait_timer = 0.0
+            
+        # Notes animation update
+        for note in self.notes:
+            note.x += note.vx * dt
+            note.y += note.vy * dt
+            
+        # Emit new notes if in Vibe Mode
+        is_vibe = False
+        if self.passenger and hasattr(self.passenger, "state_machine"):
+            current_state = self.passenger.state_machine.current
+            if type(current_state).__name__ == "PassengerRideState":
+                taxi = getattr(current_state, "taxi", None)
+                if taxi and hasattr(taxi, "state_machine") and type(taxi.state_machine.current).__name__ == "TaxiVibeState":
+                    is_vibe = True
+                    
+        if is_vibe:
+            self._note_timer += dt
+            if self._note_timer > 0.25:
+                self._note_timer = 0.0
+                import random
+                import types
+                frames_len = len(settings.FRAMES.get("music_notes", []))
+                if frames_len > 0:
+                    note = types.SimpleNamespace(
+                        x=self.passenger_inner_x,
+                        y=self.passenger_inner_y + 40,
+                        vx=random.uniform(20, 60),
+                        vy=random.uniform(-60, -20),
+                        alpha=255.0,
+                        frame=random.randint(0, frames_len - 1)
+                    )
+                    self.notes.append(note)
+                    Timer.tween(1.5, [(note, {"alpha": 0.0})], on_finish=lambda n=note: self.notes.remove(n) if n in self.notes else None)
 
     def show_text(self, text: str, duration: float = settings.DIALOGUE_DISPLAY_TIME) -> float:
         self.set_text(text)
@@ -369,6 +405,27 @@ class PassengerHUD:
                 p_y = int(base_y + self.passenger_inner_y)
                 
                 panel_surf.blit(scaled_img, (p_x, p_y))
+                
+        # Draw notes
+        if hasattr(self, "notes"):
+            notes_sheet = settings.TEXTURES.get("music_notes")
+            notes_frames = settings.FRAMES.get("music_notes")
+            if notes_sheet and notes_frames:
+                for note in self.notes:
+                    if note.alpha <= 0: continue
+                    idx = note.frame
+                    rect = notes_frames[idx]
+                    img = notes_sheet.subsurface(rect).copy()
+                    
+                    # scale slightly
+                    img = pygame.transform.scale(img, (int(rect.width * 1.5), int(rect.height * 1.5)))
+                    
+                    # apply alpha
+                    alpha_surf = pygame.Surface(img.get_size(), pygame.SRCALPHA)
+                    alpha_surf.fill((255, 255, 255, int(note.alpha)))
+                    img.blit(alpha_surf, (0, 0), special_flags=pygame.BLEND_RGBA_MULT)
+                    
+                    panel_surf.blit(img, (int(note.x), int(note.y)))
         
         surface.blit(panel_surf, (x, y))
         

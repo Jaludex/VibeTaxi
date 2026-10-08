@@ -1,5 +1,6 @@
 from gale.state import StateMachine
 from typing import Any
+import pygame
 
 from src.entity.Car import Car
 from src.states.entity.TaxiIdleState import TaxiIdleState
@@ -229,3 +230,25 @@ class Taxi(Car):
                 self.mouse_x, self.mouse_y = input_data.position
             else:
                 self.command_bindings.dispatch(self, input_id, input_data)
+
+    def render(self, surface, camera=None):
+        if hasattr(self, "ghosts"):
+            for ghost in self.ghosts:
+                if ghost.alpha <= 0:
+                    continue
+                
+                # Copy the pre-rotated tinted image
+                tmp = ghost.image.copy()
+                
+                # Apply alpha
+                alpha_surf = pygame.Surface(tmp.get_size(), pygame.SRCALPHA)
+                alpha_surf.fill((255, 255, 255, int(ghost.alpha)))
+                tmp.blit(alpha_surf, (0, 0), special_flags=pygame.BLEND_RGBA_MULT)
+                
+                rect = tmp.get_rect(center=(ghost.x, ghost.y))
+                if camera is not None:
+                    rect = camera.apply(rect)
+                    
+                surface.blit(tmp, rect)
+                
+        super().render(surface, camera)

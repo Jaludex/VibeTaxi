@@ -110,6 +110,11 @@ BAD_MUSIC_PENALTY_TIME = 1.5
 MOUSE_MAX_SPEED_RADIUS = 80
 GAMEPAD_DEADZONE = 0.25
 
+# Vibe Mode Ghosting
+GHOSTING_SPAWN_RATE = 0.08  # seconds between ghosts
+GHOSTING_DURATION = 0.4     # seconds until alpha reaches 0
+GHOSTING_ALPHA_START = 120  # initial alpha (0-255)
+
 # Arcade Scoring
 ARCADE_BASE_SCORE = 150
 ARCADE_TIME_BONUS_SCORE = 50
@@ -163,6 +168,7 @@ TEXTURES = {
     "taximeter": pygame.image.load(BASE_DIR / "assets" / "graphics" / "taximeter.png"),
     "background_car_view": pygame.image.load(BASE_DIR / "assets" / "graphics" / "background_car_view.png"),
     "game_icon": pygame.image.load(BASE_DIR / "assets" / "graphics" / "icon.png"),
+    "music_notes": pygame.image.load(BASE_DIR / "assets" / "graphics" / "music_notes.png"),
 }
 
 TILEMAPS = {
@@ -175,7 +181,8 @@ FRAMES = {
     "props": frames.generate_frames(TEXTURES["props"], 16, 16),
     "button-less": frames.generate_frames(TEXTURES["button-less"], 47, 24),
     "button-plus": frames.generate_frames(TEXTURES["button-plus"], 47, 24),
-    "peds": frames.generate_frames(TEXTURES["peds"], 16, 16)
+    "peds": frames.generate_frames(TEXTURES["peds"], 16, 16),
+    "music_notes": frames.generate_frames(TEXTURES["music_notes"], 12, 15)
 }
 
 FONTS = {

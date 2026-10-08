@@ -231,6 +231,7 @@ class PlayState(BaseState):
             genre = self.radio.get_current_genre()
             if genre and genre in settings.VIBE_COLORS:
                 self.vibe_color = settings.VIBE_COLORS[genre]
+                self.taxi.vibe_color = self.vibe_color
             
         if is_vibe and not was_vibe:
             settings.SOUNDS["into_vibe"].play()
