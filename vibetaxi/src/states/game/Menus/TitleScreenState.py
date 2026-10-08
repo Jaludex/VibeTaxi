@@ -362,6 +362,11 @@ class TitleScreenState(BaseState):
     def on_input(self, input_id, input_data):
         if getattr(self, "input_cooldown", 0.0) > 0:
             return
+            
+        from src.menu_navigation import handle_menu_navigation
+        if hasattr(self, 'ui') and handle_menu_navigation(self.ui, input_id, input_data):
+            return
+            
         if hasattr(self, 'ui') and self.ui:
             self.ui.on_input(input_id, input_data)
 

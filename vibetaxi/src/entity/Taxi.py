@@ -24,13 +24,15 @@ class Taxi(Car):
             'crashed': lambda sm: CarCrashedState(self, sm)
         })
         
+        from src.input_strategies import MouseInputStrategy
+        self.input_strategy = MouseInputStrategy()
+        
         from gale.command import CommandBindings
         from src import commands
         
         self.command_bindings = CommandBindings()
         self.command_bindings.bind("mouse_click", press=commands.ACCELERATE, release=commands.STOP_ACCELERATE)
         self.command_bindings.bind("brake", press=commands.BRAKE, release=commands.STOP_BRAKE)
-        self.command_bindings.bind("reverse", press=commands.REVERSE, release=commands.STOP_REVERSE)
         self.command_bindings.bind("drift", press=commands.DRIFT, release=commands.STOP_DRIFT)
         
         self.state_machine.change('idle')
@@ -176,5 +178,45 @@ class Taxi(Car):
                     ch.unpause()
 
     def on_input(self, input_id: str, input_data: Any) -> None:
+        import settings
+        if getattr(settings, 'PHYSICS_DEBUG', False) and 'steer' in input_id:
+            print(f"DEBUG INPUT: id={input_id}, value={input_data.value}")
         if not self.is_crashed:
-            self.command_bindings.dispatch(self, input_id, input_data)
+            # Auto-switch input strategy based on the device being used
+            import settings
+            from src.input_strategies import GamepadInputStrategy, KeyboardInputStrategy, MouseInputStrategy
+            from gale.input_handler import KeyboardData, GamepadButtonData, GamepadAxisData, MouseMotionData, MouseClickData
+            
+            if isinstance(input_data, GamepadAxisData) and input_id in ("steer_x", "steer_y") and abs(input_data.value) >= getattr(settings, 'GAMEPAD_DEADZONE', 0.25):
+                if not isinstance(self.input_strategy, GamepadInputStrategy):
+                    self.input_strategy = GamepadInputStrategy()
+            elif isinstance(input_data, KeyboardData) and input_id in ("move_up", "move_down", "move_left", "move_right"):
+                if not isinstance(self.input_strategy, KeyboardInputStrategy):
+                    self.input_strategy = KeyboardInputStrategy()
+            elif isinstance(input_data, MouseClickData):
+                if not isinstance(self.input_strategy, MouseInputStrategy):
+                    self.input_strategy = MouseInputStrategy()
+            elif isinstance(input_data, MouseMotionData) and any(input_data.buttons):
+                if not isinstance(self.input_strategy, MouseInputStrategy):
+                    self.input_strategy = MouseInputStrategy()
+            
+            if input_id == "steer_x":
+                self.steer_x = input_data.value
+            elif input_id == "steer_y":
+                self.steer_y = input_data.value
+            elif input_id == "trigger_brake":
+                self.is_braking = input_data.value > 0.1
+            elif input_id == "trigger_drift":
+                self.is_drifting = input_data.value > 0.1
+            elif input_id == "move_up":
+                self.key_up = input_data.pressed
+            elif input_id == "move_down":
+                self.key_down = input_data.pressed
+            elif input_id == "move_left":
+                self.key_left = input_data.pressed
+            elif input_id == "move_right":
+                self.key_right = input_data.pressed
+            elif input_id == "mouse_motion":
+                self.mouse_x, self.mouse_y = input_data.position
+            else:
+                self.command_bindings.dispatch(self, input_id, input_data)

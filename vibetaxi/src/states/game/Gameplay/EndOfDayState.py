@@ -253,5 +253,8 @@ class EndOfDayState(BaseState):
                 surface.blit(self.taxi_image, (self.taxi_x, self.taxi_y))
 
     def on_input(self, input_id: str, input_data: InputData) -> None:
+        from src.menu_navigation import handle_menu_navigation
+        if handle_menu_navigation(self.ui, input_id, input_data):
+            return
         if self.ui:
             self.ui.on_input(input_id, input_data)

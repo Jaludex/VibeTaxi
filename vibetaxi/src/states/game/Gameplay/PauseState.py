@@ -139,6 +139,11 @@ class PauseState(BaseState):
         if input_id == "pause" and input_data.pressed:
             self.on_resume_click()
             return
+            
+        from src.menu_navigation import handle_menu_navigation
+        if handle_menu_navigation(self.ui, input_id, input_data):
+            return
+            
         self.ui.on_input(input_id, input_data)
 
     def render(self, surface: pygame.Surface):

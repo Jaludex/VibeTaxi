@@ -15,19 +15,46 @@ input_handler.InputHandler.set_keyboard_action(input_handler.KEY_ESCAPE, "pause"
 input_handler.InputHandler.set_mouse_click_action(input_handler.MOUSE_BUTTON_1, "mouse_click")
 input_handler.InputHandler.set_mouse_motion_action(None, "mouse_motion")
 input_handler.InputHandler.set_keyboard_action(input_handler.KEY_x, "brake")
-input_handler.InputHandler.set_keyboard_action(input_handler.KEY_z, "reverse")
 input_handler.InputHandler.set_keyboard_action(input_handler.KEY_LSHIFT, "drift")
 input_handler.InputHandler.set_keyboard_action(input_handler.KEY_a, "prev-song")
 input_handler.InputHandler.set_keyboard_action(input_handler.KEY_d, "next-song")
 input_handler.InputHandler.set_keyboard_action(input_handler.KEY_w, "vol-up")
 input_handler.InputHandler.set_keyboard_action(input_handler.KEY_s, "vol-down")
 
+# Gamepad bindings
+input_handler.InputHandler.set_gamepad_button_action(input_handler.GAMEPAD_BUTTON_LEFTSHOULDER, "prev-song")
+input_handler.InputHandler.set_gamepad_button_action(input_handler.GAMEPAD_BUTTON_RIGHTSHOULDER, "next-song")
+
+# Navigation and Menu bindings (Keyboard)
+input_handler.InputHandler.set_keyboard_action(pygame.K_UP, "move_up")
+input_handler.InputHandler.set_keyboard_action(pygame.K_DOWN, "move_down")
+input_handler.InputHandler.set_keyboard_action(pygame.K_LEFT, "move_left")
+input_handler.InputHandler.set_keyboard_action(pygame.K_RIGHT, "move_right")
+input_handler.InputHandler.set_keyboard_action(pygame.K_RETURN, "confirm")
+input_handler.InputHandler.set_keyboard_action(pygame.K_SPACE, "confirm")
+
+# Navigation bindings (Gamepad)
+input_handler.InputHandler.set_gamepad_button_action(input_handler.GAMEPAD_BUTTON_DPAD_UP, "vol-up")
+input_handler.InputHandler.set_gamepad_button_action(input_handler.GAMEPAD_BUTTON_DPAD_DOWN, "vol-down")
+input_handler.InputHandler.set_gamepad_button_action(input_handler.GAMEPAD_BUTTON_DPAD_LEFT, "move_left")
+input_handler.InputHandler.set_gamepad_button_action(input_handler.GAMEPAD_BUTTON_DPAD_RIGHT, "move_right")
+input_handler.InputHandler.set_gamepad_button_action(input_handler.GAMEPAD_BUTTON_A, "confirm")
+input_handler.InputHandler.set_gamepad_button_action(input_handler.GAMEPAD_BUTTON_X, "confirm")
+input_handler.InputHandler.set_gamepad_button_action(input_handler.GAMEPAD_BUTTON_START, "pause")
+
+# Analog driving bindings (Gamepad)
+input_handler.InputHandler.set_gamepad_axis_action(input_handler.GAMEPAD_AXIS_LEFT_X, "steer_x")
+input_handler.InputHandler.set_gamepad_axis_action(input_handler.GAMEPAD_AXIS_LEFT_Y, "steer_y")
+input_handler.InputHandler.set_gamepad_axis_action(input_handler.GAMEPAD_AXIS_TRIGGER_LEFT, "trigger_brake")
+input_handler.InputHandler.set_gamepad_axis_action(input_handler.GAMEPAD_AXIS_TRIGGER_RIGHT, "trigger_drift")
+
 import string
 # Map all printable keys for TextInput, without overwriting existing game controls
 existing_keys = {
     input_handler.KEY_a, input_handler.KEY_d, input_handler.KEY_w, input_handler.KEY_s,
-    input_handler.KEY_x, input_handler.KEY_z, input_handler.KEY_LSHIFT,
-    input_handler.KEY_ESCAPE
+    input_handler.KEY_x, input_handler.KEY_LSHIFT,
+    input_handler.KEY_ESCAPE, pygame.K_UP, pygame.K_DOWN, pygame.K_LEFT, pygame.K_RIGHT,
+    pygame.K_RETURN, pygame.K_SPACE
 }
 
 for char in string.ascii_lowercase + string.digits:
@@ -36,7 +63,7 @@ for char in string.ascii_lowercase + string.digits:
         input_handler.InputHandler.set_keyboard_action(key_const, "keyboard")
 
 # Special keys for TextInput
-for key_name in ["SPACE", "BACKSPACE", "RETURN", "KP_ENTER", "DELETE", "LEFT", "RIGHT"]:
+for key_name in ["BACKSPACE", "KP_ENTER", "DELETE"]:
     key_const = getattr(pygame, f"K_{key_name}", None)
     if key_const is not None and key_const not in existing_keys:
         input_handler.InputHandler.set_keyboard_action(key_const, "keyboard")
@@ -79,8 +106,9 @@ PASSENGER_DETECTION_RADIUS = 30
 PASSENGER_DELIVERY_RADIUS = 60
 
 PASSENGER_NEXT_PAGE_TIME = 1.0
-BAD_MUSIC_PENALTY_TIME = 1.5  # Seconds of wrong/no music before comfort starts decreasing
+BAD_MUSIC_PENALTY_TIME = 1.5
 MOUSE_MAX_SPEED_RADIUS = 80
+GAMEPAD_DEADZONE = 0.25
 
 # Arcade Scoring
 ARCADE_BASE_SCORE = 150
@@ -118,7 +146,7 @@ TRAFFIC_MAX_CARS = 20
 
 CANT_MUSIC_CHANNELS = 5
 
-PHYSICS_DEBUG = False
+PHYSICS_DEBUG = True
 
 TEXTURES = {
     "city_tiles": pygame.image.load(BASE_DIR / "assets" / "graphics" / "city_tileset.png"),

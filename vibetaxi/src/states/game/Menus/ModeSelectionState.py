@@ -181,6 +181,9 @@ class ModeSelectionState(BaseState):
             self.desc_label.set_text(tr("mode_selection_title", default="Choose a game mode."))
 
     def on_input(self, input_id, input_data):
+        from src.menu_navigation import handle_menu_navigation
+        if handle_menu_navigation(self.ui, input_id, input_data):
+            return
         self.ui.on_input(input_id, input_data)
 
     def render(self, surface: pygame.Surface):

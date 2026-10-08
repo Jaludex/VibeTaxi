@@ -150,17 +150,36 @@ class PlayState(BaseState):
             return
         
         self.arrow_time = getattr(self, 'arrow_time', 0.0) + dt
-
         import math
         self.arrow_offset_y = (math.sin(self.arrow_time * 6.0) + 1.0) * 5.0
         
-        if getattr(self, "_click_emitter", None) and getattr(self._click_emitter, "_is_emitting", False):
-            px, py = pygame.mouse.get_pos()
-            vx, vy = physical_to_virtual(px, py)
-            if self.camera:
-                world_x, world_y = self.camera.screen_to_world((vx, vy))
-                self._click_emitter.x = world_x
-                self._click_emitter.y = world_y
+        # Manage virtual cursor particles (mouse click emitter)
+        is_driving = getattr(self.taxi, "is_accelerating", False) and not getattr(self.taxi, "prevent_movement", False)
+        
+        if is_driving:
+            target_x = getattr(self.taxi, "target_x", self.taxi.x)
+            target_y = getattr(self.taxi, "target_y", self.taxi.y)
+            
+            # Don't show particles if target is exactly on top of the car (idle intent)
+            dist_to_target = math.hypot(target_x - self.taxi.x, target_y - self.taxi.y)
+            if dist_to_target > 5:
+                if getattr(self, "_click_emitter", None) is None or not getattr(self._click_emitter, "_is_emitting", False):
+                    if getattr(self, "_click_emitter", None) is not None:
+                        self._click_emitter.stop()
+                    from src.ParticleEmitter import ParticleEmitter
+                    self._click_emitter = ParticleEmitter.create_mouse_click(target_x, target_y)
+                    self.city_map.particle_emitters.append(self._click_emitter)
+                
+                self._click_emitter.x = target_x
+                self._click_emitter.y = target_y
+            else:
+                if getattr(self, "_click_emitter", None) is not None:
+                    self._click_emitter.stop()
+                    self._click_emitter = None
+        else:
+            if getattr(self, "_click_emitter", None) is not None:
+                self._click_emitter.stop()
+                self._click_emitter = None
         
         if self.soundscape_channel:
             if self.radio.ind_song == 0:
@@ -223,13 +242,21 @@ class PlayState(BaseState):
         self.was_vibe = is_vibe
             
     def update_active_passenger(self, dt: float):
+        if not self.active_passenger:
+            self.taxi.prevent_movement = False
+            return
+            
         self.active_passenger.update(dt)
 
         if not self.active_passenger:
+            self.taxi.prevent_movement = False
             return
 
         if self.active_passenger.is_walking():
             self.taxi.is_accelerating = False
+            self.taxi.prevent_movement = True
+        else:
+            self.taxi.prevent_movement = False
 
         if self.active_passenger.is_riding():
             
@@ -356,6 +383,13 @@ class PlayState(BaseState):
         try:
             if settings.PHYSICS_DEBUG:
                 self.city_map.render_debug(surface, self.camera)
+                
+                # Render gamepad deadzone circle on the taxi
+                from src.input_strategies import GamepadInputStrategy
+                if isinstance(self.taxi.input_strategy, GamepadInputStrategy):
+                    deadzone = getattr(settings, 'GAMEPAD_DEADZONE', 0.25)
+                    max_dist = getattr(settings, 'MOUSE_MAX_SPEED_RADIUS', 80)
+                    self._render_detection_circle(surface, self.taxi.x, self.taxi.y, deadzone * max_dist, (255, 100, 100))
         except Exception:
             pass
 
@@ -493,22 +527,6 @@ class PlayState(BaseState):
             
         self.radio.on_input(input_id, input_data)
         self.taxi.on_input(input_id, input_data)
-
-        if input_id == "mouse_click":
-            if input_data.pressed:
-                px, py = pygame.mouse.get_pos()
-                vx, vy = physical_to_virtual(px, py)
-                world_x, world_y = self.camera.screen_to_world((vx, vy))
-                
-                if getattr(self, "_click_emitter", None) is not None:
-                    self._click_emitter.stop()
-                    
-                self._click_emitter = ParticleEmitter.create_mouse_click(world_x, world_y)
-                self.city_map.particle_emitters.append(self._click_emitter)
-            else:
-                if getattr(self, "_click_emitter", None) is not None:
-                    self._click_emitter.stop()
-                    self._click_emitter = None
 
     def pause_audio(self) -> None:
         if hasattr(self, 'soundscape_channel') and self.soundscape_channel:

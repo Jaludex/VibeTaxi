@@ -12,6 +12,7 @@ class TrafficCar(Car):
         self.traffic_system = traffic_system
         self.next_node_name = None
         self.crashed = False
+        self.can_reverse = False
 
         self.state_machine = StateMachine({
             'idle': lambda sm: TrafficCarIdleState(self, sm),

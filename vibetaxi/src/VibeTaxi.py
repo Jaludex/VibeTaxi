@@ -20,8 +20,39 @@ class VibeTaxi(Game):
 
     def init(self) -> None:
         from gale.ui.theme import set_default_theme
+        from gale.input_handler import InputHandler
         from src.themes import DEFAULT_THEME
         set_default_theme(DEFAULT_THEME)
+        
+        try:
+            import pygame._sdl2.controller
+            pygame._sdl2.controller.init()
+            InputHandler._real_gamepads = {}
+            
+            original_open = InputHandler._open_gamepad.__func__
+            def patched_open(cls, device_index):
+                original_open(cls, device_index)
+                if pygame._sdl2.controller.is_controller(device_index):
+                    c = pygame._sdl2.controller.Controller(device_index)
+                    c.init()
+                    cls._real_gamepads[device_index] = c
+            InputHandler._open_gamepad = classmethod(patched_open)
+            
+            # --- FIX GALE AXIS NORMALIZATION BUG ---
+            # Gale's GamepadAxisData has a flaw: `value if abs(value) <= 1.0 else value / 32768.0`
+            # If SDL sends a tiny raw value like -1 or 1 (microscopic drift), Gale treats it as -1.0 or 1.0 (100% input).
+            from gale.input_handler import GamepadAxisData
+            original_axis_init = GamepadAxisData.__init__
+            def patched_axis_init(self, event):
+                original_axis_init(self, event)
+                # Force correct normalization for Pygame 2 which always sends raw int16
+                self.value = event.value / 32768.0
+            GamepadAxisData.__init__ = patched_axis_init
+            
+        except Exception as e:
+            pass
+            
+        InputHandler.init_gamepads()
         
         pygame.mixer.set_num_channels(32)
         
