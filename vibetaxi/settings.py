@@ -146,7 +146,7 @@ TRAFFIC_MAX_CARS = 20
 
 CANT_MUSIC_CHANNELS = 5
 
-PHYSICS_DEBUG = True
+PHYSICS_DEBUG = False
 
 TEXTURES = {
     "city_tiles": pygame.image.load(BASE_DIR / "assets" / "graphics" / "city_tileset.png"),
