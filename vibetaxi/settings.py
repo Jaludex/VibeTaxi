@@ -51,6 +51,7 @@ VERSION = "1.3.0"
 
 
 DIALOGUE_DISPLAY_TIME = 5.0
+ALLOW_GAMEOVER_SKIP = False
 
 BASE_DIR = pathlib.Path(__file__).parent
 
@@ -79,6 +80,7 @@ PASSENGER_DELIVERY_RADIUS = 60
 
 PASSENGER_NEXT_PAGE_TIME = 1.0
 BAD_MUSIC_PENALTY_TIME = 1.5  # Seconds of wrong/no music before comfort starts decreasing
+MOUSE_MAX_SPEED_RADIUS = 80
 
 # Arcade Scoring
 ARCADE_BASE_SCORE = 150

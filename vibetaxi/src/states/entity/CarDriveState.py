@@ -1,5 +1,6 @@
 import math
 import pygame
+import settings
 from src.states.entity.BaseEntityState import BaseEntityState
 
 class CarDriveState(BaseEntityState):
@@ -34,10 +35,11 @@ class CarDriveState(BaseEntityState):
         self.entity.angle = (self.entity.angle + math.pi) % (2 * math.pi) - math.pi
 
         target_speed = 0.0
+        max_dist = getattr(settings, 'MOUSE_MAX_SPEED_RADIUS', 150)
         if not is_reversing and distance < 15:
             target_speed = 0.0
         elif (is_accelerating or is_reversing) and not is_braking:
-            speed_limit = max_spd if (is_reversing or distance >= 150) else max_spd * (distance / 150.0)
+            speed_limit = max_spd if (is_reversing or distance >= max_dist) else max_spd * (distance / max_dist)
             target_speed = speed_limit * dir_sign
 
         accel_rate = self.entity.acceleration * dt

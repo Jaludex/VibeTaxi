@@ -72,6 +72,20 @@ class GameOverState(MessageBoxState):
         # Wait 1 second after panel finishes dropping (0.5s drop + 1s wait = 1.5s)
         Timer.after(1.5, show_rank)
 
+    def _on_button_click(self):
+        if not getattr(settings, 'ALLOW_GAMEOVER_SKIP', True):
+            if self.rank and self.rank_alpha < 255.0:
+                # Allow advancing text, but if there's no more text, block
+                if not getattr(self.text_box, "has_next_page", False) and not (hasattr(self.text_box, "is_typing") and self.text_box.is_typing):
+                    return
+        super()._on_button_click()
+
+    def _on_ok(self):
+        if not getattr(settings, 'ALLOW_GAMEOVER_SKIP', True):
+            if self.rank and self.rank_alpha < 255.0:
+                return
+        super()._on_ok()
+
     def render(self, surface):
         super().render(surface)
         from gale.text import render_text
