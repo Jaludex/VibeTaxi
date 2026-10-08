@@ -50,9 +50,7 @@ Go to the Release section, find the latest release, download the one specified f
 
 ## Requirements
 -   Python 3.12+
--   A single dependency shared by every project: [`gale-engine`](https://pypi.org/project/gale-engine/) (which in turn depends on Pygame).
-
-  
+-   A single key dependency: [`gale-engine`](https://pypi.org/project/gale-engine/) (which in turn depends on Pygame).
 
 ## Running the game
 
