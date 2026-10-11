@@ -18,6 +18,7 @@ DEFAULTS: Dict[str, Any] = {
     "show_fps": False,
     "physics_debug": False,
     "pause_on_focus_loss": True,
+    "discord_rpc": True,
 }
 
 _config: Dict[str, Any] = {}

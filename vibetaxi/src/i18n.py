@@ -49,6 +49,7 @@ texts = {
         "opt_show_fps": "Show FPS",
         "opt_debug_visuals": "Debug Visuals",
         "opt_pause_on_focus_loss": "Pause on Focus Loss",
+        "opt_discord_rpc": "Discord Presence",
         "btn_reset_defaults": "Reset Defaults",
         
         # Messages & Texts
@@ -273,6 +274,7 @@ texts = {
         "opt_show_fps": "Mostrar FPS",
         "opt_debug_visuals": "Visuales Debug",
         "opt_pause_on_focus_loss": "Pausar al Perder Foco",
+        "opt_discord_rpc": "Presencia en Discord",
         "btn_reset_defaults": "Restablecer",
         
         # Messages & Texts

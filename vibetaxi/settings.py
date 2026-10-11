@@ -240,6 +240,7 @@ SAVE_MANAGER = SaveManager(save_dir=BASE_DIR / 'saves')
 SHOW_FPS = False
 PHYSICS_DEBUG = False
 LANGUAGE = None
+DISCORD_CLIENT_ID = "1558733170730344582"
 
 try:
     from src import config

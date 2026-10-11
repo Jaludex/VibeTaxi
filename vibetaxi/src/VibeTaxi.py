@@ -62,6 +62,10 @@ class VibeTaxi(Game):
         self.state_stack = StateStack()
         self.state_stack.push(OpeningState(self.state_stack))
 
+        from src.discord_rpc import DiscordRPCManager
+        self.discord_rpc = DiscordRPCManager()
+        self.discord_rpc.start()
+
     def fixed_update(self) -> None:
         state = self.state_stack.states[-1]
         fixed_update = getattr(state, "fixed_update", None)
@@ -70,6 +74,8 @@ class VibeTaxi(Game):
 
     def update(self, dt: float) -> None:
         self.state_stack.update(dt)
+        if self.state_stack.states and hasattr(self, "discord_rpc"):
+            self.discord_rpc.update_from_state(self.state_stack.states[-1])
 
     def render(self, surface: pygame.Surface) -> None:
         self.state_stack.render(surface)
@@ -97,3 +103,8 @@ class VibeTaxi(Game):
             self.quit()
         else:
             self.state_stack.on_input(input_id, input_data)
+
+    def quit(self) -> None:
+        if hasattr(self, "discord_rpc"):
+            self.discord_rpc.close()
+        super().quit()

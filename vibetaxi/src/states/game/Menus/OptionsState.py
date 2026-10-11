@@ -220,6 +220,15 @@ class OptionsState(BaseState):
         )
         self.lbl_focus = Label(col_lbl_x + 22, self.panel_y + g_y_off + g_dy * 4 + 10, tr("opt_pause_on_focus_loss"), theme=LABEL_THEME)
 
+        # Discord RPC
+        col_right_x = self.panel_x + self.panel_width - 150
+        self.chk_discord = Checkbox(
+            col_right_x, self.panel_y + g_y_off + g_dy * 2 + 10, 15,
+            checked=bool(config.get("discord_rpc", True)),
+            on_change=self._on_discord_toggle,
+        )
+        self.lbl_discord = Label(col_right_x + 22, self.panel_y + g_y_off + g_dy * 2 + 10, tr("opt_discord_rpc"), theme=LABEL_THEME)
+
         # Language button
         lang_name = tr("language_name", default=config.get("language", "es").upper())
         self.btn_language = Button(
@@ -238,6 +247,7 @@ class OptionsState(BaseState):
             self.chk_fps, self.lbl_fps,
             self.chk_debug, self.lbl_debug,
             self.chk_focus, self.lbl_focus,
+            self.chk_discord, self.lbl_discord,
             self.btn_language,
         ]
 
@@ -283,6 +293,15 @@ class OptionsState(BaseState):
         config.set("gamepad_deadzone", val)
         self.vis_deadzone.set_deadzone(val)
 
+    def _on_discord_toggle(self, checked: bool) -> None:
+        audio.play_sfx("press")
+        config.set("discord_rpc", checked)
+        import sys
+        main_module = sys.modules.get("__main__")
+        game = getattr(main_module, "game", None)
+        if game and hasattr(game, "discord_rpc"):
+            game.discord_rpc.set_enabled(checked)
+
     def _on_fullscreen_toggle(self, checked: bool) -> None:
         audio.play_sfx("press")
         display.set_fullscreen(checked)
@@ -316,6 +335,12 @@ class OptionsState(BaseState):
         self.chk_fps.checked = bool(config.get("show_fps", False))
         self.chk_debug.checked = bool(config.get("physics_debug", False))
         self.chk_focus.checked = bool(config.get("pause_on_focus_loss", True))
+        self.chk_discord.checked = bool(config.get("discord_rpc", True))
+        import sys
+        main_module = sys.modules.get("__main__")
+        game = getattr(main_module, "game", None)
+        if game and hasattr(game, "discord_rpc"):
+            game.discord_rpc.set_enabled(True)
 
     def enter(self, enter_params: Optional[dict] = None) -> None:
         self.fade_alpha = 0.0
