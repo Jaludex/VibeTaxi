@@ -5,7 +5,7 @@ import settings
 from gale.state import BaseState
 from gale.timer import Timer
 from gale.ui.button import Button
-from gale.ui.container import Container
+from src.gui.SpatialContainer import SpatialContainer
 from gale.ui.label import Label
 from src.gui.TypewriterTextBox import TypewriterTextBox
 from gale.ui.manager import UIManager
@@ -62,7 +62,7 @@ class MessageBoxState(BaseState):
             theme=BUTTON_THEME
         )
         
-        self.container = Container(0, 0, settings.VIRTUAL_WIDTH, settings.VIRTUAL_HEIGHT, children=[
+        self.container = SpatialContainer(0, 0, settings.VIRTUAL_WIDTH, settings.VIRTUAL_HEIGHT, children=[
             self.panel, self.label_title, self.text_box, self.btn_ok
         ])
         

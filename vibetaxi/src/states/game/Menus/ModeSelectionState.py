@@ -6,8 +6,7 @@ from gale.timer import Timer
 from gale.ui.manager import UIManager
 from gale.ui.button import Button
 from gale.ui.label import Label
-from gale.ui.window import Window
-from gale.ui.container import Container
+from src.gui.SpatialContainer import SpatialContainer, SpatialWindow
 
 from src.states.game.Gameplay.PlayState import PlayState
 from src.game_rules.WorkdayStrategy import WorkdayStrategy
@@ -75,7 +74,7 @@ class ModeSelectionState(BaseState):
             center=True
         )
         
-        self.window = Window(
+        self.window = SpatialWindow(
             window_x, 
             self.panel_y, 
             window_width, window_height,
@@ -84,7 +83,7 @@ class ModeSelectionState(BaseState):
             children=[self.btn_tutorial, self.btn_jornada, self.btn_arcade, self.btn_zen, self.desc_label]
         )
         
-        self.container = Container(0, 0, settings.VIRTUAL_WIDTH, settings.VIRTUAL_HEIGHT, children=[self.window])
+        self.container = SpatialContainer(0, 0, settings.VIRTUAL_WIDTH, settings.VIRTUAL_HEIGHT, children=[self.window])
         self.ui = UIManager(
             self.container,
             virtual_width=settings.VIRTUAL_WIDTH,

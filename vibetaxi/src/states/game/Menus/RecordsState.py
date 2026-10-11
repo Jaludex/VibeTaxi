@@ -7,7 +7,7 @@ from gale.state import BaseState
 from gale.timer import Timer
 from gale.text import render_text
 from gale.ui.manager import UIManager
-from gale.ui.container import Container
+from src.gui.SpatialContainer import SpatialContainer
 from gale.ui.button import Button
 from gale.ui.theme import Theme
 
@@ -27,7 +27,7 @@ class RecordsState(BaseState):
         
     def _setup_ui(self):
         from src.themes import BUTTON_THEME
-        container = Container(0, 0, settings.VIRTUAL_WIDTH, settings.VIRTUAL_HEIGHT)
+        container = SpatialContainer(0, 0, settings.VIRTUAL_WIDTH, settings.VIRTUAL_HEIGHT)
         
         btn_back = Button(
             settings.VIRTUAL_WIDTH / 2 - 50, settings.VIRTUAL_HEIGHT - 40,

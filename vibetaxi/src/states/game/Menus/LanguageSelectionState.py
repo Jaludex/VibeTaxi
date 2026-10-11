@@ -4,7 +4,7 @@ from gale.state import BaseState
 from gale.timer import Timer
 from gale.ui.manager import UIManager
 from gale.ui.button import Button
-from gale.ui.container import Container
+from src.gui.SpatialContainer import SpatialContainer
 from gale.text import render_text
 
 from src.themes import BUTTON_THEME
@@ -19,7 +19,7 @@ class LanguageSelectionState(BaseState):
         self.container_y = settings.VIRTUAL_HEIGHT + 200
         self.target_y = settings.VIRTUAL_HEIGHT / 2
         
-        container = Container(0, 0, settings.VIRTUAL_WIDTH, settings.VIRTUAL_HEIGHT)
+        container = SpatialContainer(0, 0, settings.VIRTUAL_WIDTH, settings.VIRTUAL_HEIGHT)
         
         available_langs = list(texts.keys())
         

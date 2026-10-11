@@ -6,7 +6,7 @@ from typing import Dict, Any, Optional
 from gale.state import BaseState
 from gale.timer import Timer
 from gale.ui.manager import UIManager
-from gale.ui.container import Container
+from src.gui.SpatialContainer import SpatialContainer
 from gale.ui.panel import Panel
 from gale.ui.button import Button
 from gale.ui.label import Label
@@ -67,7 +67,7 @@ class NewRecordState(BaseState):
             theme=BUTTON_THEME
         )
         
-        self.container = Container(0, 0, settings.VIRTUAL_WIDTH, settings.VIRTUAL_HEIGHT, children=[
+        self.container = SpatialContainer(0, 0, settings.VIRTUAL_WIDTH, settings.VIRTUAL_HEIGHT, children=[
             self.panel, self.label_title, self.label_score, self.text_input, self.btn_submit
         ])
         

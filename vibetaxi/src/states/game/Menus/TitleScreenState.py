@@ -69,10 +69,10 @@ class TitleScreenState(BaseState):
     def _setup_ui(self):
         from gale.ui.manager import UIManager
         from gale.ui.button import Button
-        from gale.ui.container import Container
+        from src.gui.SpatialContainer import SpatialContainer
         from src.themes import BUTTON_THEME, DISABLED_BUTTON_THEME
 
-        container = Container(0, 0, settings.VIRTUAL_WIDTH, settings.VIRTUAL_HEIGHT)
+        container = SpatialContainer(0, 0, settings.VIRTUAL_WIDTH, settings.VIRTUAL_HEIGHT)
 
         center_y = settings.VIRTUAL_HEIGHT / 2 + 30
         

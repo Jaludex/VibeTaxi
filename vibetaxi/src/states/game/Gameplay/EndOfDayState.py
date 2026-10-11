@@ -5,7 +5,7 @@ from gale.input_handler import InputData
 from gale.state import BaseState
 from gale.timer import Timer
 from gale.ui.manager import UIManager
-from gale.ui.container import Container
+from src.gui.SpatialContainer import SpatialContainer
 from gale.ui.panel import Panel
 from gale.ui.button import Button
 from gale.ui.label import Label
@@ -50,7 +50,7 @@ class EndOfDayState(BaseState):
 
     def _setup_ui(self):
         from src.themes import BUTTON_THEME, LABEL_THEME, LABEL_GREEN_THEME, PANEL_THEME
-        container = Container(0, 0, settings.VIRTUAL_WIDTH, settings.VIRTUAL_HEIGHT)
+        container = SpatialContainer(0, 0, settings.VIRTUAL_WIDTH, settings.VIRTUAL_HEIGHT)
         
         panel_width = 300
         panel_height = 160
