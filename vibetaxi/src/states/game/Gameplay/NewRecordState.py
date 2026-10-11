@@ -101,7 +101,8 @@ class NewRecordState(BaseState):
         
     def on_submit_click(self):
         if self.is_exiting: return
-        settings.SOUNDS["press"].play()
+        from src import audio
+        audio.play_sfx("press")
         self.is_exiting = True
         
         name = self.text_input.text.strip()

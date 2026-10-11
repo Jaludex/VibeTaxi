@@ -56,6 +56,9 @@ class VibeTaxi(Game):
         
         pygame.mixer.set_num_channels(32)
         
+        from src import display
+        display.init_display()
+
         self.state_stack = StateStack()
         self.state_stack.push(OpeningState(self.state_stack))
 
@@ -70,11 +73,25 @@ class VibeTaxi(Game):
 
     def render(self, surface: pygame.Surface) -> None:
         self.state_stack.render(surface)
+        import settings
+        if getattr(settings, 'SHOW_FPS', False):
+            from gale.text import render_text
+            fps = int(self.clock.get_fps())
+            render_text(
+                surface,
+                f"{fps} FPS",
+                settings.FONTS["minecraft_small"],
+                settings.VIRTUAL_WIDTH - 44,
+                4,
+                (255, 255, 100),
+                shadowed=True,
+            )
 
     def on_input(self, input_id: str, input_data: InputData) -> None:
         if input_id == "toggle_fullscreen" and input_data.pressed:
-            pygame.display.toggle_fullscreen()
-            self.is_fullscreen = not self.is_fullscreen
+            from src import display
+            display.toggle_fullscreen()
+            self.is_fullscreen = display.is_fullscreen()
             return
         elif input_id == "quit" and input_data.pressed:
             self.quit()

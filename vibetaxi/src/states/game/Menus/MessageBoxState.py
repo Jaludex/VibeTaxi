@@ -106,7 +106,8 @@ class MessageBoxState(BaseState):
     def _on_ok(self):
         if self.is_exiting: return
         self.is_exiting = True
-        if "press" in settings.SOUNDS: settings.SOUNDS["press"].play()
+        from src import audio
+        audio.play_sfx("press")
         
         def on_finish():
             self.state_machine.pop()

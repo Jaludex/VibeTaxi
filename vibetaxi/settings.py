@@ -236,7 +236,15 @@ REPAIR_COST = 40.0
 
 SAVE_MANAGER = SaveManager(save_dir=BASE_DIR / 'saves')
 
+# Configurable runtime flags
+SHOW_FPS = False
+PHYSICS_DEBUG = False
 LANGUAGE = None
-if SAVE_MANAGER.exists("config"):
-    _config = SAVE_MANAGER.load("config")
-    LANGUAGE = _config.get("language")
+
+try:
+    from src import config
+    config.load()
+except Exception:
+    if SAVE_MANAGER.exists("config"):
+        _config = SAVE_MANAGER.load("config")
+        LANGUAGE = _config.get("language")

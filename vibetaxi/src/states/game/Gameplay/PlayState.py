@@ -78,15 +78,17 @@ class PlayState(BaseState):
             soundscape = pygame.mixer.Sound(settings.BASE_DIR / "assets" / "music" / "city_soundscape.mp3")
             self.soundscape_channel = soundscape.play(loops=-1)
             if self.soundscape_channel:
-                self.soundscape_channel.set_volume(0.5)
+                from src import audio
+                self.soundscape_channel.set_volume(0.5 * audio.ambient_scale())
         except Exception as e:
             print("Error loading soundscape:", e)
             
         try:
             engine_start = settings.SOUNDS.get("engine_start")
             if engine_start:
+                from src import audio
                 ch = engine_start.play()
-                if ch: ch.set_volume(0.4)
+                if ch: ch.set_volume(0.4 * audio.engine_scale())
         except Exception as e:
             pass
             
@@ -121,6 +123,21 @@ class PlayState(BaseState):
     def update(self, dt):
         if getattr(self, "game_over_triggered", False):
             return
+
+        # Check pause on window focus loss
+        if not hasattr(self, "_had_focus"):
+            self._had_focus = True
+        has_focus = pygame.key.get_focused()
+        if self._had_focus and not has_focus:
+            from src import config
+            if config.get("pause_on_focus_loss", True):
+                from src.states.game.Gameplay.PauseState import PauseState
+                if not any(isinstance(s, PauseState) for s in self.state_machine.states):
+                    self.pause_audio()
+                    self.state_machine.push(PauseState(self.state_machine))
+                    self._had_focus = False
+                    return
+        self._had_focus = has_focus
             
         self.taxi.update(dt)
         self.city_map.update(dt, self.camera)
@@ -182,10 +199,9 @@ class PlayState(BaseState):
                 self._click_emitter = None
         
         if self.soundscape_channel:
-            if self.radio.ind_song == 0:
-                self.soundscape_channel.set_volume(0.5)
-            else:
-                self.soundscape_channel.set_volume(0.1)
+            from src import audio
+            base_vol = 0.5 if self.radio.ind_song == 0 else 0.1
+            self.soundscape_channel.set_volume(base_vol * audio.ambient_scale())
         
         if self.camera:
             row_range, col_range = self.tilemap._visible_range(self.camera)
@@ -233,11 +249,12 @@ class PlayState(BaseState):
                 self.vibe_color = settings.VIBE_COLORS[genre]
                 self.taxi.vibe_color = self.vibe_color
             
+        from src import audio
         if is_vibe and not was_vibe:
-            settings.SOUNDS["into_vibe"].play()
+            audio.play_sfx("into_vibe")
             Timer.tween(0.5, [(self, {"vibe_alpha": 40.0})])
         elif not is_vibe and was_vibe:
-            settings.SOUNDS["out_vibe"].play()
+            audio.play_sfx("out_vibe")
             Timer.tween(0.5, [(self, {"vibe_alpha": 0.0})])
             
         self.was_vibe = is_vibe
@@ -301,8 +318,8 @@ class PlayState(BaseState):
                         if isinstance(self.taxi.state_machine.current, TaxiVibeState):
                             self.taxi.state_machine.change("drive")
 
-                if "money" in settings.SOUNDS:
-                    settings.SOUNDS["money"].play()
+                from src import audio
+                audio.play_sfx("money")
 
                 self.active_passenger.state_machine.change(
                     "walk", 
@@ -326,8 +343,8 @@ class PlayState(BaseState):
                         self.arrow_radius_progress = 0.0
                         Timer.tween(0.7, [(self, {"arrow_radius_progress": 1.0})], ease_function_name="out_cubic")
                     
-                    if "honk" in settings.SOUNDS:
-                        settings.SOUNDS["honk"].play()
+                    from src import audio
+                    audio.play_sfx("honk")
                         
                     p.state_machine.change("walk", target=self.taxi, on_arrival=reach_taxi)
                     self.active_passenger = p
@@ -521,7 +538,8 @@ class PlayState(BaseState):
             return
             
         if input_id == "pause" and input_data.pressed:
-            if "pause" in settings.SOUNDS: settings.SOUNDS["pause"].play()
+            from src import audio
+            audio.play_sfx("pause")
             from src.states.game.Gameplay.PauseState import PauseState
             self.state_machine.push(PauseState(self.state_machine))
             return

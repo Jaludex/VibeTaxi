@@ -53,9 +53,8 @@ class TypewriterTextBox(TextBox):
                     if any(not c.isspace() for c in revealed):
                         bleep_num = random.randint(1, 5)
                         bleep_name = f"bleep{bleep_num}"
-                        
-                        if bleep_name in settings.SOUNDS:
-                            settings.SOUNDS[bleep_name].play()
+                        from src import audio
+                        audio.play_sfx(bleep_name)
 
     @property
     def is_typing(self) -> bool:

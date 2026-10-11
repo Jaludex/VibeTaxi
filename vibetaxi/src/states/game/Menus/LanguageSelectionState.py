@@ -105,15 +105,10 @@ class LanguageSelectionState(BaseState):
         self.ui.render(surface)
         
     def _on_language_select(self, lang_code):
-        settings.SOUNDS["press"].play()
+        from src import audio, config
+        audio.play_sfx("press")
         settings.LANGUAGE = lang_code
-        
-        # Save configuration
-        config = {}
-        if settings.SAVE_MANAGER.exists("config"):
-            config = settings.SAVE_MANAGER.load("config")
-        config["language"] = lang_code
-        settings.SAVE_MANAGER.save("config", config)
+        config.set("language", lang_code, auto_save=True)
         
         Timer.tween(
             0.3, 

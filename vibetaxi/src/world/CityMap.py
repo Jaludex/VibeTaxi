@@ -63,12 +63,9 @@ class CityMap:
             if getattr(self, 'muted', False):
                 return
             try:
-                import settings
-                sound = settings.SOUNDS.get(sound_key)
-                if sound:
-                    vol = base_volume * random.uniform(0.8, 1.2)
-                    sound.set_volume(max(0.0, min(1.0, vol)))
-                    sound.play()
+                from src import audio
+                vol = base_volume * random.uniform(0.8, 1.2)
+                audio.play_sfx(sound_key, volume=vol)
             except Exception:
                 pass
 

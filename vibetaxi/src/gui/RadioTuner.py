@@ -136,33 +136,37 @@ class Radio:
         self._fade_out_timer = Timer.after(settings.RADIO_FADEOUT_TIME, self._start_fade_out)
 
     def volume_up(self):
-        settings.SOUNDS["press"].play()
+        from src import audio
+        audio.play_sfx("press")
         self._trigger_ui_activity()
         self.volume = min(100, self.volume + 10)
         self.state_plus = 1
         if self._plus_timer:
             self._plus_timer.remove()
         self._plus_timer = Timer.after(self.animation_time, lambda: setattr(self, 'state_plus', 0))
-        pygame.mixer.music.set_volume(self.volume / 100.0)
+        audio.set_music_volume(self.volume / 100.0)
 
     def volume_down(self):
-        settings.SOUNDS["press"].play()
+        from src import audio
+        audio.play_sfx("press")
         self._trigger_ui_activity()
         self.volume = max(0, self.volume - 10)
         self.state_less = 1
         if self._less_timer:
             self._less_timer.remove()
         self._less_timer = Timer.after(self.animation_time, lambda: setattr(self, 'state_less', 0))
-        pygame.mixer.music.set_volume(self.volume / 100.0)
+        audio.set_music_volume(self.volume / 100.0)
 
     def next_station(self):
-        settings.SOUNDS["press"].play()
+        from src import audio
+        audio.play_sfx("press")
         self._trigger_ui_activity()
         self.ind_song = (self.ind_song + 1) % len(self.stations)
         self.change_station()
 
     def prev_station(self):
-        settings.SOUNDS["press"].play()
+        from src import audio
+        audio.play_sfx("press")
         self._trigger_ui_activity()
         self.ind_song = (self.ind_song - 1) % len(self.stations)
         self.change_station()

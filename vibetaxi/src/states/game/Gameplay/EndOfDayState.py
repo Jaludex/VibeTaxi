@@ -30,8 +30,8 @@ class EndOfDayState(BaseState):
         self.ui = None
 
     def enter(self, **enter_params: Dict[str, Any]) -> None:
-        if "win" in settings.SOUNDS:
-            settings.SOUNDS["win"].play()
+        from src import audio
+        audio.play_sfx("win")
         
         Timer.tween(
             1.0,
@@ -166,8 +166,9 @@ class EndOfDayState(BaseState):
             self.repair_button.enabled = True
 
     def _on_repair(self):
+        from src import audio
         if self.health < self.max_health and self.money >= settings.REPAIR_COST:
-            if "fix" in settings.SOUNDS: settings.SOUNDS["fix"].play()
+            audio.play_sfx("fix")
             self.money -= settings.REPAIR_COST
             self.health = self.max_health
             
@@ -177,17 +178,19 @@ class EndOfDayState(BaseState):
             self.health_bar.theme.accent_color = self._get_health_color(self.health, self.max_health)
             self._update_repair_button()
         else:
-            if "error" in settings.SOUNDS: settings.SOUNDS["error"].play()
+            audio.play_sfx("error")
 
     def _on_exit(self):
-        settings.SOUNDS["press"].play()
+        from src import audio
+        audio.play_sfx("press")
         from src.states.game.Menus.TitleScreenState import TitleScreenState
         while len(self.state_machine.states) > 0:
             self.state_machine.pop()
         self.state_machine.push(TitleScreenState(self.state_machine))
 
     def _on_save_exit(self):
-        settings.SOUNDS["press"].play()
+        from src import audio
+        audio.play_sfx("press")
         
         def execute_save():
             settings.SAVE_MANAGER.save("workday_save", {
@@ -216,7 +219,8 @@ class EndOfDayState(BaseState):
             execute_save()
 
     def _on_continue(self):
-        settings.SOUNDS["press"].play()
+        from src import audio
+        audio.play_sfx("press")
         self.ui = None # Disable UI interactions
         Timer.tween(
             1.0,

@@ -150,8 +150,8 @@ class TutorialPlayState(PlayState):
                     self.taxi.state_machine.change('idle')
                     
                     self.fade_alpha = 0.0
-                    if "crash_car" in settings.SOUNDS:
-                        settings.SOUNDS["crash_car"].play()
+                    from src import audio
+                    audio.play_sfx("crash_car")
                         
                     def fade_in():
                         Timer.tween(0.4, [(self, {"fade_alpha": 0.0})], on_finish=lambda: setattr(self, "tutorial_paused", False))

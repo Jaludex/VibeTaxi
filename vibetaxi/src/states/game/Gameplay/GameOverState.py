@@ -58,16 +58,16 @@ class GameOverState(MessageBoxState):
 
     def enter(self, enter_params=None):
         super().enter(enter_params)
-        if "game_over" in settings.SOUNDS:
-            settings.SOUNDS["game_over"].play()
+        from src import audio
+        audio.play_sfx("game_over")
             
         from gale.timer import Timer
         def show_rank():
             if self.rank:
                 Timer.tween(0.4, [(self, {"rank_alpha": 255.0})])
                 sound_key = self.rank.get("sound")
-                if sound_key and sound_key in settings.SOUNDS:
-                    settings.SOUNDS[sound_key].play()
+                if sound_key:
+                    audio.play_sfx(sound_key)
                 
         # Wait 1 second after panel finishes dropping (0.5s drop + 1s wait = 1.5s)
         Timer.after(1.5, show_rank)

@@ -87,9 +87,8 @@ class WorkdayStrategy(BaseRuleStrategy):
             if time_bonus > 0: reasons.append(tr("bonus_fast", default="Fast!"))
             if safety_bonus > 0: reasons.append(tr("bonus_safe", default="Safe!"))
             self.money_popup_text += f"\n({', '.join(reasons)})"
-            import settings
-            if "bonus" in settings.SOUNDS:
-                settings.SOUNDS["bonus"].play()
+            from src import audio
+            audio.play_sfx("bonus")
             
         self.money_popup_alpha = 0.0
         self.money_popup_y_offset = 0.0

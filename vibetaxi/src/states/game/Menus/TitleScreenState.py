@@ -164,15 +164,15 @@ class TitleScreenState(BaseState):
         )
         container.add_child(btn_usertracks)
 
-        btn_language = Button(
+        btn_options = Button(
             settings.VIRTUAL_WIDTH - 120,
             settings.VIRTUAL_HEIGHT - 40,
             100, 30,
-            tr("btn_language"),
-            on_click=self._on_language,
+            tr("btn_options"),
+            on_click=self._on_options,
             theme=BUTTON_THEME
         )
-        container.add_child(btn_language)
+        container.add_child(btn_options)
 
         self.ui = UIManager(
             container,
@@ -182,23 +182,25 @@ class TitleScreenState(BaseState):
             window_height=settings.WINDOW_HEIGHT
         )
 
-    def _on_language(self):
+    def _on_options(self):
         if not getattr(self, "mode_selection_triggered", False):
-            settings.SOUNDS["press"].play()
+            from src import audio
+            audio.play_sfx("press")
             self.mode_selection_triggered = True
             self._cancel_pan_timers()
 
             def close_callback():
                 self.resume_panning()
-                # Re-setup UI to refresh languages
+                # Re-setup UI to refresh any changes (e.g. language)
                 self._setup_ui()
 
-            from src.states.game.Menus.LanguageSelectionState import LanguageSelectionState
-            self.state_machine.push(LanguageSelectionState(self.state_machine, on_close=close_callback))
+            from src.states.game.Menus.OptionsState import OptionsState
+            self.state_machine.push(OptionsState(self.state_machine, on_close=close_callback))
 
     def _on_user_tracks(self):
         if not getattr(self, "mode_selection_triggered", False):
-            settings.SOUNDS["press"].play()
+            from src import audio
+            audio.play_sfx("press")
             self.mode_selection_triggered = True
             self._cancel_pan_timers()
 
@@ -214,7 +216,8 @@ class TitleScreenState(BaseState):
 
     def _on_credits(self):
         if not getattr(self, "mode_selection_triggered", False):
-            settings.SOUNDS["press"].play()
+            from src import audio
+            audio.play_sfx("press")
             self.mode_selection_triggered = True
             self._cancel_pan_timers()
             from src.states.game.Menus.MessageBoxState import MessageBoxState
@@ -226,12 +229,14 @@ class TitleScreenState(BaseState):
 
     def _on_quit(self):
         if not getattr(self, "mode_selection_triggered", False):
-            settings.SOUNDS["press"].play()
+            from src import audio
+            audio.play_sfx("press")
             pygame.event.post(pygame.event.Event(pygame.QUIT))
 
     def _on_new_game(self):
         if not getattr(self, "mode_selection_triggered", False):
-            settings.SOUNDS["press"].play()
+            from src import audio
+            audio.play_sfx("press")
             self.mode_selection_triggered = True
             self._cancel_pan_timers()
             from src.states.game.Menus.ModeSelectionState import ModeSelectionState
@@ -248,7 +253,8 @@ class TitleScreenState(BaseState):
 
     def _on_resume(self):
         if not getattr(self, "mode_selection_triggered", False):
-            settings.SOUNDS["press"].play()
+            from src import audio
+            audio.play_sfx("press")
             self.mode_selection_triggered = True
             
             def proceed():
@@ -265,7 +271,8 @@ class TitleScreenState(BaseState):
 
     def _on_records(self):
         if not getattr(self, "mode_selection_triggered", False):
-            settings.SOUNDS["press"].play()
+            from src import audio
+            audio.play_sfx("press")
 
             def proceed():
                 from src.states.game.Menus.RecordsState import RecordsState
@@ -355,7 +362,8 @@ class TitleScreenState(BaseState):
         if self.city_map and self.camera:
             self.city_map.update(dt, self.camera)
             self.camera.update(dt)
-        pygame.mixer.music.set_volume(getattr(self, 'music_volume', 0.5))
+        from src import audio
+        audio.set_music_volume(getattr(self, 'music_volume', 0.5))
         if hasattr(self, 'ui') and self.ui:
             self.ui.update(dt)
 

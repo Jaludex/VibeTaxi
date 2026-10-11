@@ -115,7 +115,8 @@ class Taxi(Car):
             speed_ratio = abs(getattr(self, 'speed', 0)) / max(1, getattr(self, 'max_speed', 1))
             speed_ratio = min(1.0, max(0.0, speed_ratio))
             
-            base_vol = 0.2 # Maximum general volume
+            from src import audio
+            base_vol = 0.2 * audio.engine_scale()
             
             if self.is_crashed:
                 for ch in self.engine_channels.values():
@@ -152,7 +153,7 @@ class Taxi(Car):
                     
                 if getattr(self, "is_drifting", False) and abs(getattr(self, 'speed', 0)) > 30:
                     if self.engine_channels.get("drifting"):
-                        self.engine_channels["drifting"].set_volume(0.2)
+                        self.engine_channels["drifting"].set_volume(0.2 * audio.engine_scale())
                 else:
                     if self.engine_channels.get("drifting"):
                         self.engine_channels["drifting"].set_volume(0.0)

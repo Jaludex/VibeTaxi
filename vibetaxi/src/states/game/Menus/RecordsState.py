@@ -51,7 +51,8 @@ class RecordsState(BaseState):
         
     def on_back_click(self):
         if self.is_exiting: return
-        settings.SOUNDS["press"].play()
+        from src import audio
+        audio.play_sfx("press")
         self.is_exiting = True
         
         def exit_to_title():
