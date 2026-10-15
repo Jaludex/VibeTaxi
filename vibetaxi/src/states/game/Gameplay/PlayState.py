@@ -204,24 +204,28 @@ class PlayState(BaseState):
             self.soundscape_channel.set_volume(base_vol * audio.ambient_scale())
         
         if self.camera:
-            row_range, col_range = self.tilemap._visible_range(self.camera)
-            
-            def is_visible(x, y, margin_pixels):
-                margin_cols = int(margin_pixels // self.tilemap.tile_width)
-                margin_rows = int(margin_pixels // self.tilemap.tile_height)
-                
-                row, col = self.tilemap.tile_at(x, y)
-                
-                return (row_range.start - margin_rows <= row < row_range.stop + margin_rows) and \
-                       (col_range.start - margin_cols <= col < col_range.stop + margin_cols)
+            cam_x, cam_y = self.camera.offset
+            zoom = self.camera.zoom
+            vw = self.camera.viewport_width / zoom
+            vh = self.camera.viewport_height / zoom
 
-            self.nearby_props = [
-                prop for prop in self.city_map.props 
-                if is_visible(prop.x, prop.y, margin_pixels=100)
-            ]
+            prop_min_x = cam_x - 100
+            prop_max_x = cam_x + vw + 100
+            prop_min_y = cam_y - 100
+            prop_max_y = cam_y + vh + 100
+
+            self.nearby_props = self.city_map.get_nearby_props(
+                prop_min_x, prop_max_x, prop_min_y, prop_max_y
+            )
+
+            pass_min_x = cam_x - 150
+            pass_max_x = cam_x + vw + 150
+            pass_min_y = cam_y - 150
+            pass_max_y = cam_y + vh + 150
+
             self.nearby_passengers = [
                 p for p in self.map_passengers 
-                if is_visible(p.x, p.y, margin_pixels=150)
+                if pass_min_x <= p.x <= pass_max_x and pass_min_y <= p.y <= pass_max_y
             ]
         else:
             self.nearby_props = self.city_map.props[:]

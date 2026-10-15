@@ -107,8 +107,11 @@ class Entity(DrawableMixin):
         if hasattr(self, "angle"):
             import math
             angle_offset = getattr(self, "angle_offset", 0)
-            self.body.angle = self.angle - math.radians(angle_offset)
-            self.body.angular_velocity = 0.0
+            target_angle = self.angle - math.radians(angle_offset)
+            if abs(self.body.angle - target_angle) > 1e-4:
+                self.body.angle = target_angle
+            if self.body.angular_velocity != 0.0:
+                self.body.angular_velocity = 0.0
 
     def get_collision_rect(self):
         # Axis-aligned bounding box fallback (keeps compatibility)
@@ -190,14 +193,8 @@ class Entity(DrawableMixin):
                     self.vy = actual_vel.y
                     self.speed = math.copysign(actual_vel.length(), self.speed)
             
-            if hasattr(self, "angle"):
-                import math
-                angle_offset = getattr(self, "angle_offset", 0)
-                self.body.angle = self.angle - math.radians(angle_offset)
-                self.body.angular_velocity = 0.0
-            
-            if hasattr(self, "vx") and hasattr(self, "vy"):
-                self.body.velocity = (self.vx, self.vy)
+                if (self.body.velocity.x, self.body.velocity.y) != (self.vx, self.vy):
+                    self.body.velocity = (self.vx, self.vy)
                 
             return
 

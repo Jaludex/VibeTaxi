@@ -13,7 +13,7 @@ class TrafficCarDriveState(CarDriveState):
     def update(self, dt):
         dx = self.entity.target_x - self.entity.x
         dy = self.entity.target_y - self.entity.y
-        distance = math.hypot(dx, dy)
+        dist_to_target_sq = dx * dx + dy * dy
         
         should_brake = False
         if self.entity.traffic_system:
@@ -28,17 +28,18 @@ class TrafficCarDriveState(CarDriveState):
                     
                 dist_x = other.x - self.entity.x
                 dist_y = other.y - self.entity.y
-                dist = math.hypot(dist_x, dist_y)
+                dist_sq = dist_x * dist_x + dist_y * dist_y
                 
-                if dist < 80.0:
+                # Check within 80px (80^2 = 6400)
+                if dist_sq < 6400.0:
                     angle_to_other = math.atan2(dist_y, dist_x)
                     angle_diff = (angle_to_other - self.entity.angle + math.pi) % (2 * math.pi) - math.pi
-                    if abs(angle_diff) < math.radians(45):
+                    if abs(angle_diff) < 0.7853981633974483:  # math.radians(45)
                         # Check if we are also in their front cone
                         other_angle_to_us = math.atan2(-dist_y, -dist_x)
                         other_angle_diff = (other_angle_to_us - getattr(other, 'angle', 0) + math.pi) % (2 * math.pi) - math.pi
                         
-                        if abs(other_angle_diff) < math.radians(45):
+                        if abs(other_angle_diff) < 0.7853981633974483:
                             # Both see each other. Break tie with ID so one yields.
                             if id(self.entity) < id(other):
                                 should_brake = True
@@ -51,8 +52,8 @@ class TrafficCarDriveState(CarDriveState):
         self.entity.is_braking = should_brake
         self.entity.is_accelerating = True
         
-        # Check distance to target node
-        if distance < 30.0:
+        # Check distance to target node (30^2 = 900)
+        if dist_to_target_sq < 900.0:
             if self.entity.next_node_name and self.entity.traffic_system:
                 next_pos = self.entity.traffic_system.get_node_position(self.entity.next_node_name)
                 next_next = self.entity.traffic_system.get_node_next(self.entity.next_node_name)

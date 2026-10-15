@@ -14,8 +14,6 @@ from src.definitions.props import PROPS_DEF
 from src.definitions.passengers import PASSENGER_DEFS
 from src.entity.Traffic import TrafficSystem
 from src.definitions.radio import RADIO_STATIONS
-
-
 class CityMap:
     def __init__(self, map_key: str = "city") -> None:
         self.tilemap = load_tiled_map(settings.TILEMAPS[map_key])
@@ -25,6 +23,9 @@ class CityMap:
         self.physics_world.on_collision_begin(self._on_collision_begin)
 
         self.props: List[Prop] = []
+        self._gid_cache: Dict[int, Any] = {}
+        self.prop_grid: Dict[tuple, List[Prop]] = {}
+        self.grid_cell_size: int = 256
         self.particle_emitters: List[Any] = []
         self._load_collisions()
         self._load_props()
@@ -222,14 +223,26 @@ class CityMap:
                     body_type=BodyType.DYNAMIC,
                     shape=shape,
                 )
-                # Give props moderate damping so they don't drift forever
-                if prop.body is not None:
-                    try:
-                        prop.body.set_damping(1.5, 0.5)
-                    except Exception:
-                        pass
-
                 self.props.append(prop)
+                gx = int(center_x // self.grid_cell_size)
+                gy = int(center_y // self.grid_cell_size)
+                self.prop_grid.setdefault((gx, gy), []).append(prop)
+
+    def get_nearby_props(self, min_x: float, max_x: float, min_y: float, max_y: float) -> List[Prop]:
+        min_gx = int(min_x // self.grid_cell_size)
+        max_gx = int(max_x // self.grid_cell_size)
+        min_gy = int(min_y // self.grid_cell_size)
+        max_gy = int(max_y // self.grid_cell_size)
+
+        result = []
+        for gx in range(min_gx, max_gx + 1):
+            for gy in range(min_gy, max_gy + 1):
+                cell_props = self.prop_grid.get((gx, gy))
+                if cell_props:
+                    for p in cell_props:
+                        if min_x <= p.x <= max_x and min_y <= p.y <= max_y:
+                            result.append(p)
+        return result
 
     def get_taxi_spawn_position(self, default: tuple = (400, 300)) -> tuple:
         spawner_layer = self.tilemap.object_layers.get("taxi-spawns", [])
@@ -246,6 +259,16 @@ class CityMap:
     def fixed_update(self) -> None:
         self.physics_world.fixed_update()
         for entity in getattr(self.physics_world, "_entity_registry", []):
+            if getattr(entity, "_is_prop", False) and not getattr(entity, "_removal_scheduled", False):
+                pm_body = getattr(getattr(entity, 'body', None), '_pm_body', None)
+                if pm_body is not None and pm_body.velocity.length_squared < 1e-4:
+                    continue
+                if getattr(entity, 'body', None) is not None and not getattr(entity, '_damping_active', False):
+                    try:
+                        entity.body.set_damping(1.5, 0.5)
+                        entity._damping_active = True
+                    except Exception:
+                        pass
             entity.sync_body_to_entity()
 
     def update(self, dt: float, camera: Any = None) -> None:
@@ -368,28 +391,49 @@ class CityMap:
 
     def _render_single_layer(self, surface: pygame.Surface, camera: Any, name: str) -> None:
         grid = self.tilemap.get_layer(name)
-        row_range, col_range = (
-            range(self.tilemap.rows), range(self.tilemap.cols)
-        ) if camera is None else self.tilemap._visible_range(camera)
-
-        for row in row_range:
-            for col in col_range:
-                gid = grid[row][col]
-                if gid == 0:
-                    continue
-                tileset = self.tilemap.tileset_for_gid(gid)
-                if tileset is None:
-                    continue
-                source_rect = tileset.rect_for(gid)
-                x, y = self.tilemap.position_of(row, col)
-
-                if camera is None:
+        if camera is None:
+            row_range = range(self.tilemap.rows)
+            col_range = range(self.tilemap.cols)
+            for row in row_range:
+                row_tiles = grid[row]
+                for col in col_range:
+                    gid = row_tiles[col]
+                    if gid == 0:
+                        continue
+                    tileset = self.tilemap.tileset_for_gid(gid)
+                    if tileset is None:
+                        continue
+                    source_rect = tileset.rect_for(gid)
+                    x, y = self.tilemap.position_of(row, col)
                     surface.blit(tileset.image, (x, y), source_rect)
-                else:
-                    dest_rect = camera.apply(
-                        pygame.Rect(x, y, self.tilemap.tile_width, self.tilemap.tile_height)
-                    )
-                    surface.blit(tileset.image, dest_rect, source_rect)
+        else:
+            row_range, col_range = self.tilemap._visible_range(camera)
+            offset_x, offset_y = camera.offset
+            zoom = camera.zoom
+            tw, th = self.tilemap.tile_width, self.tilemap.tile_height
+
+            xs = [round((col * tw - offset_x) * zoom) for col in col_range]
+            ys = [round((row * th - offset_y) * zoom) for row in row_range]
+            col_start = col_range.start
+            row_start = row_range.start
+
+            cache = self._gid_cache
+            for row in row_range:
+                dest_y = ys[row - row_start]
+                row_tiles = grid[row]
+                for col in col_range:
+                    gid = row_tiles[col]
+                    if gid == 0:
+                        continue
+                    tile_info = cache.get(gid)
+                    if tile_info is None:
+                        tileset = self.tilemap.tileset_for_gid(gid)
+                        if tileset is None:
+                            continue
+                        tile_info = (tileset.image, tileset.rect_for(gid))
+                        cache[gid] = tile_info
+                    dest_x = xs[col - col_start]
+                    surface.blit(tile_info[0], (dest_x, dest_y), tile_info[1])
 
     def render_car_silhouette_if_obstructed(self, surface: pygame.Surface, car, camera: Any = None) -> None:
         rect = car.get_collision_rect()
@@ -417,20 +461,26 @@ class CityMap:
         if not is_covered:
             return
 
-        texture = settings.TEXTURES[car.texture_id]
-        frame = settings.FRAMES[car.texture_id][car.frame_index]
-        image = pygame.Surface((frame.width, frame.height), pygame.SRCALPHA)
-        image.fill((0, 0, 0, 0))
-        image.blit(texture, (0, 0), frame)
-
         angle = getattr(car, "angle", None)
+        degrees = 0.0
         if angle is not None:
             angle_offset = getattr(car, "angle_offset", 0)
             degrees = math.degrees(-angle) + angle_offset
-            image = pygame.transform.rotate(image, degrees)
 
-        mask = pygame.mask.from_surface(image)
-        silhouette = mask.to_surface(setcolor=(0, 0, 0, 160), unsetcolor=(0, 0, 0, 0))
+        cache_key = (car.texture_id, car.frame_index, round(degrees, 1))
+        silhouette = getattr(car, "_cached_silhouette", None)
+        if getattr(car, "_sil_cache_key", None) != cache_key or silhouette is None:
+            texture = settings.TEXTURES[car.texture_id]
+            frame = settings.FRAMES[car.texture_id][car.frame_index]
+            image = pygame.Surface((frame.width, frame.height), pygame.SRCALPHA)
+            image.fill((0, 0, 0, 0))
+            image.blit(texture, (0, 0), frame)
+            if angle is not None:
+                image = pygame.transform.rotate(image, degrees)
+            mask = pygame.mask.from_surface(image)
+            silhouette = mask.to_surface(setcolor=(0, 0, 0, 160), unsetcolor=(0, 0, 0, 0))
+            car._sil_cache_key = cache_key
+            car._cached_silhouette = silhouette
 
         sil_rect = silhouette.get_rect(center=(car.x, car.y))
         if camera is not None:

@@ -237,19 +237,10 @@ class Taxi(Car):
             for ghost in self.ghosts:
                 if ghost.alpha <= 0:
                     continue
-                
-                # Copy the pre-rotated tinted image
-                tmp = ghost.image.copy()
-                
-                # Apply alpha
-                alpha_surf = pygame.Surface(tmp.get_size(), pygame.SRCALPHA)
-                alpha_surf.fill((255, 255, 255, int(ghost.alpha)))
-                tmp.blit(alpha_surf, (0, 0), special_flags=pygame.BLEND_RGBA_MULT)
-                
-                rect = tmp.get_rect(center=(ghost.x, ghost.y))
+                ghost.image.set_alpha(int(ghost.alpha))
+                rect = ghost.image.get_rect(center=(ghost.x, ghost.y))
                 if camera is not None:
                     rect = camera.apply(rect)
-                    
-                surface.blit(tmp, rect)
+                surface.blit(ghost.image, rect)
                 
         super().render(surface, camera)
