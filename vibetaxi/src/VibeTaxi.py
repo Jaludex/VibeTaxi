@@ -1,4 +1,5 @@
 import pygame
+from typing import Any
 
 from gale.game import Game
 from gale.input_handler import InputData
@@ -59,12 +60,20 @@ class VibeTaxi(Game):
         from src import display
         display.init_display()
 
+        from src import config
+        self.set_fps_limit(config.get("fps_limit", 60), save=False)
+
         self.state_stack = StateStack()
         self.state_stack.push(OpeningState(self.state_stack))
 
         from src.discord_rpc import DiscordRPCManager
         self.discord_rpc = DiscordRPCManager()
         self.discord_rpc.start()
+
+    def set_fps_limit(self, fps_val: Any, save: bool = True) -> None:
+        from src import config
+        config.set("fps_limit", fps_val, auto_save=save)
+        self.fps = config.get_effective_fps()
 
     def fixed_update(self) -> None:
         state = self.state_stack.states[-1]
@@ -73,6 +82,8 @@ class VibeTaxi(Game):
             fixed_update()
 
     def update(self, dt: float) -> None:
+        import settings
+        settings.RENDER_ALPHA = min(1.0, max(0.0, self._accumulator / self.fixed_timestep))
         self.state_stack.update(dt)
         if self.state_stack.states and hasattr(self, "discord_rpc"):
             self.discord_rpc.update_from_state(self.state_stack.states[-1])

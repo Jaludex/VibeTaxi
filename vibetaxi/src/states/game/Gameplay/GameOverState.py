@@ -6,6 +6,8 @@ from src.states.game.Menus.MessageBoxState import MessageBoxState
 from src.states.game.Menus.TitleScreenState import TitleScreenState
 
 class GameOverState(MessageBoxState):
+    discord_presence = {"details": "Game Over", "state": "Shift ended"}
+
     def __init__(self, state_machine: Any, reason: Optional[str] = None, record_data: Optional[Dict] = None, mode: str = "", score: float = 0) -> None:
         message = reason if reason else "Click OK to exit"
         

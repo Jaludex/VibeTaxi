@@ -9,6 +9,8 @@ from src.states.game.Menus.TitleScreenState import TitleScreenState
 
 
 class OpeningState(BaseState):
+    discord_presence = {"details": "Starting up", "state": "Watching intro"}
+
     def enter(self, enter_params: Optional[Dict[str, Any]] = None) -> None:
         self.slides: List[Dict[str, Any]] = [
         {

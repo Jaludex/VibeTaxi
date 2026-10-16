@@ -19,6 +19,7 @@ DEFAULTS: Dict[str, Any] = {
     "physics_debug": False,
     "pause_on_focus_loss": True,
     "discord_rpc": True,
+    "fps_limit": 60,
 }
 
 _config: Dict[str, Any] = {}
@@ -44,6 +45,19 @@ def load() -> Dict[str, Any]:
     return _config
 
 
+def get_effective_fps() -> int:
+    """Resolve the numerical FPS limit from the current configuration."""
+    val = get("fps_limit", 60)
+    if val == "auto":
+        from src import display
+        return display.get_monitor_refresh_rate()
+    try:
+        parsed = int(val)
+        return max(0, parsed)
+    except (ValueError, TypeError):
+        return 60
+
+
 def _apply_to_settings() -> None:
     """Synchronize configuration values with global settings attributes."""
     if _config.get("language") is not None:
@@ -51,6 +65,8 @@ def _apply_to_settings() -> None:
     settings.GAMEPAD_DEADZONE = float(_config.get("gamepad_deadzone", 0.25))
     settings.SHOW_FPS = bool(_config.get("show_fps", False))
     settings.PHYSICS_DEBUG = bool(_config.get("physics_debug", False))
+    settings.FPS_LIMIT = _config.get("fps_limit", 60)
+    settings.EFFECTIVE_FPS = get_effective_fps()
 
 
 def get(key: str, default: Any = None) -> Any:

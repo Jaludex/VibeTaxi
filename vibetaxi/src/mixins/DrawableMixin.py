@@ -37,7 +37,10 @@ class DrawableMixin:
         angle = getattr(self, "angle", None)
         flipped = getattr(self, "flipped", False)
         alpha = getattr(self, "alpha", 255)
-        center_x, center_y = self.x, self.y
+        if hasattr(self, "get_render_coords"):
+            center_x, center_y = self.get_render_coords()
+        else:
+            center_x, center_y = self.x, self.y
         
         has_rotation = False
         degrees = 0.0
@@ -48,7 +51,6 @@ class DrawableMixin:
             except Exception:
                 angle_offset = getattr(self, "angle_offset", 0)
                 degrees = math.degrees(-angle) + angle_offset
-                center_x, center_y = self.x, self.y
             
             norm_deg = round(degrees % 360, 1)
             if norm_deg not in (0.0, 360.0):

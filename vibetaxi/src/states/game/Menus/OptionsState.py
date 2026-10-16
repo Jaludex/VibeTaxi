@@ -27,6 +27,8 @@ from src.themes import BUTTON_THEME, LABEL_THEME, PANEL_THEME
 
 
 class OptionsState(BaseState):
+    discord_presence = {"details": "Settings", "state": "Tuning options"}
+
     def __init__(self, state_machine: Any, on_close: Optional[Callable] = None) -> None:
         super().__init__(state_machine)
         self.on_close_callback = on_close
@@ -241,6 +243,17 @@ class OptionsState(BaseState):
             theme=BUTTON_THEME,
         )
 
+        # FPS Limit button
+        self.btn_fps = Button(
+            self.panel_x + self.panel_width - 150,
+            self.panel_y + g_y_off + g_dy * 4 + 6,
+            120,
+            24,
+            self._get_fps_button_text(),
+            on_click=self._on_fps_click,
+            theme=BUTTON_THEME,
+        )
+
         self.game_widgets = [
             self.chk_fullscreen, self.lbl_fullscreen,
             self.lbl_deadzone, self.sld_deadzone, self.vis_deadzone,
@@ -249,6 +262,7 @@ class OptionsState(BaseState):
             self.chk_focus, self.lbl_focus,
             self.chk_discord, self.lbl_discord,
             self.btn_language,
+            self.btn_fps,
         ]
 
         self.container = SpatialContainer(0, 0, settings.VIRTUAL_WIDTH, settings.VIRTUAL_HEIGHT)
@@ -315,6 +329,40 @@ class OptionsState(BaseState):
         self._build_ui()
         self.update_ui_y()
 
+    def _get_fps_button_text(self) -> str:
+        val = config.get("fps_limit", 60)
+        label = tr("opt_fps_limit", default="FPS")
+        if val == "auto":
+            hz = display.get_monitor_refresh_rate()
+            return f"{label}: {tr('fps_auto')} ({hz}Hz)"
+        elif val == 0 or val == "0" or val == "unlimited":
+            return f"{label}: {tr('fps_uncapped')}"
+        else:
+            return f"{label}: {val}"
+
+    def _on_fps_click(self) -> None:
+        audio.play_sfx("press")
+        choices = [30, 60, 90, 120, 144, "auto", 0]
+        current = config.get("fps_limit", 60)
+        if current not in choices:
+            try:
+                current = int(current)
+                if current not in choices:
+                    current = 60
+            except Exception:
+                current = 60
+        idx = choices.index(current)
+        next_val = choices[(idx + 1) % len(choices)]
+
+        config.set("fps_limit", next_val, auto_save=True)
+        import sys
+        main_module = sys.modules.get("__main__")
+        game = getattr(main_module, "game", None)
+        if game and hasattr(game, "set_fps_limit"):
+            game.set_fps_limit(next_val, save=True)
+
+        self.btn_fps.text = self._get_fps_button_text()
+
     def _on_reset(self) -> None:
         audio.play_sfx("press")
         config.reset_defaults()
@@ -336,11 +384,14 @@ class OptionsState(BaseState):
         self.chk_debug.checked = bool(config.get("physics_debug", False))
         self.chk_focus.checked = bool(config.get("pause_on_focus_loss", True))
         self.chk_discord.checked = bool(config.get("discord_rpc", True))
+        self.btn_fps.text = self._get_fps_button_text()
         import sys
         main_module = sys.modules.get("__main__")
         game = getattr(main_module, "game", None)
         if game and hasattr(game, "discord_rpc"):
             game.discord_rpc.set_enabled(True)
+        if game and hasattr(game, "set_fps_limit"):
+            game.set_fps_limit(60, save=True)
 
     def enter(self, enter_params: Optional[dict] = None) -> None:
         self.fade_alpha = 0.0

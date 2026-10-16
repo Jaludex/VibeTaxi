@@ -115,6 +115,14 @@ class PlayState(BaseState):
         else:
             self.danger_color = (255, 0, 0)
 
+    def get_discord_presence(self) -> dict:
+        if hasattr(self, "game_rule_strategy") and hasattr(self.game_rule_strategy, "get_discord_presence"):
+            return self.game_rule_strategy.get_discord_presence(self)
+        return {
+            "details": "In-game",
+            "state": "Driving through the city",
+        }
+
     def fixed_update(self) -> None:
         if getattr(self, "game_over_triggered", False):
             return
@@ -142,7 +150,15 @@ class PlayState(BaseState):
         self.taxi.update(dt)
         self.city_map.update(dt, self.camera)
 
-        self.camera.update(dt)
+        if hasattr(self.taxi, "get_render_coords"):
+            rx, ry = self.taxi.get_render_coords()
+            real_x, real_y = self.taxi.x, self.taxi.y
+            self.taxi.x, self.taxi.y = rx, ry
+            self.camera.update(dt)
+            self.taxi.x, self.taxi.y = real_x, real_y
+        else:
+            self.camera.update(dt)
+
         self.radio.update(dt)
         
         

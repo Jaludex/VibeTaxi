@@ -172,96 +172,27 @@ class DiscordRPCManager:
         if not PYPRESENCE_AVAILABLE or not self._running or current_state is None:
             return
 
-        state_name = current_state.__class__.__name__
-        details = "VibeTaxi"
-        state = "Driving around"
-        large_image = "logo"
-        large_text = "VibeTaxi"
-        small_image: Optional[str] = None
-        small_text: Optional[str] = None
+        presence_data = None
+        if hasattr(current_state, "get_discord_presence"):
+            try:
+                presence_data = current_state.get_discord_presence()
+            except Exception:
+                presence_data = None
+        elif hasattr(current_state, "discord_presence"):
+            presence_data = getattr(current_state, "discord_presence")
 
-        if state_name == "PlayState":
-            strategy = getattr(current_state, "game_rule_strategy", None)
-            strat_name = strategy.__class__.__name__ if strategy else ""
+        if not isinstance(presence_data, dict):
+            presence_data = {
+                "details": "VibeTaxi",
+                "state": "Driving around",
+            }
 
-            if strat_name == "WorkdayStrategy":
-                day = int(getattr(strategy, "day", 1))
-                money = float(getattr(strategy, "money", 0.0))
-                fee = float(getattr(strategy, "fee", 80.0))
-
-                details = f"Workday - Day {day}"
-                pax = getattr(current_state, "active_passenger", None)
-                if pax is not None:
-                    pax_def = getattr(pax, "definition", {})
-                    pax_name = pax_def.get("name", "Passenger")
-                    state = f"Carrying {pax_name} | ${money:.0f} earned"
-                else:
-                    state = f"Cruising | ${money:.0f} / Goal ${fee:.0f}"
-
-                small_image = "workday"
-                small_text = f"Day {day}"
-
-            elif strat_name == "ArcadeStrategy":
-                score = int(getattr(strategy, "score", 0))
-                delivered = int(getattr(strategy, "passengers_delivered", 0))
-
-                details = "Arcade Mode"
-                state = f"Score: {score} | Passengers: {delivered}"
-
-                small_image = "arcade"
-                small_text = "Arcade"
-
-            elif strat_name == "ZenStrategy":
-                details = "Zen Mode"
-                state = "Cruising the city (No limits)"
-                small_image = "zen"
-                small_text = "Zen Mode"
-
-            else:
-                details = "In-game"
-                state = "Driving through the city"
-
-        elif state_name == "TutorialPlayState":
-            details = "Tutorial"
-            state = "Learning the ropes"
-
-        elif state_name == "PauseState":
-            details = "Paused"
-            state = "Taking a break"
-
-        elif state_name == "TitleScreenState":
-            details = "Main Menu"
-            state = "Selecting destination"
-
-        elif state_name == "ModeSelectionState":
-            details = "Mode Selection"
-            state = "Choosing a game mode"
-
-        elif state_name in ("OptionsState", "LanguageSelectionState"):
-            details = "Settings"
-            state = "Tuning options"
-
-        elif state_name == "RecordsState":
-            details = "Hall of Fame"
-            state = "Checking top scores"
-
-        elif state_name == "EndOfDayState":
-            day = int(getattr(current_state, "day", 1))
-            money = float(getattr(current_state, "money", 0.0))
-            details = f"End of Day {day}"
-            state = f"Earnings: ${money:.0f}"
-
-        elif state_name == "GameOverState":
-            details = "Game Over"
-            state = "Shift ended"
-
-        elif state_name == "NewRecordState":
-            details = "New High Score!"
-            state = "Registering name in Hall of Fame"
-
-        elif state_name == "OpeningState":
-            details = "Starting up"
-            state = "Watching intro"
+        details = presence_data.get("details", "VibeTaxi")
+        state = presence_data.get("state", "Driving around")
+        large_image = presence_data.get("large_image", "logo")
+        large_text = presence_data.get("large_text", "VibeTaxi")
+        small_image: Optional[str] = presence_data.get("small_image")
+        small_text: Optional[str] = presence_data.get("small_text")
 
         payload: Dict[str, Any] = {
             "details": details,

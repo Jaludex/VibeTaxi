@@ -14,6 +14,8 @@ from gale.ui.theme import Theme
 from src.states.game.Menus.TitleScreenState import TitleScreenState
 
 class RecordsState(BaseState):
+    discord_presence = {"details": "Hall of Fame", "state": "Checking top scores"}
+
     def __init__(self, state_machine: Any) -> None:
         super().__init__(state_machine)
         

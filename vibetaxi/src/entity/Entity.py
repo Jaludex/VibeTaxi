@@ -89,13 +89,21 @@ class Entity(DrawableMixin):
 
         return self.body
 
-    def sync_body_to_entity(self) -> None:
+    def sync_body_to_entity(self, is_fixed_step: bool = False) -> None:
         if self.body is None:
             return
 
         pos = self.body.position
-        self.x = float(pos.x)
-        self.y = float(pos.y)
+        new_x = float(pos.x)
+        new_y = float(pos.y)
+
+        if is_fixed_step:
+            self._prev_x = getattr(self, "x", new_x)
+            self._prev_y = getattr(self, "y", new_y)
+            self._prev_angle = getattr(self, "angle", 0.0)
+
+        self.x = new_x
+        self.y = new_y
 
         if getattr(self, "free_physics", False):
             if hasattr(self, "angle"):
@@ -146,11 +154,29 @@ class Entity(DrawableMixin):
 
         return poly
 
+    def get_render_coords(self) -> tuple[float, float]:
+        import settings
+        alpha = getattr(settings, "RENDER_ALPHA", 1.0)
+        if alpha >= 1.0 or not hasattr(self, "_prev_x"):
+            return self.x, self.y
+        rx = self._prev_x + (self.x - self._prev_x) * alpha
+        ry = self._prev_y + (self.y - self._prev_y) * alpha
+        return rx, ry
+
+    def get_render_angle(self) -> float:
+        import math, settings
+        angle = getattr(self, "angle", 0.0)
+        alpha = getattr(settings, "RENDER_ALPHA", 1.0)
+        if alpha >= 1.0 or not hasattr(self, "_prev_angle"):
+            return angle
+        diff = (angle - self._prev_angle + math.pi) % (2 * math.pi) - math.pi
+        return self._prev_angle + diff * alpha
+
     def get_render_center_and_degrees(self):
         import math
         import pygame
-        center_x, center_y = self.x, self.y
-        angle = getattr(self, 'angle', 0.0)
+        center_x, center_y = self.get_render_coords()
+        angle = self.get_render_angle()
         angle_offset = getattr(self, 'angle_offset', 0)
         degrees = math.degrees(-angle) + angle_offset
 
@@ -159,8 +185,8 @@ class Entity(DrawableMixin):
         if pivot_x != 0 or pivot_y != 0:
             offset = pygame.math.Vector2(pivot_x, pivot_y)
             rotated_offset = offset.rotate(-degrees)
-            center_x = (self.x + pivot_x) - rotated_offset.x
-            center_y = (self.y + pivot_y) - rotated_offset.y
+            center_x = (center_x + pivot_x) - rotated_offset.x
+            center_y = (center_y + pivot_y) - rotated_offset.y
 
         return center_x, center_y, degrees
 

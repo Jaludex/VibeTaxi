@@ -14,6 +14,12 @@ class BaseRuleStrategy:
     def should_respawn_passengers(self, current_count: int) -> bool:
         return False
 
+    def get_discord_presence(self, play_state=None) -> dict:
+        return {
+            "details": "In-game",
+            "state": "Driving through the city",
+        }
+
     def render_ui(self, surface, font, x, y):
         # Allow the strategy to render its own stats (time, score, money)
         pass

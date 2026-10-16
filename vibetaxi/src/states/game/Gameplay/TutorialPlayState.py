@@ -13,6 +13,12 @@ from src.i18n import tr
 import settings
 
 class TutorialPlayState(PlayState):
+    def get_discord_presence(self) -> dict:
+        return {
+            "details": "Tutorial",
+            "state": "Learning the ropes",
+        }
+
     def enter(self, **enter_params: Dict[str, Any]) -> None:
         # Force tutorial map
         if "city_map" not in enter_params or enter_params["city_map"] is None:

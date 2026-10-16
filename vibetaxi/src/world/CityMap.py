@@ -269,7 +269,7 @@ class CityMap:
                         entity._damping_active = True
                     except Exception:
                         pass
-            entity.sync_body_to_entity()
+            entity.sync_body_to_entity(is_fixed_step=True)
 
     def update(self, dt: float, camera: Any = None) -> None:
         for prop in self.props:

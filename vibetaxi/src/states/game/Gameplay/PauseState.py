@@ -13,6 +13,8 @@ from gale.ui.label import Label
 from gale.ui.theme import Theme
 
 class PauseState(BaseState):
+    discord_presence = {"details": "Paused", "state": "Taking a break"}
+
     def __init__(self, state_machine: Any) -> None:
         super().__init__(state_machine)
         self.fade_alpha = 0.0

@@ -19,6 +19,8 @@ from src.states.game.Gameplay.TutorialPlayState import TutorialPlayState
 from src.i18n import tr
 
 class ModeSelectionState(BaseState):
+    discord_presence = {"details": "Mode Selection", "state": "Choosing a game mode"}
+
     def __init__(self, state_machine: Any) -> None:
         super().__init__(state_machine)
         self.fade_alpha = 0.0

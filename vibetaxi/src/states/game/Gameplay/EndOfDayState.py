@@ -29,6 +29,12 @@ class EndOfDayState(BaseState):
         self.alpha = 0
         self.ui = None
 
+    def get_discord_presence(self) -> dict:
+        return {
+            "details": f"End of Day {self.day}",
+            "state": f"Earnings: ${self.money:.0f}",
+        }
+
     def enter(self, **enter_params: Dict[str, Any]) -> None:
         from src import audio
         audio.play_sfx("win")

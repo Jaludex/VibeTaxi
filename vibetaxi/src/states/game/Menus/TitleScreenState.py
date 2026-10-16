@@ -15,6 +15,7 @@ from src.i18n import tr
 
 
 class TitleScreenState(BaseState):
+    discord_presence = {"details": "Main Menu", "state": "Selecting destination"}
     PHASE_FADE_IN = 0
     PHASE_PAN = 1
     PHASE_FADE_OUT = 2

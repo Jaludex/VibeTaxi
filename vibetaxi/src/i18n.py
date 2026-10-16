@@ -50,6 +50,9 @@ texts = {
         "opt_debug_visuals": "Debug Visuals",
         "opt_pause_on_focus_loss": "Pause on Focus Loss",
         "opt_discord_rpc": "Discord Presence",
+        "opt_fps_limit": "FPS",
+        "fps_auto": "Auto",
+        "fps_uncapped": "Unlimited",
         "btn_reset_defaults": "Reset Defaults",
         
         # Messages & Texts
@@ -275,6 +278,9 @@ texts = {
         "opt_debug_visuals": "Visuales Debug",
         "opt_pause_on_focus_loss": "Pausar al Perder Foco",
         "opt_discord_rpc": "Presencia en Discord",
+        "opt_fps_limit": "FPS",
+        "fps_auto": "Auto",
+        "fps_uncapped": "Ilimitado",
         "btn_reset_defaults": "Restablecer",
         
         # Messages & Texts

@@ -11,6 +11,8 @@ from src.themes import BUTTON_THEME
 from src.i18n import texts, tr
 
 class LanguageSelectionState(BaseState):
+    discord_presence = {"details": "Settings", "state": "Tuning options"}
+
     def __init__(self, state_machine, on_close=None):
         super().__init__(state_machine)
         self.on_close = on_close

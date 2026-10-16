@@ -14,6 +14,8 @@ from gale.ui.theme import Theme
 from gale.ui.text_input import TextInput
 
 class NewRecordState(BaseState):
+    discord_presence = {"details": "New High Score!", "state": "Registering name in Hall of Fame"}
+
     def __init__(self, state_machine: Any, mode: str, score: float, records: dict, next_state_callback: callable) -> None:
         super().__init__(state_machine)
         self.mode = mode

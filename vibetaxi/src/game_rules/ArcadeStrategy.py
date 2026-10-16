@@ -39,6 +39,16 @@ class ArcadeStrategy(BaseRuleStrategy):
     def get_start_text(self) -> str:
         return tr("mode_arcade_initial_text")
 
+    def get_discord_presence(self, play_state=None) -> dict:
+        score = int(getattr(self, "score", 0))
+        delivered = int(getattr(self, "passengers_delivered", 0))
+        return {
+            "details": "Arcade Mode",
+            "state": f"Score: {score} | Passengers: {delivered}",
+            "small_image": "arcade",
+            "small_text": "Arcade",
+        }
+
     def on_passenger_delivered(self, passenger, distance: float):
         import settings
         self.passengers_delivered += 1
