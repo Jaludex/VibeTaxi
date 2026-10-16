@@ -19,3 +19,23 @@ class Car(Entity):
         
         self.target_x = x
         self.target_y = y
+
+    def penalize_speed(self, factor: float = 0.5) -> None:
+        self.speed *= factor
+        if hasattr(self, "vx"):
+            self.vx *= factor
+        if hasattr(self, "vy"):
+            self.vy *= factor
+        if getattr(self, "body", None) is not None:
+            try:
+                vel = self.body.velocity
+                self.body.velocity = (vel[0] * factor, vel[1] * factor)
+            except Exception:
+                pass
+        sm = getattr(self, "state_machine", None)
+        if sm is not None and getattr(sm, "current", None) is not None:
+            curr = sm.current
+            if hasattr(curr, "slide_vx"):
+                curr.slide_vx *= factor
+            if hasattr(curr, "slide_vy"):
+                curr.slide_vy *= factor

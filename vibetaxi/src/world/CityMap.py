@@ -87,18 +87,32 @@ class CityMap:
             except Exception:
                 pass
 
+        # Helper to penalize vehicle speed, vector velocity, and physical body momentum
+        def penalize_vehicle(vehicle, factor=0.5):
+            if hasattr(vehicle, "penalize_speed"):
+                vehicle.penalize_speed(factor)
+            else:
+                try:
+                    if hasattr(vehicle, "speed"):
+                        vehicle.speed *= factor
+                    if hasattr(vehicle, "vx"):
+                        vehicle.vx *= factor
+                    if hasattr(vehicle, "vy"):
+                        vehicle.vy *= factor
+                    if getattr(vehicle, "body", None) is not None:
+                        vel = vehicle.body.velocity
+                        vehicle.body.velocity = (vel[0] * factor, vel[1] * factor)
+                except Exception:
+                    pass
+
         # If a is a Prop and b is a Car-like, notify prop and penalize vehicle speed
         if Prop is not None and Car is not None:
             if isinstance(a, Prop) and (isinstance(b, Car) or hasattr(b, 'speed')):
                 # Increase friction/damping so prop doesn't fly
                 if getattr(a, 'body', None) is not None:
                     increase_friction(a.body, friction=2.0, linear_damping=3.0)
-                # Penalize vehicle speed
-                try:
-                    if hasattr(b, 'speed'):
-                        b.speed *= 0.5
-                except Exception:
-                    pass
+                # Penalize vehicle speed and momentum
+                penalize_vehicle(b, 0.5)
                 a.on_collide(b)
                 if type(b).__name__ == "Taxi":
                     play_crash_sound("crash_solid", 0.2)
@@ -107,11 +121,7 @@ class CityMap:
             elif isinstance(b, Prop) and (isinstance(a, Car) or hasattr(a, 'speed')):
                 if getattr(b, 'body', None) is not None:
                     increase_friction(b.body, friction=2.0, linear_damping=3.0)
-                try:
-                    if hasattr(a, 'speed'):
-                        a.speed *= 0.5
-                except Exception:
-                    pass
+                penalize_vehicle(a, 0.5)
                 b.on_collide(a)
                 if type(a).__name__ == "Taxi":
                     play_crash_sound("crash_solid", 0.2)
@@ -120,10 +130,7 @@ class CityMap:
         else:
             # Fallback: if user_data types not mapped but entity-like
             if hasattr(a, 'on_collide') and hasattr(b, 'speed'):
-                try:
-                    b.speed *= 0.5
-                except Exception:
-                    pass
+                penalize_vehicle(b, 0.5)
                 try:
                     a.on_collide(b)
                 except Exception:
@@ -133,10 +140,7 @@ class CityMap:
                 else:
                     play_crash_sound("crash_solid", 0.06)
             elif hasattr(b, 'on_collide') and hasattr(a, 'speed'):
-                try:
-                    a.speed *= 0.5
-                except Exception:
-                    pass
+                penalize_vehicle(a, 0.5)
                 try:
                     b.on_collide(a)
                 except Exception:
@@ -157,8 +161,8 @@ class CityMap:
             if is_a_car and is_b_car:
                 impact_x = (a.x + b.x) / 2
                 impact_y = (a.y + b.y) / 2
-                a.speed *= 0.5
-                b.speed *= 0.5
+                penalize_vehicle(a, 0.5)
+                penalize_vehicle(b, 0.5)
                 self.add_particle_emitter(ParticleEmitter.create_sparks(impact_x, impact_y))
                 if hasattr(a, 'on_collide'): a.on_collide(b)
                 if hasattr(b, 'on_collide'): b.on_collide(a)
