@@ -89,7 +89,7 @@ class Entity(DrawableMixin):
 
         return self.body
 
-    def sync_body_to_entity(self, is_fixed_step: bool = False) -> None:
+    def sync_body_to_entity(self) -> None:
         if self.body is None:
             return
 
@@ -97,10 +97,9 @@ class Entity(DrawableMixin):
         new_x = float(pos.x)
         new_y = float(pos.y)
 
-        if is_fixed_step:
-            self._prev_x = getattr(self, "x", new_x)
-            self._prev_y = getattr(self, "y", new_y)
-            self._prev_angle = getattr(self, "angle", 0.0)
+        self._prev_x = getattr(self, "x", new_x)
+        self._prev_y = getattr(self, "y", new_y)
+        self._prev_angle = getattr(self, "angle", 0.0)
 
         self.x = new_x
         self.y = new_y
@@ -203,8 +202,6 @@ class Entity(DrawableMixin):
 
     def update(self, dt: float) -> None:
         if self.body is not None:
-            self.sync_body_to_entity()
-
             if getattr(self, "free_physics", False):
                 return
             
