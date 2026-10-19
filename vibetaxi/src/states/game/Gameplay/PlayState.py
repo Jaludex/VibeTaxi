@@ -30,7 +30,7 @@ class PlayState(BaseState):
             
         self.city_map = enter_params.get("city_map")
         if self.city_map is None:
-            self.city_map = CityMap("city")
+            self.city_map = CityMap("city", enable_pedestrians=True)
 
         self.tilemap = self.city_map.tilemap
 
@@ -45,6 +45,7 @@ class PlayState(BaseState):
 
         self.taxi.tilemap = self.city_map.tilemap
         self.taxi.city_map = self.city_map
+        self.city_map.taxi = self.taxi
         self.taxi.invincible = getattr(self.game_rule_strategy, "invincible", False)
         self.taxi.set_physics(
             self.city_map.physics_world,
@@ -195,6 +196,70 @@ class PlayState(BaseState):
         for p in self.nearby_passengers:
             p.update(dt)
 
+        # Check collision between Vehicles (Taxi + Traffic Cars) and Pedestrian NPCs
+        if hasattr(self.city_map, "pedestrian_system") and self.city_map.pedestrian_system:
+            taxi_rect = self.taxi.get_collision_rect()
+            taxi_x = self.taxi.x
+            taxi_y = self.taxi.y
+            
+            cam_x = getattr(self.camera, 'x', taxi_x)
+            cam_y = getattr(self.camera, 'y', taxi_y)
+            view_margin_x = (settings.VIRTUAL_WIDTH / 2) + 50
+            view_margin_y = (settings.VIRTUAL_HEIGHT / 2) + 50
+            
+            traffic_cars = []
+            if hasattr(self.city_map, "traffic_system") and self.city_map.traffic_system:
+                traffic_cars = self.city_map.traffic_system.active_cars
+            
+            for npc in self.city_map.pedestrian_system.active_npcs:
+                if npc.state in ("hit", "down", "getting_up", "dead"):
+                    continue
+                
+                # Check collision with Taxi
+                if abs(npc.x - taxi_x) <= 35 and abs(npc.y - taxi_y) <= 35:
+                    npc_rect = npc.get_collision_rect()
+                    if taxi_rect.colliderect(npc_rect):
+                        # Trigger knockback toss animation
+                        npc.on_hit_by_car(self.taxi.x, self.taxi.y, car_speed=getattr(self.taxi, "speed", 50.0))
+                        
+                        # Play collision sound and emit impact sparks
+                        if not getattr(self.city_map, "muted", False) and "crash_car" in settings.SOUNDS:
+                            crash_snd = settings.SOUNDS["crash_car"]
+                            crash_snd.set_volume(0.35)
+                            crash_snd.play()
+                        self.city_map.add_particle_emitter(ParticleEmitter.create_sparks(npc.x, npc.y))
+                        
+                        # Slow down taxi slightly
+                        self.taxi.speed *= 0.8
+                        
+                        # Penalize passenger comfort if riding
+                        if self.active_passenger and self.active_passenger.is_riding():
+                            self.active_passenger.on_collision(hud=self.game_rule_strategy.get_hud())
+                        continue
+
+                # Cull collision check with traffic cars if NPC is not on screen!
+                is_on_screen = (abs(npc.x - cam_x) <= view_margin_x and 
+                                abs(npc.y - cam_y) <= view_margin_y)
+                if not is_on_screen:
+                    continue
+
+                # Check collision with Traffic Cars (only for on-screen NPCs)
+                for car in traffic_cars:
+                    if abs(npc.x - car.x) <= 35 and abs(npc.y - car.y) <= 35:
+                        npc_rect = npc.get_collision_rect()
+                        car_rect = car.get_collision_rect()
+                        if car_rect.colliderect(npc_rect):
+                            npc.on_hit_by_car(car.x, car.y, car_speed=getattr(car, "speed", 30.0))
+                            car.speed = 0.0
+                            car.is_braking = True
+                            
+                            if not getattr(self.city_map, "muted", False) and "crash_car" in settings.SOUNDS:
+                                crash_snd = settings.SOUNDS["crash_car"]
+                                crash_snd.set_volume(0.25)
+                                crash_snd.play()
+                            self.city_map.add_particle_emitter(ParticleEmitter.create_sparks(npc.x, npc.y))
+                            break
+
         if self.active_passenger:
             self.update_active_passenger(dt)
         else:
@@ -342,6 +407,7 @@ class PlayState(BaseState):
         if render_active_passenger:
             self.active_passenger.render(surface, self.camera)
             
+        self.city_map.render_pedestrians(surface, self.camera)
         self.city_map.render_traffic(surface, self.camera)
         self.taxi.render(surface, self.camera)
         for emitter in self.city_map.particle_emitters:

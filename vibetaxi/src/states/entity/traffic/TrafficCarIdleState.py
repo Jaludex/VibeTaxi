@@ -25,7 +25,10 @@ class TrafficCarIdleState(BaseState):
                 pass
 
     def update(self, dt):
-        pass
+        # If not permanently crashed and has a route/target, resume driving!
+        if not getattr(self.entity, "crashed", False):
+            if getattr(self.entity, "next_node_name", None) is not None or getattr(self.entity, "target_x", None) is not None:
+                self.sm.change('drive')
 
     def exit(self):
         self.entity.free_physics = False

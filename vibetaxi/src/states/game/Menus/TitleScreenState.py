@@ -396,6 +396,7 @@ class TitleScreenState(BaseState):
         if self.city_map and self.camera:
             self.city_map.render_layers(surface, self.camera, settings.TILED_GROUND_LAYERS)
             self.city_map.render_layers(surface, self.camera, settings.TILED_MIDDLE_LAYERS)
+            self.city_map.render_pedestrians(surface, self.camera)
             self.city_map.render_traffic(surface, self.camera)
             self.city_map.render_layers(surface, self.camera, settings.TILED_UPPER_NO_SHADOW_LAYERS)
             self.city_map.render_layers(surface, self.camera, settings.TILED_UPPER_SHADOW_LAYERS)
