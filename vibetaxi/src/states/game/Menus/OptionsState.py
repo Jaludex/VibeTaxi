@@ -232,7 +232,8 @@ class OptionsState(BaseState):
         self.lbl_discord = Label(col_right_x + 22, self.panel_y + g_y_off + g_dy * 2 + 10, tr("opt_discord_rpc"), theme=LABEL_THEME)
 
         # Language button
-        lang_name = tr("language_name", default=config.get("language", "es").upper())
+        lang_code = config.get("language") or getattr(settings, "LANGUAGE", "es") or "es"
+        lang_name = tr("language_name", default=lang_code.upper())
         self.btn_language = Button(
             self.panel_x + self.panel_width - 150,
             self.panel_y + g_y_off + g_dy * 3 + 6,

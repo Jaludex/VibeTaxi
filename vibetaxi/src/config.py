@@ -7,7 +7,7 @@ from typing import Any, Dict
 import settings
 
 DEFAULTS: Dict[str, Any] = {
-    "language": "es",
+    "language": None,
     "master_volume": 1.0,
     "music_volume": 0.8,
     "sfx_volume": 1.0,
@@ -60,8 +60,7 @@ def get_effective_fps() -> int:
 
 def _apply_to_settings() -> None:
     """Synchronize configuration values with global settings attributes."""
-    if _config.get("language") is not None:
-        settings.LANGUAGE = _config["language"]
+    settings.LANGUAGE = _config.get("language")
     settings.GAMEPAD_DEADZONE = float(_config.get("gamepad_deadzone", 0.25))
     settings.SHOW_FPS = bool(_config.get("show_fps", False))
     settings.PHYSICS_DEBUG = bool(_config.get("physics_debug", False))
@@ -101,7 +100,7 @@ def save() -> None:
 def reset_defaults() -> None:
     global _config
     # Keep current language when resetting other defaults
-    current_lang = _config.get("language", DEFAULTS["language"])
+    current_lang = _config.get("language") or "es"
     _config = dict(DEFAULTS)
     _config["language"] = current_lang
     _apply_to_settings()

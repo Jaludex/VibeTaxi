@@ -220,7 +220,6 @@ class PlayState(BaseState):
                 if getattr(self, "_click_emitter", None) is None or not getattr(self._click_emitter, "_is_emitting", False):
                     if getattr(self, "_click_emitter", None) is not None:
                         self._click_emitter.stop()
-                    from src.ParticleEmitter import ParticleEmitter
                     self._click_emitter = ParticleEmitter.create_mouse_click(target_x, target_y)
                     self.city_map.particle_emitters.append(self._click_emitter)
                 
