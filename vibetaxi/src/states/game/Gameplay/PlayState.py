@@ -19,6 +19,8 @@ from gale.timer import Timer
 from src.definitions.comfort import COMFORT_RULES
 from src.mouse_tools import physical_to_virtual
 from src.ParticleEmitter import ParticleEmitter
+from src.i18n import tr
+from src.states.game.Menus.MessageBoxState import MessageBoxState
 
 class PlayState(BaseState):
     def enter(self, **enter_params: Dict[str, Any]) -> None:
@@ -30,7 +32,7 @@ class PlayState(BaseState):
             
         self.city_map = enter_params.get("city_map")
         if self.city_map is None:
-            self.city_map = CityMap("city")
+            self.city_map = CityMap("city", enable_pedestrians=True)
 
         self.tilemap = self.city_map.tilemap
 
@@ -45,6 +47,7 @@ class PlayState(BaseState):
 
         self.taxi.tilemap = self.city_map.tilemap
         self.taxi.city_map = self.city_map
+        self.city_map.taxi = self.taxi
         self.taxi.invincible = getattr(self.game_rule_strategy, "invincible", False)
         self.taxi.set_physics(
             self.city_map.physics_world,
@@ -104,8 +107,23 @@ class PlayState(BaseState):
         self.start_text = self.game_rule_strategy.get_start_text()
         
 
+        self.tutorial_mode = enter_params.get("tutorial_mode", False)
+        if self.tutorial_mode:
+            self.tutorial_step = 1
+            self.tutorial_vibe_shown = False
+            self._tutorial_initial_time = getattr(self.game_rule_strategy, "time_remaining", None)
+
+        def on_intro_finished():
+            if getattr(self, "tutorial_mode", False) and not getattr(self, "exited", False):
+                self.reset_inputs()
+                self.state_machine.push(MessageBoxState(
+                    self.state_machine,
+                    title=tr("tutorial_title"),
+                    message=tr("tutorial_integrated_welcome")
+                ))
+
         def fade_out_text():
-            Timer.tween(1.0, [(self, {"day_text_alpha": 0.0})])
+            Timer.tween(1.0, [(self, {"day_text_alpha": 0.0})], on_finish=on_intro_finished)
             
         Timer.tween(1.0, [(self, {"day_text_alpha": 255.0, "fade_overlay_alpha": 0.0})], on_finish=lambda: Timer.after(2.0, fade_out_text))
 
@@ -163,6 +181,9 @@ class PlayState(BaseState):
         
         
         self.game_rule_strategy.update(dt)
+        if getattr(self, "tutorial_mode", False):
+            if hasattr(self.game_rule_strategy, "time_remaining") and getattr(self, "_tutorial_initial_time", None) is not None:
+                self.game_rule_strategy.time_remaining = self._tutorial_initial_time
         
         if hasattr(self.game_rule_strategy, "should_respawn_passengers") and self.game_rule_strategy.should_respawn_passengers(len(self.map_passengers)):
             new_passengers = self.city_map.generate_passengers(spawn_chance=0.3)
@@ -250,6 +271,70 @@ class PlayState(BaseState):
         for p in self.nearby_passengers:
             p.update(dt)
 
+        # Check collision between Vehicles (Taxi + Traffic Cars) and Pedestrian NPCs
+        if hasattr(self.city_map, "pedestrian_system") and self.city_map.pedestrian_system:
+            taxi_rect = self.taxi.get_collision_rect()
+            taxi_x = self.taxi.x
+            taxi_y = self.taxi.y
+            
+            cam_x = getattr(self.camera, 'x', taxi_x)
+            cam_y = getattr(self.camera, 'y', taxi_y)
+            view_margin_x = (settings.VIRTUAL_WIDTH / 2) + 50
+            view_margin_y = (settings.VIRTUAL_HEIGHT / 2) + 50
+            
+            traffic_cars = []
+            if hasattr(self.city_map, "traffic_system") and self.city_map.traffic_system:
+                traffic_cars = self.city_map.traffic_system.active_cars
+            
+            for npc in self.city_map.pedestrian_system.active_npcs:
+                if npc.state in ("hit", "down", "getting_up", "dead"):
+                    continue
+                
+                # Check collision with Taxi
+                if abs(npc.x - taxi_x) <= 35 and abs(npc.y - taxi_y) <= 35:
+                    npc_rect = npc.get_collision_rect()
+                    if taxi_rect.colliderect(npc_rect):
+                        # Trigger knockback toss animation
+                        npc.on_hit_by_car(self.taxi.x, self.taxi.y, car_speed=getattr(self.taxi, "speed", 50.0))
+                        
+                        # Play collision sound and emit impact sparks
+                        if not getattr(self.city_map, "muted", False) and "crash_car" in settings.SOUNDS:
+                            crash_snd = settings.SOUNDS["crash_car"]
+                            crash_snd.set_volume(0.35)
+                            crash_snd.play()
+                        self.city_map.add_particle_emitter(ParticleEmitter.create_sparks(npc.x, npc.y))
+                        
+                        # Slow down taxi slightly
+                        self.taxi.speed *= 0.8
+                        
+                        # Penalize passenger comfort if riding
+                        if self.active_passenger and self.active_passenger.is_riding():
+                            self.active_passenger.on_collision(hud=self.game_rule_strategy.get_hud())
+                        continue
+
+                # Cull collision check with traffic cars if NPC is not on screen!
+                is_on_screen = (abs(npc.x - cam_x) <= view_margin_x and 
+                                abs(npc.y - cam_y) <= view_margin_y)
+                if not is_on_screen:
+                    continue
+
+                # Check collision with Traffic Cars (only for on-screen NPCs)
+                for car in traffic_cars:
+                    if abs(npc.x - car.x) <= 35 and abs(npc.y - car.y) <= 35:
+                        npc_rect = npc.get_collision_rect()
+                        car_rect = car.get_collision_rect()
+                        if car_rect.colliderect(npc_rect):
+                            npc.on_hit_by_car(car.x, car.y, car_speed=getattr(car, "speed", 30.0))
+                            car.speed = 0.0
+                            car.is_braking = True
+                            
+                            if not getattr(self.city_map, "muted", False) and "crash_car" in settings.SOUNDS:
+                                crash_snd = settings.SOUNDS["crash_car"]
+                                crash_snd.set_volume(0.25)
+                                crash_snd.play()
+                            self.city_map.add_particle_emitter(ParticleEmitter.create_sparks(npc.x, npc.y))
+                            break
+
         if self.active_passenger:
             self.update_active_passenger(dt)
         else:
@@ -316,7 +401,17 @@ class PlayState(BaseState):
                     if isinstance(self.taxi.state_machine.current, TaxiVibeState):
                         self.taxi.state_machine.change("drive")
 
-
+            if (getattr(self, "tutorial_mode", False) and 
+                getattr(self, "tutorial_step", 1) == 2 and 
+                not getattr(self, "tutorial_vibe_shown", False)):
+                if isinstance(self.taxi.state_machine.current, TaxiVibeState):
+                    self.tutorial_vibe_shown = True
+                    self.reset_inputs()
+                    self.state_machine.push(MessageBoxState(
+                        self.state_machine,
+                        title=tr("tutorial_title"),
+                        message=tr("tutorial_integrated_vibe")
+                    ))
 
             dest_x, dest_y = self.city_map.nodes[self.active_passenger.destination]
             dx = self.taxi.x - dest_x
@@ -338,6 +433,18 @@ class PlayState(BaseState):
                         if isinstance(self.taxi.state_machine.current, TaxiVibeState):
                             self.taxi.state_machine.change("drive")
 
+
+                    if getattr(self, "tutorial_mode", False) and getattr(self, "tutorial_step", 1) == 2:
+                        self.tutorial_step = 3
+                        self.tutorial_mode = False
+                        settings.TUTORIAL_ENABLED = False
+                        self.reset_inputs()
+                        self.state_machine.push(MessageBoxState(
+                            self.state_machine,
+                            title=tr("tutorial_completed_title"),
+                            message=tr("tutorial_integrated_complete")
+                        ))
+
                 from src import audio
                 audio.play_sfx("money")
 
@@ -358,10 +465,26 @@ class PlayState(BaseState):
                 if distance <= settings.PASSENGER_DETECTION_RADIUS and abs(self.taxi.speed) < 5:
                     def reach_taxi():
                         p.state_machine.change("ride", taxi=self.taxi)
-                        self.game_rule_strategy.bind_passenger(p)
                         self._prev_taxi_health = self.taxi.health  # baseline for crash detection
                         self.arrow_radius_progress = 0.0
                         Timer.tween(0.7, [(self, {"arrow_radius_progress": 1.0})], ease_function_name="out_cubic")
+                        
+                        if getattr(self, "tutorial_mode", False) and getattr(self, "tutorial_step", 1) == 1:
+                            self.tutorial_step = 2
+                            self.reset_inputs()
+                            self.game_rule_strategy.bind_passenger(p, show_dialogue=False)
+                            
+                            def on_radio_dialog_closed():
+                                self.game_rule_strategy.show_passenger_greeting()
+
+                            self.state_machine.push(MessageBoxState(
+                                self.state_machine,
+                                title=tr("tutorial_title"),
+                                message=tr("tutorial_integrated_radio"),
+                                on_close=on_radio_dialog_closed
+                            ))
+                        else:
+                            self.game_rule_strategy.bind_passenger(p, show_dialogue=True)
                     
                     from src import audio
                     audio.play_sfx("honk")
@@ -407,6 +530,7 @@ class PlayState(BaseState):
         if render_active_passenger:
             self.active_passenger.render(surface, self.camera)
             
+        self.city_map.render_pedestrians(surface, self.camera)
         self.city_map.render_traffic(surface, self.camera)
         self.taxi.render(surface, self.camera)
         for emitter in self.city_map.particle_emitters:
@@ -443,6 +567,10 @@ class PlayState(BaseState):
         if self.active_passenger and self.active_passenger.is_riding():
             dest_x, dest_y = self.city_map.nodes[self.active_passenger.destination]
             self._render_arrow(surface, dest_x, dest_y)
+        elif getattr(self, "tutorial_mode", False) and getattr(self, "tutorial_step", 1) == 1 and not self.active_passenger:
+            nearest_p = self._get_nearest_waiting_passenger()
+            if nearest_p:
+                self._render_arrow(surface, nearest_p.x, nearest_p.y)
             
         for emitter in self.city_map.particle_emitters:
             if getattr(emitter, "is_ui", False):
@@ -503,6 +631,12 @@ class PlayState(BaseState):
         else:
             px, py = x, y
         pygame.draw.circle(surface, color, (px, py), radius, width=2)
+
+    def _get_nearest_waiting_passenger(self):
+        waiting = [p for p in self.map_passengers if p.is_waiting()]
+        if not waiting:
+            return None
+        return min(waiting, key=lambda p: math.hypot(self.taxi.x - p.x, self.taxi.y - p.y))
 
     def _render_arrow(self, surface, dest_x, dest_y):
         arrow_tex = settings.TEXTURES.get("arrow")
@@ -603,6 +737,8 @@ class PlayState(BaseState):
     def exit(self) -> None:
         self.exited = True
         self.reset_inputs()
+        if hasattr(self, '_tutorial_timer') and self._tutorial_timer:
+            self._tutorial_timer.remove()
         if hasattr(self, 'danger_timer') and self.danger_timer:
             self.danger_timer.remove()
         if hasattr(self, 'soundscape_channel') and self.soundscape_channel:

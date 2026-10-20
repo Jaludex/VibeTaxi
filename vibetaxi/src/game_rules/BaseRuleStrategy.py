@@ -27,10 +27,15 @@ class BaseRuleStrategy:
     def get_hud(self):
         return None
         
-    def bind_passenger(self, p):
+    def bind_passenger(self, p, show_dialogue: bool = True):
         hud = self.get_hud()
         if hud:
-            hud.bind_passenger(p)
+            hud.bind_passenger(p, show_dialogue=show_dialogue)
+
+    def show_passenger_greeting(self):
+        hud = self.get_hud()
+        if hud:
+            hud.show_greeting()
             
     def unbind_passenger(self):
         hud = self.get_hud()

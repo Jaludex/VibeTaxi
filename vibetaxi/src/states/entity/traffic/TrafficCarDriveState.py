@@ -49,7 +49,29 @@ class TrafficCarDriveState(CarDriveState):
                             should_brake = True
                             break
 
+            # Check for pedestrian NPCs in the car's lane ahead
+            if not should_brake and hasattr(self.entity.traffic_system.city_map, "pedestrian_system"):
+                p_sys = self.entity.traffic_system.city_map.pedestrian_system
+                if p_sys and p_sys.active_npcs:
+                    car_cos = math.cos(self.entity.angle)
+                    car_sin = math.sin(self.entity.angle)
+                    for npc in p_sys.active_npcs:
+                        if npc.state == "dead":
+                            continue
+                        p_dx = npc.x - self.entity.x
+                        p_dy = npc.y - self.entity.y
+                        if abs(p_dx) > 75 or abs(p_dy) > 75:
+                            continue
+                        
+                        forward = p_dx * car_cos + p_dy * car_sin
+                        if -5.0 < forward < 60.0:
+                            lateral = abs(-p_dx * car_sin + p_dy * car_cos)
+                            if lateral < 22.0:
+                                should_brake = True
+                                break
+
         self.entity.is_braking = should_brake
+        # Keep is_accelerating = True so CarDriveState does not permanently freeze the car into idle when stopped
         self.entity.is_accelerating = True
         
         # Check distance to target node (30^2 = 900)
