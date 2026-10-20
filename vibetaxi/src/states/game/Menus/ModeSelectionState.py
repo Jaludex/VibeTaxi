@@ -155,18 +155,10 @@ class ModeSelectionState(BaseState):
         
         if self.selected_mode == "workday":
             strategy = WorkdayStrategy()
-            if tutorial_active:
-                tut_strategy = TutorialStrategy()
-                self.state_machine.push(TutorialPlayState(self.state_machine), game_rule_strategy=tut_strategy, next_strategy=strategy)
-            else:
-                self.state_machine.push(PlayState(self.state_machine), game_rule_strategy=strategy)
+            self.state_machine.push(PlayState(self.state_machine), game_rule_strategy=strategy, tutorial_mode=tutorial_active)
         elif self.selected_mode == "arcade":
             strategy = ArcadeStrategy()
-            if tutorial_active:
-                tut_strategy = TutorialStrategy()
-                self.state_machine.push(TutorialPlayState(self.state_machine), game_rule_strategy=tut_strategy, next_strategy=strategy)
-            else:
-                self.state_machine.push(PlayState(self.state_machine), game_rule_strategy=strategy)
+            self.state_machine.push(PlayState(self.state_machine), game_rule_strategy=strategy, tutorial_mode=tutorial_active)
         elif self.selected_mode == "zen":
             strategy = ZenStrategy()
             self.state_machine.push(PlayState(self.state_machine), game_rule_strategy=strategy)

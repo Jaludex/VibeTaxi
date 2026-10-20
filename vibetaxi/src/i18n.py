@@ -93,6 +93,10 @@ texts = {
         "tutorial_msg_radio": "Now lets try with this another client, listen to him. Use WASD to change the radio station and volume, try playing something he/she likes",
         "tutorial_msg_obstacles": "Now try getting to the end of this section, try avoiding the cones and traffic and get the client to his destination. Good Luck!",
         "tutorial_msg_vibe": "Great, you're in Vibe Mode, now you can drift to keep your speed. Drift with SHIFT",
+        "tutorial_integrated_welcome": "Welcome to VibeTaxi! Steer with your mouse cursor and hold left-click to drive. Press 'X' to brake and 'Z' for reverse.\n\nFollow the navigation arrow to the nearest client and brake to pick them up!",
+        "tutorial_integrated_radio": "You picked up a client! Check their music taste in the bottom HUD.\n\nUse WASD to change radio stations and volume. Playing what they love fills their Vibe!\n\nNow follow the arrow to their destination.",
+        "tutorial_integrated_vibe": "Awesome, you're in Vibe Mode! While in Vibe Mode, hold SHIFT to drift through corners and keep your speed without losing control.",
+        "tutorial_integrated_complete": "Great job delivering your passenger! You've learned all the basics of VibeTaxi.\n\nNow continue your run and keep the music flowing!",
         
         # --- Passenger Dialogues ---
         "dialogues": {
@@ -283,6 +287,10 @@ texts = {
         "tutorial_msg_radio": "Ahora probemos con este otro cliente, escúchalo. Usa WASD para cambiar la estación de radio y el volumen, intenta poner algo que le guste.",
         "tutorial_msg_obstacles": "Ahora intenta llegar al final de esta sección, esquivando los conos y el tráfico y llevando al cliente a su destino. ¡Buena suerte!",
         "tutorial_msg_vibe": "Genial, estás en Modo Vibe, ahora puedes derrapar para mantener tu velocidad. Derrapa con SHIFT.",
+        "tutorial_integrated_welcome": "¡Bienvenido a VibeTaxi! Dirige con el cursor del ratón y mantén clic izquierdo para acelerar. Presiona 'X' para frenar y 'Z' para reversa.\n\n¡Sigue la flecha de navegación hasta el cliente más cercano y frena para recogerlo!",
+        "tutorial_integrated_radio": "¡Recogiste a un cliente! Revisa sus gustos musicales en la barra inferior.\n\nUsa WASD para cambiar de estación y ajustar el volumen. ¡Poner la música que le gusta aumentará su Vibe!\n\nAhora sigue la flecha hasta su destino.",
+        "tutorial_integrated_vibe": "¡Excelente, estás en Modo Vibe! En Modo Vibe, mantén SHIFT para derrapar en las curvas y mantener tu velocidad.",
+        "tutorial_integrated_complete": "¡Gran trabajo entregando a tu pasajero! Ya conoces lo básico de VibeTaxi.\n\n¡Continúa tu partida y mantén la buena música sonando!",
         
         # --- Passenger Dialogues ---
         "dialogues": {

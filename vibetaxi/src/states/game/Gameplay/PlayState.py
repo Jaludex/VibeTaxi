@@ -19,6 +19,8 @@ from gale.timer import Timer
 from src.definitions.comfort import COMFORT_RULES
 from src.mouse_tools import physical_to_virtual
 from src.ParticleEmitter import ParticleEmitter
+from src.i18n import tr
+from src.states.game.Menus.MessageBoxState import MessageBoxState
 
 class PlayState(BaseState):
     def enter(self, **enter_params: Dict[str, Any]) -> None:
@@ -103,8 +105,23 @@ class PlayState(BaseState):
         self.start_text = self.game_rule_strategy.get_start_text()
         
 
+        self.tutorial_mode = enter_params.get("tutorial_mode", False)
+        if self.tutorial_mode:
+            self.tutorial_step = 1
+            self.tutorial_vibe_shown = False
+            self._tutorial_initial_time = getattr(self.game_rule_strategy, "time_remaining", None)
+
+        def on_intro_finished():
+            if getattr(self, "tutorial_mode", False) and not getattr(self, "exited", False):
+                self.reset_inputs()
+                self.state_machine.push(MessageBoxState(
+                    self.state_machine,
+                    title=tr("tutorial_title"),
+                    message=tr("tutorial_integrated_welcome")
+                ))
+
         def fade_out_text():
-            Timer.tween(1.0, [(self, {"day_text_alpha": 0.0})])
+            Timer.tween(1.0, [(self, {"day_text_alpha": 0.0})], on_finish=on_intro_finished)
             
         Timer.tween(1.0, [(self, {"day_text_alpha": 255.0, "fade_overlay_alpha": 0.0})], on_finish=lambda: Timer.after(2.0, fade_out_text))
 
@@ -131,6 +148,9 @@ class PlayState(BaseState):
         
         
         self.game_rule_strategy.update(dt)
+        if getattr(self, "tutorial_mode", False):
+            if hasattr(self.game_rule_strategy, "time_remaining") and getattr(self, "_tutorial_initial_time", None) is not None:
+                self.game_rule_strategy.time_remaining = self._tutorial_initial_time
         
         if hasattr(self.game_rule_strategy, "should_respawn_passengers") and self.game_rule_strategy.should_respawn_passengers(len(self.map_passengers)):
             new_passengers = self.city_map.generate_passengers(spawn_chance=0.3)
@@ -316,7 +336,17 @@ class PlayState(BaseState):
                     if isinstance(self.taxi.state_machine.current, TaxiVibeState):
                         self.taxi.state_machine.change("drive")
 
-
+            if (getattr(self, "tutorial_mode", False) and 
+                getattr(self, "tutorial_step", 1) == 2 and 
+                not getattr(self, "tutorial_vibe_shown", False)):
+                if isinstance(self.taxi.state_machine.current, TaxiVibeState):
+                    self.tutorial_vibe_shown = True
+                    self.reset_inputs()
+                    self.state_machine.push(MessageBoxState(
+                        self.state_machine,
+                        title=tr("tutorial_title"),
+                        message=tr("tutorial_integrated_vibe")
+                    ))
 
             dest_x, dest_y = self.city_map.nodes[self.active_passenger.destination]
             dx = self.taxi.x - dest_x
@@ -338,6 +368,17 @@ class PlayState(BaseState):
                         if isinstance(self.taxi.state_machine.current, TaxiVibeState):
                             self.taxi.state_machine.change("drive")
 
+                    if getattr(self, "tutorial_mode", False) and getattr(self, "tutorial_step", 1) == 2:
+                        self.tutorial_step = 3
+                        self.tutorial_mode = False
+                        settings.TUTORIAL_ENABLED = False
+                        self.reset_inputs()
+                        self.state_machine.push(MessageBoxState(
+                            self.state_machine,
+                            title=tr("tutorial_completed_title"),
+                            message=tr("tutorial_integrated_complete")
+                        ))
+
                 if "money" in settings.SOUNDS:
                     settings.SOUNDS["money"].play()
 
@@ -358,10 +399,26 @@ class PlayState(BaseState):
                 if distance <= settings.PASSENGER_DETECTION_RADIUS and abs(self.taxi.speed) < 5:
                     def reach_taxi():
                         p.state_machine.change("ride", taxi=self.taxi)
-                        self.game_rule_strategy.bind_passenger(p)
                         self._prev_taxi_health = self.taxi.health  # baseline for crash detection
                         self.arrow_radius_progress = 0.0
                         Timer.tween(0.7, [(self, {"arrow_radius_progress": 1.0})], ease_function_name="out_cubic")
+                        
+                        if getattr(self, "tutorial_mode", False) and getattr(self, "tutorial_step", 1) == 1:
+                            self.tutorial_step = 2
+                            self.reset_inputs()
+                            self.game_rule_strategy.bind_passenger(p, show_dialogue=False)
+                            
+                            def on_radio_dialog_closed():
+                                self.game_rule_strategy.show_passenger_greeting()
+
+                            self.state_machine.push(MessageBoxState(
+                                self.state_machine,
+                                title=tr("tutorial_title"),
+                                message=tr("tutorial_integrated_radio"),
+                                on_close=on_radio_dialog_closed
+                            ))
+                        else:
+                            self.game_rule_strategy.bind_passenger(p, show_dialogue=True)
                     
                     if "honk" in settings.SOUNDS:
                         settings.SOUNDS["honk"].play()
@@ -437,6 +494,10 @@ class PlayState(BaseState):
         if self.active_passenger and self.active_passenger.is_riding():
             dest_x, dest_y = self.city_map.nodes[self.active_passenger.destination]
             self._render_arrow(surface, dest_x, dest_y)
+        elif getattr(self, "tutorial_mode", False) and getattr(self, "tutorial_step", 1) == 1 and not self.active_passenger:
+            nearest_p = self._get_nearest_waiting_passenger()
+            if nearest_p:
+                self._render_arrow(surface, nearest_p.x, nearest_p.y)
             
         for emitter in self.city_map.particle_emitters:
             if getattr(emitter, "is_ui", False):
@@ -497,6 +558,12 @@ class PlayState(BaseState):
         else:
             px, py = x, y
         pygame.draw.circle(surface, color, (px, py), radius, width=2)
+
+    def _get_nearest_waiting_passenger(self):
+        waiting = [p for p in self.map_passengers if p.is_waiting()]
+        if not waiting:
+            return None
+        return min(waiting, key=lambda p: math.hypot(self.taxi.x - p.x, self.taxi.y - p.y))
 
     def _render_arrow(self, surface, dest_x, dest_y):
         arrow_tex = settings.TEXTURES.get("arrow")
@@ -612,6 +679,8 @@ class PlayState(BaseState):
     def exit(self) -> None:
         self.exited = True
         self.reset_inputs()
+        if hasattr(self, '_tutorial_timer') and self._tutorial_timer:
+            self._tutorial_timer.remove()
         if hasattr(self, 'danger_timer') and self.danger_timer:
             self.danger_timer.remove()
         if hasattr(self, 'soundscape_channel') and self.soundscape_channel:

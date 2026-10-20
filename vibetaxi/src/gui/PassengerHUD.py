@@ -174,7 +174,12 @@ class PassengerHUD:
         self.dialogue_panel.x = val
         self.text_box.x = val + 6
 
-    def bind_passenger(self, passenger) -> None:
+    def show_greeting(self) -> None:
+        if self.passenger:
+            greeting = self.passenger.dialogues.get("enter", "Hello! Take me to my destination.")
+            self.show_text(greeting)
+
+    def bind_passenger(self, passenger, show_dialogue: bool = True) -> None:
         if getattr(self, "_clear_timer", None):
             self._clear_timer.remove()
             self._clear_timer = None
@@ -192,8 +197,8 @@ class PassengerHUD:
         Timer.tween(0.35, [(self, {"bar_x": self.bar_on_x})])
         Timer.tween(0.35, [(self, {"portrait_x": float(self.portrait_on_x)})])
         # Show greeting dialogue
-        greeting = passenger.dialogues.get("enter", "Hello! Take me to my destination.")
-        self.show_text(greeting)
+        if show_dialogue:
+            self.show_greeting()
         
     def trigger_crash(self) -> None:
         if self.passenger:

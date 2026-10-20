@@ -170,6 +170,48 @@ class PedestrianNPC(Entity):
             
         self.total_wait_time = 0.0
 
+    def _recover_from_hit(self) -> None:
+        """Finds a safe recovery node with unobstructed line-of-sight after being hit."""
+        self.angle = 0.0
+        self.jump_offset_y = 0.0
+        
+        # Verify landing position is not overlapping any building and resolve if needed
+        nearby_cols = self.pedestrian_system.get_nearby_collision_rects(self.x, self.y, radius=32.0)
+        npc_box = pygame.Rect(int(self.x - 7), int(self.y - 7), 14, 14)
+        for r in nearby_cols:
+            if r.colliderect(npc_box):
+                overlap_left = npc_box.right - r.left
+                overlap_right = r.right - npc_box.left
+                overlap_top = npc_box.bottom - r.top
+                overlap_bottom = r.bottom - npc_box.top
+                min_overlap = min(overlap_left, overlap_right, overlap_top, overlap_bottom)
+                if min_overlap == overlap_left:
+                    self.x = r.left - 7.5
+                elif min_overlap == overlap_right:
+                    self.x = r.right + 7.5
+                elif min_overlap == overlap_top:
+                    self.y = r.top - 7.5
+                else:
+                    self.y = r.bottom + 7.5
+                npc_box.center = (int(self.x), int(self.y))
+
+        # Find nearest walkable node that has direct line-of-sight (no building in between)
+        safe_node = self.pedestrian_system.find_nearest_walkable_node(self.x, self.y, max_dist=350.0)
+        if safe_node:
+            self.current_node = safe_node
+            self.target_node = safe_node
+            pos = self.pedestrian_system.get_node_pos(safe_node)
+            if pos:
+                self.target_x, self.target_y = pos
+            self.previous_node = None
+            self.blocked_node = None
+            self.blocked_timer = 0.0
+            self.state = "walking"
+            self.change_animation("walk")
+        else:
+            # Trapped with no clear line-of-sight to any node: despawn cleanly without cutting buildings
+            self.start_despawn("up")
+
     def start_despawn(self, dir_name: str) -> None:
         self.state = "despawning"
         self.despawn_timer = 0.0
@@ -329,26 +371,58 @@ class PedestrianNPC(Entity):
             progress = min(1.0, self.hit_timer / self.hit_duration)
             decay = max(0.0, 1.0 - progress)
             
-            new_x = self.x + self.hit_vx * decay * dt
-            new_y = self.y + self.hit_vy * decay * dt
+            step_dx = self.hit_vx * decay * dt
+            step_dy = self.hit_vy * decay * dt
             
-            # Building bounce clamp
-            col_rects = getattr(self.pedestrian_system.city_map, "collision_rects", None)
-            if col_rects:
+            # Query nearby collision rects from spatial grid
+            nearby_cols = self.pedestrian_system.get_nearby_collision_rects(self.x, self.y, radius=48.0)
+            
+            # Step X with clamping against nearby buildings
+            if step_dx != 0:
+                new_x = self.x + step_dx
                 test_rect_x = pygame.Rect(int(new_x - 7), int(self.y - 7), 14, 14)
-                if test_rect_x.collidelist(col_rects) != -1:
-                    self.hit_vx = -self.hit_vx * 0.3
-                else:
-                    self.x = new_x
-                    
-                test_rect_y = pygame.Rect(int(self.x - 7), int(new_y - 7), 14, 14)
-                if test_rect_y.collidelist(col_rects) != -1:
-                    self.hit_vy = -self.hit_vy * 0.3
-                else:
-                    self.y = new_y
-            else:
+                for r in nearby_cols:
+                    if r.colliderect(test_rect_x):
+                        self.hit_vx = -self.hit_vx * 0.3
+                        if step_dx > 0:
+                            new_x = r.left - 7.5
+                        else:
+                            new_x = r.right + 7.5
+                        break
                 self.x = new_x
+
+            # Step Y with clamping against nearby buildings
+            if step_dy != 0:
+                new_y = self.y + step_dy
+                test_rect_y = pygame.Rect(int(self.x - 7), int(new_y - 7), 14, 14)
+                for r in nearby_cols:
+                    if r.colliderect(test_rect_y):
+                        self.hit_vy = -self.hit_vy * 0.3
+                        if step_dy > 0:
+                            new_y = r.top - 7.5
+                        else:
+                            new_y = r.bottom + 7.5
+                        break
                 self.y = new_y
+                
+            # Separation push-out: if overlapping any building, resolve out along shortest penetration axis
+            npc_box = pygame.Rect(int(self.x - 7), int(self.y - 7), 14, 14)
+            for r in nearby_cols:
+                if r.colliderect(npc_box):
+                    overlap_left = npc_box.right - r.left
+                    overlap_right = r.right - npc_box.left
+                    overlap_top = npc_box.bottom - r.top
+                    overlap_bottom = r.bottom - npc_box.top
+                    min_overlap = min(overlap_left, overlap_right, overlap_top, overlap_bottom)
+                    if min_overlap == overlap_left:
+                        self.x = r.left - 7.5
+                    elif min_overlap == overlap_right:
+                        self.x = r.right + 7.5
+                    elif min_overlap == overlap_top:
+                        self.y = r.top - 7.5
+                    else:
+                        self.y = r.bottom + 7.5
+                    npc_box.center = (int(self.x), int(self.y))
             
             # Arching bounce and spin while falling
             self.jump_offset_y = -math.sin(progress * math.pi) * 16.0
@@ -387,11 +461,7 @@ class PedestrianNPC(Entity):
             self.jump_offset_y = -math.sin(t * math.pi) * 4.0
             
             if t >= 1.0:
-                self.state = "walking"
-                self.angle = 0.0
-                self.jump_offset_y = 0.0
-                self.change_animation("walk")
-                self._select_next_node()
+                self._recover_from_hit()
             
         elif self.state == "despawning":
             self.despawn_timer += dt

@@ -4,11 +4,72 @@ import pygame
 import settings
 from src.entity.PedestrianNPC import PedestrianNPC
 
+class CollisionSpatialGrid:
+    """Fast spatial hash grid for querying building collision rects and line-of-sight checks."""
+    def __init__(self, rects, cell_size: int = 128):
+        self.cell_size = cell_size
+        self.grid = {}
+        self.all_rects = rects
+        for r in rects:
+            min_cx = int(r.left // cell_size)
+            max_cx = int(r.right // cell_size)
+            min_cy = int(r.top // cell_size)
+            max_cy = int(r.bottom // cell_size)
+            for cx in range(min_cx, max_cx + 1):
+                for cy in range(min_cy, max_cy + 1):
+                    self.grid.setdefault((cx, cy), []).append(r)
+                    
+    def get_nearby_rects(self, x: float, y: float, radius: float = 32.0):
+        """Returns all collision rects within adjacent grid cells of (x, y)."""
+        min_cx = int((x - radius) // self.cell_size)
+        max_cx = int((x + radius) // self.cell_size)
+        min_cy = int((y - radius) // self.cell_size)
+        max_cy = int((y + radius) // self.cell_size)
+        results = {}
+        for cx in range(min_cx, max_cx + 1):
+            for cy in range(min_cy, max_cy + 1):
+                cell = self.grid.get((cx, cy))
+                if cell:
+                    for r in cell:
+                        results[id(r)] = r
+        return list(results.values())
+
+    def line_intersects_building(self, p1, p2) -> bool:
+        """Returns True if the line segment (p1, p2) passes through the interior of any building."""
+        min_x = min(p1[0], p2[0])
+        max_x = max(p1[0], p2[0])
+        min_y = min(p1[1], p2[1])
+        max_y = max(p1[1], p2[1])
+        min_cx = int(min_x // self.cell_size)
+        max_cx = int(max_x // self.cell_size)
+        min_cy = int(min_y // self.cell_size)
+        max_cy = int(max_y // self.cell_size)
+        
+        tested = set()
+        for cx in range(min_cx, max_cx + 1):
+            for cy in range(min_cy, max_cy + 1):
+                cell = self.grid.get((cx, cy))
+                if cell:
+                    for r in cell:
+                        r_id = id(r)
+                        if r_id not in tested:
+                            tested.add(r_id)
+                            deflated = r.inflate(-6, -6)
+                            if deflated.width > 0 and deflated.height > 0:
+                                if deflated.clipline(p1, p2):
+                                    return True
+        return False
+
+
 class PedestrianSystem:
     def __init__(self, city_map):
         self.city_map = city_map
         self.npc_nodes = {}
         self.active_npcs = []
+        
+        # Spatial grid for fast collision queries
+        col_rects = getattr(self.city_map, "collision_rects", [])
+        self.collision_grid = CollisionSpatialGrid(col_rects)
         
         # Balance count and spawn timing
         self.max_npcs = getattr(settings, 'PEDESTRIAN_MAX_COUNT', 25)
@@ -61,9 +122,6 @@ class PedestrianSystem:
 
         # Validate and sanitize all node connections:
         # Discard typo edges (> 600px) and edges cutting through building interiors
-        col_rects = getattr(self.city_map, "collision_rects", [])
-        deflated_rects = [r.inflate(-6, -6) for r in col_rects if r.width > 8 and r.height > 8]
-        
         for name, data in self.npc_nodes.items():
             p1 = (data["x"], data["y"])
             valid_next = []
@@ -80,17 +138,41 @@ class PedestrianSystem:
                     continue # Discard typo edges across the entire city
                     
                 # Discard edges cutting through building interiors
-                cuts_building = False
-                for r in deflated_rects:
-                    if r.clipline(p1, target_pos):
-                        cuts_building = True
-                        break
-                if not cuts_building:
+                if not self.collision_grid.line_intersects_building(p1, target_pos):
                     valid_next.append(n)
                     
             data["next"] = valid_next
             if not valid_next:
                 data["despawn"] = True
+
+    def get_nearby_collision_rects(self, x: float, y: float, radius: float = 32.0):
+        if self.collision_grid:
+            return self.collision_grid.get_nearby_rects(x, y, radius)
+        return getattr(self.city_map, "collision_rects", [])
+
+    def find_nearest_walkable_node(self, x: float, y: float, max_dist: float = 350.0):
+        """Finds the closest npc_ node that has clear line-of-sight from (x, y) without cutting buildings."""
+        best_node = None
+        best_dist_sq = max_dist * max_dist
+        p1 = (x, y)
+        
+        for name, data in self.npc_nodes.items():
+            if not name.startswith("npc_") or not data.get("next"):
+                continue
+            dx = data["x"] - x
+            if abs(dx) > max_dist:
+                continue
+            dy = data["y"] - y
+            if abs(dy) > max_dist:
+                continue
+            dist_sq = dx * dx + dy * dy
+            if dist_sq < best_dist_sq:
+                p2 = (data["x"], data["y"])
+                if not self.collision_grid.line_intersects_building(p1, p2):
+                    best_dist_sq = dist_sq
+                    best_node = name
+                    
+        return best_node
 
     def get_npc_node(self, name: str):
         return self.npc_nodes.get(name)
