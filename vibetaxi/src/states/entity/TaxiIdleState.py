@@ -14,5 +14,11 @@ class TaxiIdleState(BaseEntityState):
         
         self.entity.is_drifting = False
         
+        # If we have an active input strategy (Keyboard/Gamepad), check if it wants to accelerate
+        strategy = getattr(self.entity, "input_strategy", None)
+        if strategy:
+            strategy.get_target_position(self.entity, dt)
+            is_accelerating = getattr(self.entity, "is_accelerating", False)
+        
         if (is_accelerating or is_reversing) and not is_braking:
             self.state_machine.change('drive')

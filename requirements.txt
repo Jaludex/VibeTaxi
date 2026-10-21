@@ -1,1 +1,2 @@
 gale-engine>=1.16.0
+pyinstance>=1.0

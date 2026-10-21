@@ -39,6 +39,16 @@ class ArcadeStrategy(BaseRuleStrategy):
     def get_start_text(self) -> str:
         return tr("mode_arcade_initial_text")
 
+    def get_discord_presence(self, play_state=None) -> dict:
+        score = int(getattr(self, "score", 0))
+        delivered = int(getattr(self, "passengers_delivered", 0))
+        return {
+            "details": "Arcade Mode",
+            "state": f"Score: {score} | Passengers: {delivered}",
+            "small_image": "arcade",
+            "small_text": "Arcade",
+        }
+
     def on_passenger_delivered(self, passenger, distance: float):
         import settings
         self.passengers_delivered += 1
@@ -78,8 +88,8 @@ class ArcadeStrategy(BaseRuleStrategy):
             if time_bonus > 0: reasons.append(tr("bonus_fast", default="Fast!"))
             if safety_bonus > 0: reasons.append(tr("bonus_safe", default="Safe!"))
             self.score_popup_text += f"\n({', '.join(reasons)})"
-            if "bonus" in settings.SOUNDS:
-                settings.SOUNDS["bonus"].play()
+            from src import audio
+            audio.play_sfx("bonus")
             
         self.score_popup_alpha = 0.0
         self.score_popup_y_offset = 0.0

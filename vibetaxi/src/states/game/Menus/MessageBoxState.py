@@ -5,7 +5,7 @@ import settings
 from gale.state import BaseState
 from gale.timer import Timer
 from gale.ui.button import Button
-from gale.ui.container import Container
+from src.gui.SpatialContainer import SpatialContainer
 from gale.ui.label import Label
 from src.gui.TypewriterTextBox import TypewriterTextBox
 from gale.ui.manager import UIManager
@@ -62,7 +62,7 @@ class MessageBoxState(BaseState):
             theme=BUTTON_THEME
         )
         
-        self.container = Container(0, 0, settings.VIRTUAL_WIDTH, settings.VIRTUAL_HEIGHT, children=[
+        self.container = SpatialContainer(0, 0, settings.VIRTUAL_WIDTH, settings.VIRTUAL_HEIGHT, children=[
             self.panel, self.label_title, self.text_box, self.btn_ok
         ])
         
@@ -106,7 +106,8 @@ class MessageBoxState(BaseState):
     def _on_ok(self):
         if self.is_exiting: return
         self.is_exiting = True
-        if "press" in settings.SOUNDS: settings.SOUNDS["press"].play()
+        from src import audio
+        audio.play_sfx("press")
         
         def on_finish():
             self.state_machine.pop()
@@ -130,6 +131,9 @@ class MessageBoxState(BaseState):
         self.ui.update(dt)
 
     def on_input(self, input_id, input_data):
+        from src.menu_navigation import handle_menu_navigation
+        if handle_menu_navigation(self.ui, input_id, input_data):
+            return
         self.ui.on_input(input_id, input_data)
 
     def render(self, surface: pygame.Surface):

@@ -6,8 +6,7 @@ from gale.timer import Timer
 from gale.ui.manager import UIManager
 from gale.ui.button import Button
 from gale.ui.label import Label
-from gale.ui.window import Window
-from gale.ui.container import Container
+from src.gui.SpatialContainer import SpatialContainer, SpatialWindow
 
 from src.states.game.Gameplay.PlayState import PlayState
 from src.game_rules.WorkdayStrategy import WorkdayStrategy
@@ -20,6 +19,8 @@ from src.states.game.Gameplay.TutorialPlayState import TutorialPlayState
 from src.i18n import tr
 
 class ModeSelectionState(BaseState):
+    discord_presence = {"details": "Mode Selection", "state": "Choosing a game mode"}
+
     def __init__(self, state_machine: Any) -> None:
         super().__init__(state_machine)
         self.fade_alpha = 0.0
@@ -75,7 +76,7 @@ class ModeSelectionState(BaseState):
             center=True
         )
         
-        self.window = Window(
+        self.window = SpatialWindow(
             window_x, 
             self.panel_y, 
             window_width, window_height,
@@ -84,7 +85,7 @@ class ModeSelectionState(BaseState):
             children=[self.btn_tutorial, self.btn_jornada, self.btn_arcade, self.btn_zen, self.desc_label]
         )
         
-        self.container = Container(0, 0, settings.VIRTUAL_WIDTH, settings.VIRTUAL_HEIGHT, children=[self.window])
+        self.container = SpatialContainer(0, 0, settings.VIRTUAL_WIDTH, settings.VIRTUAL_HEIGHT, children=[self.window])
         self.ui = UIManager(
             self.container,
             virtual_width=settings.VIRTUAL_WIDTH,
@@ -120,14 +121,16 @@ class ModeSelectionState(BaseState):
             
     def select_mode(self, mode):
         if self.is_exiting: return
-        settings.SOUNDS["press"].play()
+        from src import audio
+        audio.play_sfx("press")
         self.selected_mode = mode
         self.is_exiting = True
         Timer.tween(0.8, [(self, {"fade_alpha": 255.0})], ease_function_name="in_cubic", on_finish=self.start_game)
             
     def on_close_click(self):
         if self.is_exiting: return
-        settings.SOUNDS["press"].play()
+        from src import audio
+        audio.play_sfx("press")
         self.is_exiting = True
         # Window.close() sets visible to False, we want to animate it out while visible!
         self.window.visible = True
@@ -151,12 +154,14 @@ class ModeSelectionState(BaseState):
         self.state_machine.pop() # Pops ModeSelectionState
         self.state_machine.pop() # Pops TitleScreenState
         
+        tutorial_active = getattr(settings, "TUTORIAL_ENABLED", False)
+        
         if self.selected_mode == "workday":
             strategy = WorkdayStrategy()
-            self.state_machine.push(PlayState(self.state_machine), game_rule_strategy=strategy)
+            self.state_machine.push(PlayState(self.state_machine), game_rule_strategy=strategy, tutorial_mode=tutorial_active)
         elif self.selected_mode == "arcade":
             strategy = ArcadeStrategy()
-            self.state_machine.push(PlayState(self.state_machine), game_rule_strategy=strategy)
+            self.state_machine.push(PlayState(self.state_machine), game_rule_strategy=strategy, tutorial_mode=tutorial_active)
         elif self.selected_mode == "zen":
             strategy = ZenStrategy()
             self.state_machine.push(PlayState(self.state_machine), game_rule_strategy=strategy)
@@ -181,6 +186,9 @@ class ModeSelectionState(BaseState):
             self.desc_label.set_text(tr("mode_selection_title", default="Choose a game mode."))
 
     def on_input(self, input_id, input_data):
+        from src.menu_navigation import handle_menu_navigation
+        if handle_menu_navigation(self.ui, input_id, input_data):
+            return
         self.ui.on_input(input_id, input_data)
 
     def render(self, surface: pygame.Surface):

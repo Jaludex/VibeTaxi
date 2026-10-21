@@ -12,6 +12,14 @@ class ZenStrategy(BaseRuleStrategy):
         
     def get_start_text(self) -> str:
         return tr("mode_zen_initial_text")
+
+    def get_discord_presence(self, play_state=None) -> dict:
+        return {
+            "details": "Zen Mode",
+            "state": "Cruising the city (No limits)",
+            "small_image": "zen",
+            "small_text": "Zen Mode",
+        }
         
     def render_ui(self, surface, font, x, y):
         import settings

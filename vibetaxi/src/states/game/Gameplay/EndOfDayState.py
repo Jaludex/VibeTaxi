@@ -5,7 +5,7 @@ from gale.input_handler import InputData
 from gale.state import BaseState
 from gale.timer import Timer
 from gale.ui.manager import UIManager
-from gale.ui.container import Container
+from src.gui.SpatialContainer import SpatialContainer
 from gale.ui.panel import Panel
 from gale.ui.button import Button
 from gale.ui.label import Label
@@ -29,9 +29,15 @@ class EndOfDayState(BaseState):
         self.alpha = 0
         self.ui = None
 
+    def get_discord_presence(self) -> dict:
+        return {
+            "details": f"End of Day {self.day}",
+            "state": f"Earnings: ${self.money:.0f}",
+        }
+
     def enter(self, **enter_params: Dict[str, Any]) -> None:
-        if "win" in settings.SOUNDS:
-            settings.SOUNDS["win"].play()
+        from src import audio
+        audio.play_sfx("win")
         
         Timer.tween(
             1.0,
@@ -50,7 +56,7 @@ class EndOfDayState(BaseState):
 
     def _setup_ui(self):
         from src.themes import BUTTON_THEME, LABEL_THEME, LABEL_GREEN_THEME, PANEL_THEME
-        container = Container(0, 0, settings.VIRTUAL_WIDTH, settings.VIRTUAL_HEIGHT)
+        container = SpatialContainer(0, 0, settings.VIRTUAL_WIDTH, settings.VIRTUAL_HEIGHT)
         
         panel_width = 300
         panel_height = 160
@@ -166,8 +172,9 @@ class EndOfDayState(BaseState):
             self.repair_button.enabled = True
 
     def _on_repair(self):
+        from src import audio
         if self.health < self.max_health and self.money >= settings.REPAIR_COST:
-            if "fix" in settings.SOUNDS: settings.SOUNDS["fix"].play()
+            audio.play_sfx("fix")
             self.money -= settings.REPAIR_COST
             self.health = self.max_health
             
@@ -177,17 +184,19 @@ class EndOfDayState(BaseState):
             self.health_bar.theme.accent_color = self._get_health_color(self.health, self.max_health)
             self._update_repair_button()
         else:
-            if "error" in settings.SOUNDS: settings.SOUNDS["error"].play()
+            audio.play_sfx("error")
 
     def _on_exit(self):
-        settings.SOUNDS["press"].play()
+        from src import audio
+        audio.play_sfx("press")
         from src.states.game.Menus.TitleScreenState import TitleScreenState
         while len(self.state_machine.states) > 0:
             self.state_machine.pop()
         self.state_machine.push(TitleScreenState(self.state_machine))
 
     def _on_save_exit(self):
-        settings.SOUNDS["press"].play()
+        from src import audio
+        audio.play_sfx("press")
         
         def execute_save():
             settings.SAVE_MANAGER.save("workday_save", {
@@ -216,7 +225,8 @@ class EndOfDayState(BaseState):
             execute_save()
 
     def _on_continue(self):
-        settings.SOUNDS["press"].play()
+        from src import audio
+        audio.play_sfx("press")
         self.ui = None # Disable UI interactions
         Timer.tween(
             1.0,
@@ -253,5 +263,8 @@ class EndOfDayState(BaseState):
                 surface.blit(self.taxi_image, (self.taxi_x, self.taxi_y))
 
     def on_input(self, input_id: str, input_data: InputData) -> None:
+        from src.menu_navigation import handle_menu_navigation
+        if handle_menu_navigation(self.ui, input_id, input_data):
+            return
         if self.ui:
             self.ui.on_input(input_id, input_data)

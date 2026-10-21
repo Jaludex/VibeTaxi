@@ -13,11 +13,11 @@ from src.entity.Passenger import Passenger
 from src.definitions.props import PROPS_DEF
 from src.definitions.passengers import PASSENGER_DEFS
 from src.entity.Traffic import TrafficSystem
+from src.entity.PedestrianSystem import PedestrianSystem
 from src.definitions.radio import RADIO_STATIONS
-
-
 class CityMap:
-    def __init__(self, map_key: str = "city") -> None:
+    def __init__(self, map_key: str = "city", enable_pedestrians: bool = False) -> None:
+        self.map_key = map_key
         self.tilemap = load_tiled_map(settings.TILEMAPS[map_key])
         self.physics_world = World(gravity=(0, 0))
         self.physics_world._entity_registry = []
@@ -25,18 +25,32 @@ class CityMap:
         self.physics_world.on_collision_begin(self._on_collision_begin)
 
         self.props: List[Prop] = []
+        self._gid_cache: Dict[int, Any] = {}
+        self.prop_grid: Dict[tuple, List[Prop]] = {}
+        self.grid_cell_size: int = 256
         self.particle_emitters: List[Any] = []
         self._load_collisions()
         self._load_props()
         self._load_nodes()
         self.traffic_system = TrafficSystem(self)
+        
+        # Only enable pedestrian NPCs when requested and not in tutorial map
+        if enable_pedestrians and map_key != "tutorial":
+            self.pedestrian_system = PedestrianSystem(self)
+        else:
+            self.pedestrian_system = None
 
     def _load_collisions(self) -> None:
+        self.collision_rects = []
         for obj in self.tilemap.object_layers.get("collisions", []):
             width = getattr(obj, "width", 0)
             height = getattr(obj, "height", 0)
             if width <= 0 or height <= 0:
                 continue
+
+            self.collision_rects.append(
+                pygame.Rect(int(obj.x), int(obj.y), int(width), int(height))
+            )
 
             # Tiled's object y is the top edge; center is y - height/2 (same convention as props)
             # Tiled object coordinates are top-left; convert to center for the Body
@@ -59,16 +73,20 @@ class CityMap:
             Prop = None
             Car = None
 
-        def play_crash_sound(sound_key, base_volume=0.5):
+        def play_crash_sound(sound_key, base_volume=0.5, impact_pos=None):
             if getattr(self, 'muted', False):
                 return
             try:
-                import settings
-                sound = settings.SOUNDS.get(sound_key)
-                if sound:
-                    vol = base_volume * random.uniform(0.8, 1.2)
-                    sound.set_volume(max(0.0, min(1.0, vol)))
-                    sound.play()
+                taxi = getattr(self, 'taxi', None)
+                if impact_pos is not None and taxi is not None:
+                    dx = impact_pos[0] - taxi.x
+                    dy = impact_pos[1] - taxi.y
+                    # Distance threshold ~400px (outside camera view)
+                    if (dx * dx + dy * dy) > (400.0 * 400.0):
+                        return
+                from src import audio
+                vol = base_volume * random.uniform(0.8, 1.2)
+                audio.play_sfx(sound_key, volume=vol)
             except Exception:
                 pass
 
@@ -89,64 +107,68 @@ class CityMap:
             except Exception:
                 pass
 
+        # Helper to penalize vehicle speed, vector velocity, and physical body momentum
+        def penalize_vehicle(vehicle, factor=0.5):
+            if hasattr(vehicle, "penalize_speed"):
+                vehicle.penalize_speed(factor)
+            else:
+                try:
+                    if hasattr(vehicle, "speed"):
+                        vehicle.speed *= factor
+                    if hasattr(vehicle, "vx"):
+                        vehicle.vx *= factor
+                    if hasattr(vehicle, "vy"):
+                        vehicle.vy *= factor
+                    if getattr(vehicle, "body", None) is not None:
+                        vel = vehicle.body.velocity
+                        vehicle.body.velocity = (vel[0] * factor, vel[1] * factor)
+                except Exception:
+                    pass
+
         # If a is a Prop and b is a Car-like, notify prop and penalize vehicle speed
         if Prop is not None and Car is not None:
             if isinstance(a, Prop) and (isinstance(b, Car) or hasattr(b, 'speed')):
                 # Increase friction/damping so prop doesn't fly
                 if getattr(a, 'body', None) is not None:
                     increase_friction(a.body, friction=2.0, linear_damping=3.0)
-                # Penalize vehicle speed
-                try:
-                    if hasattr(b, 'speed'):
-                        b.speed *= 0.5
-                except Exception:
-                    pass
+                # Penalize vehicle speed and momentum
+                penalize_vehicle(b, 0.5)
                 a.on_collide(b)
                 if type(b).__name__ == "Taxi":
-                    play_crash_sound("crash_solid", 0.2)
+                    play_crash_sound("crash_solid", 0.2, impact_pos=(b.x, b.y))
                 else:
-                    play_crash_sound("crash_solid", 0.06)
+                    play_crash_sound("crash_solid", 0.06, impact_pos=(b.x, b.y))
             elif isinstance(b, Prop) and (isinstance(a, Car) or hasattr(a, 'speed')):
                 if getattr(b, 'body', None) is not None:
                     increase_friction(b.body, friction=2.0, linear_damping=3.0)
-                try:
-                    if hasattr(a, 'speed'):
-                        a.speed *= 0.5
-                except Exception:
-                    pass
+                penalize_vehicle(a, 0.5)
                 b.on_collide(a)
                 if type(a).__name__ == "Taxi":
-                    play_crash_sound("crash_solid", 0.2)
+                    play_crash_sound("crash_solid", 0.2, impact_pos=(a.x, a.y))
                 else:
-                    play_crash_sound("crash_solid", 0.06)
+                    play_crash_sound("crash_solid", 0.06, impact_pos=(a.x, a.y))
         else:
             # Fallback: if user_data types not mapped but entity-like
             if hasattr(a, 'on_collide') and hasattr(b, 'speed'):
-                try:
-                    b.speed *= 0.5
-                except Exception:
-                    pass
+                penalize_vehicle(b, 0.5)
                 try:
                     a.on_collide(b)
                 except Exception:
                     pass
                 if type(b).__name__ == "Taxi":
-                    play_crash_sound("crash_solid", 0.2)
+                    play_crash_sound("crash_solid", 0.2, impact_pos=(b.x, b.y))
                 else:
-                    play_crash_sound("crash_solid", 0.06)
+                    play_crash_sound("crash_solid", 0.06, impact_pos=(b.x, b.y))
             elif hasattr(b, 'on_collide') and hasattr(a, 'speed'):
-                try:
-                    a.speed *= 0.5
-                except Exception:
-                    pass
+                penalize_vehicle(a, 0.5)
                 try:
                     b.on_collide(a)
                 except Exception:
                     pass
                 if type(a).__name__ == "Taxi":
-                    play_crash_sound("crash_solid", 0.2)
+                    play_crash_sound("crash_solid", 0.2, impact_pos=(a.x, a.y))
                 else:
-                    play_crash_sound("crash_solid", 0.06)
+                    play_crash_sound("crash_solid", 0.06, impact_pos=(a.x, a.y))
 
         # Check car collisions with static obstacles or other cars
         try:
@@ -159,8 +181,8 @@ class CityMap:
             if is_a_car and is_b_car:
                 impact_x = (a.x + b.x) / 2
                 impact_y = (a.y + b.y) / 2
-                a.speed *= 0.5
-                b.speed *= 0.5
+                penalize_vehicle(a, 0.5)
+                penalize_vehicle(b, 0.5)
                 self.add_particle_emitter(ParticleEmitter.create_sparks(impact_x, impact_y))
                 if hasattr(a, 'on_collide'): a.on_collide(b)
                 if hasattr(b, 'on_collide'): b.on_collide(a)
@@ -169,7 +191,7 @@ class CityMap:
                 is_b_taxi = type(b).__name__ == "Taxi"
                 
                 if is_a_taxi or is_b_taxi:
-                    play_crash_sound("crash_car", 0.3)
+                    play_crash_sound("crash_car", 0.3, impact_pos=(impact_x, impact_y))
                     
                 if is_a_taxi: a.damage(10)
                 if is_b_taxi: b.damage(10)
@@ -178,19 +200,19 @@ class CityMap:
                 if abs(getattr(a, 'speed', 0)) > 20:
                     self.add_particle_emitter(ParticleEmitter.create_sparks(a.x, a.y))
                     if type(a).__name__ == "Taxi":
-                        play_crash_sound("crash_wall", 0.3)
+                        play_crash_sound("crash_wall", 0.3, impact_pos=(a.x, a.y))
                         a.damage(15)
                     else:
-                        play_crash_sound("crash_wall", 0.09)
+                        play_crash_sound("crash_wall", 0.09, impact_pos=(a.x, a.y))
                 if hasattr(a, 'on_collide'): a.on_collide(b)
             elif is_b_car and is_a_static:
                 if abs(getattr(b, 'speed', 0)) > 20:
                     self.add_particle_emitter(ParticleEmitter.create_sparks(b.x, b.y))
                     if type(b).__name__ == "Taxi":
-                        play_crash_sound("crash_wall", 0.3)
+                        play_crash_sound("crash_wall", 0.3, impact_pos=(b.x, b.y))
                         b.damage(15)
                     else:
-                        play_crash_sound("crash_wall", 0.09)
+                        play_crash_sound("crash_wall", 0.09, impact_pos=(b.x, b.y))
                 if hasattr(b, 'on_collide'): b.on_collide(a)
         except Exception:
             pass
@@ -225,14 +247,26 @@ class CityMap:
                     body_type=BodyType.DYNAMIC,
                     shape=shape,
                 )
-                # Give props moderate damping so they don't drift forever
-                if prop.body is not None:
-                    try:
-                        prop.body.set_damping(1.5, 0.5)
-                    except Exception:
-                        pass
-
                 self.props.append(prop)
+                gx = int(center_x // self.grid_cell_size)
+                gy = int(center_y // self.grid_cell_size)
+                self.prop_grid.setdefault((gx, gy), []).append(prop)
+
+    def get_nearby_props(self, min_x: float, max_x: float, min_y: float, max_y: float) -> List[Prop]:
+        min_gx = int(min_x // self.grid_cell_size)
+        max_gx = int(max_x // self.grid_cell_size)
+        min_gy = int(min_y // self.grid_cell_size)
+        max_gy = int(max_y // self.grid_cell_size)
+
+        result = []
+        for gx in range(min_gx, max_gx + 1):
+            for gy in range(min_gy, max_gy + 1):
+                cell_props = self.prop_grid.get((gx, gy))
+                if cell_props:
+                    for p in cell_props:
+                        if min_x <= p.x <= max_x and min_y <= p.y <= max_y:
+                            result.append(p)
+        return result
 
     def get_taxi_spawn_position(self, default: tuple = (400, 300)) -> tuple:
         spawner_layer = self.tilemap.object_layers.get("taxi-spawns", [])
@@ -249,6 +283,16 @@ class CityMap:
     def fixed_update(self) -> None:
         self.physics_world.fixed_update()
         for entity in getattr(self.physics_world, "_entity_registry", []):
+            if getattr(entity, "_is_prop", False) and not getattr(entity, "_removal_scheduled", False):
+                pm_body = getattr(getattr(entity, 'body', None), '_pm_body', None)
+                if pm_body is not None and pm_body.velocity.length_squared < 1e-4:
+                    continue
+                if getattr(entity, 'body', None) is not None and not getattr(entity, '_damping_active', False):
+                    try:
+                        entity.body.set_damping(1.5, 0.5)
+                        entity._damping_active = True
+                    except Exception:
+                        pass
             entity.sync_body_to_entity()
 
     def update(self, dt: float, camera: Any = None) -> None:
@@ -259,6 +303,8 @@ class CityMap:
             emitter.update(dt)
         self.particle_emitters = [e for e in self.particle_emitters if not e.is_finished()]
         self.traffic_system.update(dt, camera)
+        if self.pedestrian_system:
+            self.pedestrian_system.update(dt, camera)
 
 
     def render_debug(self, surface, camera=None):
@@ -371,28 +417,49 @@ class CityMap:
 
     def _render_single_layer(self, surface: pygame.Surface, camera: Any, name: str) -> None:
         grid = self.tilemap.get_layer(name)
-        row_range, col_range = (
-            range(self.tilemap.rows), range(self.tilemap.cols)
-        ) if camera is None else self.tilemap._visible_range(camera)
-
-        for row in row_range:
-            for col in col_range:
-                gid = grid[row][col]
-                if gid == 0:
-                    continue
-                tileset = self.tilemap.tileset_for_gid(gid)
-                if tileset is None:
-                    continue
-                source_rect = tileset.rect_for(gid)
-                x, y = self.tilemap.position_of(row, col)
-
-                if camera is None:
+        if camera is None:
+            row_range = range(self.tilemap.rows)
+            col_range = range(self.tilemap.cols)
+            for row in row_range:
+                row_tiles = grid[row]
+                for col in col_range:
+                    gid = row_tiles[col]
+                    if gid == 0:
+                        continue
+                    tileset = self.tilemap.tileset_for_gid(gid)
+                    if tileset is None:
+                        continue
+                    source_rect = tileset.rect_for(gid)
+                    x, y = self.tilemap.position_of(row, col)
                     surface.blit(tileset.image, (x, y), source_rect)
-                else:
-                    dest_rect = camera.apply(
-                        pygame.Rect(x, y, self.tilemap.tile_width, self.tilemap.tile_height)
-                    )
-                    surface.blit(tileset.image, dest_rect, source_rect)
+        else:
+            row_range, col_range = self.tilemap._visible_range(camera)
+            offset_x, offset_y = camera.offset
+            zoom = camera.zoom
+            tw, th = self.tilemap.tile_width, self.tilemap.tile_height
+
+            xs = [round((col * tw - offset_x) * zoom) for col in col_range]
+            ys = [round((row * th - offset_y) * zoom) for row in row_range]
+            col_start = col_range.start
+            row_start = row_range.start
+
+            cache = self._gid_cache
+            for row in row_range:
+                dest_y = ys[row - row_start]
+                row_tiles = grid[row]
+                for col in col_range:
+                    gid = row_tiles[col]
+                    if gid == 0:
+                        continue
+                    tile_info = cache.get(gid)
+                    if tile_info is None:
+                        tileset = self.tilemap.tileset_for_gid(gid)
+                        if tileset is None:
+                            continue
+                        tile_info = (tileset.image, tileset.rect_for(gid))
+                        cache[gid] = tile_info
+                    dest_x = xs[col - col_start]
+                    surface.blit(tile_info[0], (dest_x, dest_y), tile_info[1])
 
     def render_car_silhouette_if_obstructed(self, surface: pygame.Surface, car, camera: Any = None) -> None:
         rect = car.get_collision_rect()
@@ -420,20 +487,26 @@ class CityMap:
         if not is_covered:
             return
 
-        texture = settings.TEXTURES[car.texture_id]
-        frame = settings.FRAMES[car.texture_id][car.frame_index]
-        image = pygame.Surface((frame.width, frame.height), pygame.SRCALPHA)
-        image.fill((0, 0, 0, 0))
-        image.blit(texture, (0, 0), frame)
-
         angle = getattr(car, "angle", None)
+        degrees = 0.0
         if angle is not None:
             angle_offset = getattr(car, "angle_offset", 0)
             degrees = math.degrees(-angle) + angle_offset
-            image = pygame.transform.rotate(image, degrees)
 
-        mask = pygame.mask.from_surface(image)
-        silhouette = mask.to_surface(setcolor=(0, 0, 0, 160), unsetcolor=(0, 0, 0, 0))
+        cache_key = (car.texture_id, car.frame_index, round(degrees, 1))
+        silhouette = getattr(car, "_cached_silhouette", None)
+        if getattr(car, "_sil_cache_key", None) != cache_key or silhouette is None:
+            texture = settings.TEXTURES[car.texture_id]
+            frame = settings.FRAMES[car.texture_id][car.frame_index]
+            image = pygame.Surface((frame.width, frame.height), pygame.SRCALPHA)
+            image.fill((0, 0, 0, 0))
+            image.blit(texture, (0, 0), frame)
+            if angle is not None:
+                image = pygame.transform.rotate(image, degrees)
+            mask = pygame.mask.from_surface(image)
+            silhouette = mask.to_surface(setcolor=(0, 0, 0, 160), unsetcolor=(0, 0, 0, 0))
+            car._sil_cache_key = cache_key
+            car._cached_silhouette = silhouette
 
         sil_rect = silhouette.get_rect(center=(car.x, car.y))
         if camera is not None:
@@ -443,20 +516,22 @@ class CityMap:
 
     def generate_passengers(self, spawn_chance: float = 0.3) -> List[Passenger]:
         spawned_passengers = []
-        node_names = list(self.nodes.keys())
+        # Only use landmark nodes (exclude waypoint nodes like npc_x)
+        landmark_nodes = {k: v for k, v in self.nodes.items() if not k.startswith("npc_")}
+        landmark_names = list(landmark_nodes.keys())
         
-        if len(node_names) < 2:
+        if len(landmark_names) < 2:
             print("Advertencia: Hay menos de 2 nodos cargados.")
             return []
         
         from src.definitions.passengers import PASSENGER_DEFS
 
-        for name, (x, y) in self.nodes.items():
+        for name, (x, y) in landmark_nodes.items():
             if random.random() < spawn_chance:
-                possible_destinations = [n for n in node_names if n != name]
+                possible_destinations = [n for n in landmark_names if n != name]
                 destination_name = random.choice(possible_destinations)
                 
-                destination_pos = self.nodes[destination_name]
+                destination_pos = landmark_nodes[destination_name]
                 
                 ped_key = random.choice(list(PASSENGER_DEFS.keys()))
                 definition = PASSENGER_DEFS[ped_key].copy()
@@ -470,3 +545,7 @@ class CityMap:
         return spawned_passengers
     def render_traffic(self, surface: pygame.Surface, camera: Any = None) -> None:
         self.traffic_system.render(surface, camera)
+
+    def render_pedestrians(self, surface: pygame.Surface, camera: Any = None) -> None:
+        if self.pedestrian_system:
+            self.pedestrian_system.render(surface, camera)

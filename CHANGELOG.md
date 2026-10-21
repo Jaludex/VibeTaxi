@@ -4,6 +4,39 @@ Notable changes on the project will be documented here
 
 Format based on [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/), version format by [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 1.4.0 - 2026-10-20
+
+### Added
+ - Pedestrian NPC system with autonomous sidewalk navigation, randomized spawning, and full animation states (walking, hit, downed, and recovering)
+ - Collision detection between pedestrians and vehicles with impact particles, knockdown states, and hit sound effects
+ - Spatial partitioning grid (`CollisionSpatialGrid`) for high-performance pedestrian proximity and collision queries
+ - Gamepad and Keyboard driving support implemented via strategy pattern (`input_strategies.py`)
+ - Gamepad analog steering with trigger-based progressive braking and drifting
+ - Directional menu navigation supporting keyboard (arrows/Enter/Space) and gamepad (D-pad/A/X) via `SpatialContainer`
+ - Dynamic controller-aware tutorial and HUD hints that automatically adapt to the active input device
+ - Comprehensive Options menu accessible from Title and Pause screens
+ - Categorized volume control system (Master, Music, SFX) with custom interactive `Slider` UI components
+ - Analog stick deadzone configuration and interactive visualizer in Options menu
+ - Variable target framerate settings (30, 60, 120, 144, uncapped)
+ - Discord Rich Presence integration displaying real-time game mode stats, active fares, and current menu state
+ - Integrated in-game tutorial flow directly in `PlayState` with step-by-step guidance and dialogue prompts
+ - Tutorial toggle button in Title Screen with active theme styling
+ - Visual vibe mode overhaul including dynamic taxi ghosting / afterimage trail effects tinted by music genre, floating musical note particle effects, and animated passenger HUD feedback during drift
+ - Added `pyinstance` dependency to enforce single application instance execution
+
+### Changed
+ - Refactored entire audio system to scale volume dynamically by channel categories
+ - Tuned mouse steering by reducing cursor radius to 80px for sharper handling
+ - Added option to skip the Game Over screen rank reveal animation
+ - Optimized map rendering through viewport prop culling, particle emitter caching, and surface caching in `DrawableMixin`
+ - Updated traffic car AI to detect and brake for pedestrians in roadways
+
+### Fixed
+ - Fix initial language selection popup appearing unexpectedly on startup
+ - Fix prop impact collision response and penalty attribution
+ - Fix redundant entity collision and update flags
+ - Fix SDL2/Pygame gamepad axis normalization bug causing unintentional full-axis inputs on microscopic drift
+
 ## 1.3.0 - 2026-09-26
 
 ### Added

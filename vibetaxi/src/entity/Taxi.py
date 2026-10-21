@@ -1,5 +1,6 @@
 from gale.state import StateMachine
 from typing import Any
+import pygame
 
 from src.entity.Car import Car
 from src.states.entity.TaxiIdleState import TaxiIdleState
@@ -24,13 +25,24 @@ class Taxi(Car):
             'crashed': lambda sm: CarCrashedState(self, sm)
         })
         
+        import settings
+        last_device = getattr(settings, "LAST_INPUT_DEVICE", "mouse")
+        if last_device == "gamepad":
+            from src.input_strategies import GamepadInputStrategy
+            self.input_strategy = GamepadInputStrategy()
+        elif last_device == "keyboard":
+            from src.input_strategies import KeyboardInputStrategy
+            self.input_strategy = KeyboardInputStrategy()
+        else:
+            from src.input_strategies import MouseInputStrategy
+            self.input_strategy = MouseInputStrategy()
+        
         from gale.command import CommandBindings
         from src import commands
         
         self.command_bindings = CommandBindings()
         self.command_bindings.bind("mouse_click", press=commands.ACCELERATE, release=commands.STOP_ACCELERATE)
         self.command_bindings.bind("brake", press=commands.BRAKE, release=commands.STOP_BRAKE)
-        self.command_bindings.bind("reverse", press=commands.REVERSE, release=commands.STOP_REVERSE)
         self.command_bindings.bind("drift", press=commands.DRIFT, release=commands.STOP_DRIFT)
         
         self.state_machine.change('idle')
@@ -103,7 +115,8 @@ class Taxi(Car):
             speed_ratio = abs(getattr(self, 'speed', 0)) / max(1, getattr(self, 'max_speed', 1))
             speed_ratio = min(1.0, max(0.0, speed_ratio))
             
-            base_vol = 0.2 # Maximum general volume
+            from src import audio
+            base_vol = 0.2 * audio.engine_scale()
             
             if self.is_crashed:
                 for ch in self.engine_channels.values():
@@ -140,7 +153,7 @@ class Taxi(Car):
                     
                 if getattr(self, "is_drifting", False) and abs(getattr(self, 'speed', 0)) > 30:
                     if self.engine_channels.get("drifting"):
-                        self.engine_channels["drifting"].set_volume(0.2)
+                        self.engine_channels["drifting"].set_volume(0.2 * audio.engine_scale())
                 else:
                     if self.engine_channels.get("drifting"):
                         self.engine_channels["drifting"].set_volume(0.0)
@@ -176,5 +189,58 @@ class Taxi(Car):
                     ch.unpause()
 
     def on_input(self, input_id: str, input_data: Any) -> None:
+        import settings
+        if getattr(settings, 'PHYSICS_DEBUG', False) and 'steer' in input_id:
+            print(f"DEBUG INPUT: id={input_id}, value={input_data.value}")
         if not self.is_crashed:
-            self.command_bindings.dispatch(self, input_id, input_data)
+            # Auto-switch input strategy based on the device being used
+            import settings
+            from src.input_strategies import GamepadInputStrategy, KeyboardInputStrategy, MouseInputStrategy
+            from gale.input_handler import KeyboardData, GamepadButtonData, GamepadAxisData, MouseMotionData, MouseClickData
+            
+            if isinstance(input_data, GamepadAxisData) and input_id in ("steer_x", "steer_y") and abs(input_data.value) >= getattr(settings, 'GAMEPAD_DEADZONE', 0.25):
+                if not isinstance(self.input_strategy, GamepadInputStrategy):
+                    self.input_strategy = GamepadInputStrategy()
+            elif isinstance(input_data, KeyboardData) and input_id in ("move_up", "move_down", "move_left", "move_right"):
+                if not isinstance(self.input_strategy, KeyboardInputStrategy):
+                    self.input_strategy = KeyboardInputStrategy()
+            elif isinstance(input_data, MouseClickData):
+                if not isinstance(self.input_strategy, MouseInputStrategy):
+                    self.input_strategy = MouseInputStrategy()
+            elif isinstance(input_data, MouseMotionData) and any(input_data.buttons):
+                if not isinstance(self.input_strategy, MouseInputStrategy):
+                    self.input_strategy = MouseInputStrategy()
+            
+            if input_id == "steer_x":
+                self.steer_x = input_data.value
+            elif input_id == "steer_y":
+                self.steer_y = input_data.value
+            elif input_id == "trigger_brake":
+                self.is_braking = input_data.value > 0.1
+            elif input_id == "trigger_drift":
+                self.is_drifting = input_data.value > 0.1
+            elif input_id == "move_up":
+                self.key_up = input_data.pressed
+            elif input_id == "move_down":
+                self.key_down = input_data.pressed
+            elif input_id == "move_left":
+                self.key_left = input_data.pressed
+            elif input_id == "move_right":
+                self.key_right = input_data.pressed
+            elif input_id == "mouse_motion":
+                self.mouse_x, self.mouse_y = input_data.position
+            else:
+                self.command_bindings.dispatch(self, input_id, input_data)
+
+    def render(self, surface, camera=None):
+        if hasattr(self, "ghosts"):
+            for ghost in self.ghosts:
+                if ghost.alpha <= 0:
+                    continue
+                ghost.image.set_alpha(int(ghost.alpha))
+                rect = ghost.image.get_rect(center=(ghost.x, ghost.y))
+                if camera is not None:
+                    rect = camera.apply(rect)
+                surface.blit(ghost.image, rect)
+                
+        super().render(surface, camera)

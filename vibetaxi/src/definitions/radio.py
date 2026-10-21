@@ -18,17 +18,16 @@ def get_station_tracks(genre: str, base_tracks: list) -> list:
         return []
 
     genre_dir = USERTRACKS_DIR / genre
-    
-    genre_dir.mkdir(parents=True, exist_ok=True)
-
-    user_tracks = []
-    
-    for file in genre_dir.iterdir():
-        if file.is_file() and file.suffix.lower() in SUPPORTED_AUDIO_EXTENSIONS:
-            if is_valid_audio(file):
-                user_tracks.append(str(file))
-
-    return base_tracks + user_tracks
+    try:
+        genre_dir.mkdir(parents=True, exist_ok=True)
+        user_tracks = []
+        for file in genre_dir.iterdir():
+            if file.is_file() and file.suffix.lower() in SUPPORTED_AUDIO_EXTENSIONS:
+                if is_valid_audio(file):
+                    user_tracks.append(str(file))
+        return base_tracks + user_tracks
+    except OSError:
+        return base_tracks
 
 
 RADIO_STATIONS = [

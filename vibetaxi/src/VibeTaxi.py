@@ -1,4 +1,5 @@
 import pygame
+from typing import Any
 
 from gale.game import Game
 from gale.input_handler import InputData
@@ -20,13 +21,59 @@ class VibeTaxi(Game):
 
     def init(self) -> None:
         from gale.ui.theme import set_default_theme
+        from gale.input_handler import InputHandler
         from src.themes import DEFAULT_THEME
         set_default_theme(DEFAULT_THEME)
         
+        try:
+            import pygame._sdl2.controller
+            pygame._sdl2.controller.init()
+            InputHandler._real_gamepads = {}
+            
+            original_open = InputHandler._open_gamepad.__func__
+            def patched_open(cls, device_index):
+                original_open(cls, device_index)
+                if pygame._sdl2.controller.is_controller(device_index):
+                    c = pygame._sdl2.controller.Controller(device_index)
+                    c.init()
+                    cls._real_gamepads[device_index] = c
+            InputHandler._open_gamepad = classmethod(patched_open)
+            
+            # --- FIX GALE AXIS NORMALIZATION BUG ---
+            # Gale's GamepadAxisData has a flaw: `value if abs(value) <= 1.0 else value / 32768.0`
+            # If SDL sends a tiny raw value like -1 or 1 (microscopic drift), Gale treats it as -1.0 or 1.0 (100% input).
+            from gale.input_handler import GamepadAxisData
+            original_axis_init = GamepadAxisData.__init__
+            def patched_axis_init(self, event):
+                original_axis_init(self, event)
+                # Force correct normalization for Pygame 2 which always sends raw int16
+                self.value = event.value / 32768.0
+            GamepadAxisData.__init__ = patched_axis_init
+            
+        except Exception as e:
+            pass
+            
+        InputHandler.init_gamepads()
+        
         pygame.mixer.set_num_channels(32)
         
+        from src import display
+        display.init_display()
+
+        from src import config
+        self.set_fps_limit(config.get("fps_limit", 60), save=False)
+
         self.state_stack = StateStack()
         self.state_stack.push(OpeningState(self.state_stack))
+
+        from src.discord_rpc import DiscordRPCManager
+        self.discord_rpc = DiscordRPCManager()
+        self.discord_rpc.start()
+
+    def set_fps_limit(self, fps_val: Any, save: bool = True) -> None:
+        from src import config
+        config.set("fps_limit", fps_val, auto_save=save)
+        self.fps = config.get_effective_fps()
 
     def fixed_update(self) -> None:
         state = self.state_stack.states[-1]
@@ -35,17 +82,40 @@ class VibeTaxi(Game):
             fixed_update()
 
     def update(self, dt: float) -> None:
+        import settings
+        settings.RENDER_ALPHA = min(1.0, max(0.0, self._accumulator / self.fixed_timestep))
         self.state_stack.update(dt)
+        if self.state_stack.states and hasattr(self, "discord_rpc"):
+            self.discord_rpc.update_from_state(self.state_stack.states[-1])
 
     def render(self, surface: pygame.Surface) -> None:
         self.state_stack.render(surface)
+        import settings
+        if getattr(settings, 'SHOW_FPS', False):
+            from gale.text import render_text
+            fps = int(self.clock.get_fps())
+            render_text(
+                surface,
+                f"{fps} FPS",
+                settings.FONTS["minecraft_small"],
+                settings.VIRTUAL_WIDTH - 44,
+                4,
+                (255, 255, 100),
+                shadowed=True,
+            )
 
     def on_input(self, input_id: str, input_data: InputData) -> None:
         if input_id == "toggle_fullscreen" and input_data.pressed:
-            pygame.display.toggle_fullscreen()
-            self.is_fullscreen = not self.is_fullscreen
+            from src import display
+            display.toggle_fullscreen()
+            self.is_fullscreen = display.is_fullscreen()
             return
         elif input_id == "quit" and input_data.pressed:
             self.quit()
         else:
             self.state_stack.on_input(input_id, input_data)
+
+    def quit(self) -> None:
+        if hasattr(self, "discord_rpc"):
+            self.discord_rpc.close()
+        super().quit()

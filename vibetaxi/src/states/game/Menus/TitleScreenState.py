@@ -15,6 +15,7 @@ from src.i18n import tr
 
 
 class TitleScreenState(BaseState):
+    discord_presence = {"details": "Main Menu", "state": "Selecting destination"}
     PHASE_FADE_IN = 0
     PHASE_PAN = 1
     PHASE_FADE_OUT = 2
@@ -69,10 +70,10 @@ class TitleScreenState(BaseState):
     def _setup_ui(self):
         from gale.ui.manager import UIManager
         from gale.ui.button import Button
-        from gale.ui.container import Container
-        from src.themes import BUTTON_THEME, DISABLED_BUTTON_THEME
+        from src.gui.SpatialContainer import SpatialContainer
+        from src.themes import BUTTON_THEME, DISABLED_BUTTON_THEME, BUTTON_ACTIVE_THEME
 
-        container = Container(0, 0, settings.VIRTUAL_WIDTH, settings.VIRTUAL_HEIGHT)
+        container = SpatialContainer(0, 0, settings.VIRTUAL_WIDTH, settings.VIRTUAL_HEIGHT)
 
         center_y = settings.VIRTUAL_HEIGHT / 2 + 30
         
@@ -154,6 +155,17 @@ class TitleScreenState(BaseState):
         )
         container.add_child(btn_quit)
 
+        is_tut_active = getattr(settings, "TUTORIAL_ENABLED", False)
+        self.btn_tutorial_toggle = Button(
+            settings.VIRTUAL_WIDTH - 110,
+            settings.VIRTUAL_HEIGHT - 112,
+            80, 24,
+            tr("btn_tutorial"),
+            on_click=self._on_toggle_tutorial,
+            theme=BUTTON_ACTIVE_THEME if is_tut_active else BUTTON_THEME
+        )
+        container.add_child(self.btn_tutorial_toggle)
+
         btn_usertracks = Button(
             settings.VIRTUAL_WIDTH - 120,
             settings.VIRTUAL_HEIGHT - 80,
@@ -164,15 +176,15 @@ class TitleScreenState(BaseState):
         )
         container.add_child(btn_usertracks)
 
-        btn_language = Button(
+        btn_options = Button(
             settings.VIRTUAL_WIDTH - 120,
             settings.VIRTUAL_HEIGHT - 40,
             100, 30,
-            tr("btn_language"),
-            on_click=self._on_language,
+            tr("btn_options"),
+            on_click=self._on_options,
             theme=BUTTON_THEME
         )
-        container.add_child(btn_language)
+        container.add_child(btn_options)
 
         self.ui = UIManager(
             container,
@@ -182,23 +194,38 @@ class TitleScreenState(BaseState):
             window_height=settings.WINDOW_HEIGHT
         )
 
-    def _on_language(self):
+    def _on_toggle_tutorial(self):
+        settings.SOUNDS["press"].play()
+        settings.TUTORIAL_ENABLED = not getattr(settings, "TUTORIAL_ENABLED", False)
+        self._update_tutorial_btn_theme()
+
+    def _update_tutorial_btn_theme(self):
+        if hasattr(self, "btn_tutorial_toggle") and self.btn_tutorial_toggle:
+            from src.themes import BUTTON_THEME, BUTTON_ACTIVE_THEME
+            if getattr(settings, "TUTORIAL_ENABLED", False):
+                self.btn_tutorial_toggle.theme = BUTTON_ACTIVE_THEME
+            else:
+                self.btn_tutorial_toggle.theme = BUTTON_THEME
+
+    def _on_options(self):
         if not getattr(self, "mode_selection_triggered", False):
-            settings.SOUNDS["press"].play()
+            from src import audio
+            audio.play_sfx("press")
             self.mode_selection_triggered = True
             self._cancel_pan_timers()
 
             def close_callback():
                 self.resume_panning()
-                # Re-setup UI to refresh languages
+                # Re-setup UI to refresh any changes (e.g. language)
                 self._setup_ui()
 
-            from src.states.game.Menus.LanguageSelectionState import LanguageSelectionState
-            self.state_machine.push(LanguageSelectionState(self.state_machine, on_close=close_callback))
+            from src.states.game.Menus.OptionsState import OptionsState
+            self.state_machine.push(OptionsState(self.state_machine, on_close=close_callback))
 
     def _on_user_tracks(self):
         if not getattr(self, "mode_selection_triggered", False):
-            settings.SOUNDS["press"].play()
+            from src import audio
+            audio.play_sfx("press")
             self.mode_selection_triggered = True
             self._cancel_pan_timers()
 
@@ -214,7 +241,8 @@ class TitleScreenState(BaseState):
 
     def _on_credits(self):
         if not getattr(self, "mode_selection_triggered", False):
-            settings.SOUNDS["press"].play()
+            from src import audio
+            audio.play_sfx("press")
             self.mode_selection_triggered = True
             self._cancel_pan_timers()
             from src.states.game.Menus.MessageBoxState import MessageBoxState
@@ -226,12 +254,14 @@ class TitleScreenState(BaseState):
 
     def _on_quit(self):
         if not getattr(self, "mode_selection_triggered", False):
-            settings.SOUNDS["press"].play()
+            from src import audio
+            audio.play_sfx("press")
             pygame.event.post(pygame.event.Event(pygame.QUIT))
 
     def _on_new_game(self):
         if not getattr(self, "mode_selection_triggered", False):
-            settings.SOUNDS["press"].play()
+            from src import audio
+            audio.play_sfx("press")
             self.mode_selection_triggered = True
             self._cancel_pan_timers()
             from src.states.game.Menus.ModeSelectionState import ModeSelectionState
@@ -248,7 +278,8 @@ class TitleScreenState(BaseState):
 
     def _on_resume(self):
         if not getattr(self, "mode_selection_triggered", False):
-            settings.SOUNDS["press"].play()
+            from src import audio
+            audio.play_sfx("press")
             self.mode_selection_triggered = True
             
             def proceed():
@@ -265,7 +296,8 @@ class TitleScreenState(BaseState):
 
     def _on_records(self):
         if not getattr(self, "mode_selection_triggered", False):
-            settings.SOUNDS["press"].play()
+            from src import audio
+            audio.play_sfx("press")
 
             def proceed():
                 from src.states.game.Menus.RecordsState import RecordsState
@@ -355,13 +387,19 @@ class TitleScreenState(BaseState):
         if self.city_map and self.camera:
             self.city_map.update(dt, self.camera)
             self.camera.update(dt)
-        pygame.mixer.music.set_volume(getattr(self, 'music_volume', 0.5))
+        from src import audio
+        audio.set_music_volume(getattr(self, 'music_volume', 0.5))
         if hasattr(self, 'ui') and self.ui:
             self.ui.update(dt)
 
     def on_input(self, input_id, input_data):
         if getattr(self, "input_cooldown", 0.0) > 0:
             return
+            
+        from src.menu_navigation import handle_menu_navigation
+        if hasattr(self, 'ui') and handle_menu_navigation(self.ui, input_id, input_data):
+            return
+            
         if hasattr(self, 'ui') and self.ui:
             self.ui.on_input(input_id, input_data)
 
@@ -372,6 +410,7 @@ class TitleScreenState(BaseState):
         if self.city_map and self.camera:
             self.city_map.render_layers(surface, self.camera, settings.TILED_GROUND_LAYERS)
             self.city_map.render_layers(surface, self.camera, settings.TILED_MIDDLE_LAYERS)
+            self.city_map.render_pedestrians(surface, self.camera)
             self.city_map.render_traffic(surface, self.camera)
             self.city_map.render_layers(surface, self.camera, settings.TILED_UPPER_NO_SHADOW_LAYERS)
             self.city_map.render_layers(surface, self.camera, settings.TILED_UPPER_SHADOW_LAYERS)

@@ -15,19 +15,46 @@ input_handler.InputHandler.set_keyboard_action(input_handler.KEY_ESCAPE, "pause"
 input_handler.InputHandler.set_mouse_click_action(input_handler.MOUSE_BUTTON_1, "mouse_click")
 input_handler.InputHandler.set_mouse_motion_action(None, "mouse_motion")
 input_handler.InputHandler.set_keyboard_action(input_handler.KEY_x, "brake")
-input_handler.InputHandler.set_keyboard_action(input_handler.KEY_z, "reverse")
 input_handler.InputHandler.set_keyboard_action(input_handler.KEY_LSHIFT, "drift")
 input_handler.InputHandler.set_keyboard_action(input_handler.KEY_a, "prev-song")
 input_handler.InputHandler.set_keyboard_action(input_handler.KEY_d, "next-song")
 input_handler.InputHandler.set_keyboard_action(input_handler.KEY_w, "vol-up")
 input_handler.InputHandler.set_keyboard_action(input_handler.KEY_s, "vol-down")
 
+# Gamepad bindings
+input_handler.InputHandler.set_gamepad_button_action(input_handler.GAMEPAD_BUTTON_LEFTSHOULDER, "prev-song")
+input_handler.InputHandler.set_gamepad_button_action(input_handler.GAMEPAD_BUTTON_RIGHTSHOULDER, "next-song")
+
+# Navigation and Menu bindings (Keyboard)
+input_handler.InputHandler.set_keyboard_action(pygame.K_UP, "move_up")
+input_handler.InputHandler.set_keyboard_action(pygame.K_DOWN, "move_down")
+input_handler.InputHandler.set_keyboard_action(pygame.K_LEFT, "move_left")
+input_handler.InputHandler.set_keyboard_action(pygame.K_RIGHT, "move_right")
+input_handler.InputHandler.set_keyboard_action(pygame.K_RETURN, "confirm")
+input_handler.InputHandler.set_keyboard_action(pygame.K_SPACE, "confirm")
+
+# Navigation bindings (Gamepad)
+input_handler.InputHandler.set_gamepad_button_action(input_handler.GAMEPAD_BUTTON_DPAD_UP, "vol-up")
+input_handler.InputHandler.set_gamepad_button_action(input_handler.GAMEPAD_BUTTON_DPAD_DOWN, "vol-down")
+input_handler.InputHandler.set_gamepad_button_action(input_handler.GAMEPAD_BUTTON_DPAD_LEFT, "move_left")
+input_handler.InputHandler.set_gamepad_button_action(input_handler.GAMEPAD_BUTTON_DPAD_RIGHT, "move_right")
+input_handler.InputHandler.set_gamepad_button_action(input_handler.GAMEPAD_BUTTON_A, "confirm")
+input_handler.InputHandler.set_gamepad_button_action(input_handler.GAMEPAD_BUTTON_X, "confirm")
+input_handler.InputHandler.set_gamepad_button_action(input_handler.GAMEPAD_BUTTON_START, "pause")
+
+# Analog driving bindings (Gamepad)
+input_handler.InputHandler.set_gamepad_axis_action(input_handler.GAMEPAD_AXIS_LEFT_X, "steer_x")
+input_handler.InputHandler.set_gamepad_axis_action(input_handler.GAMEPAD_AXIS_LEFT_Y, "steer_y")
+input_handler.InputHandler.set_gamepad_axis_action(input_handler.GAMEPAD_AXIS_TRIGGER_LEFT, "trigger_brake")
+input_handler.InputHandler.set_gamepad_axis_action(input_handler.GAMEPAD_AXIS_TRIGGER_RIGHT, "trigger_drift")
+
 import string
 # Map all printable keys for TextInput, without overwriting existing game controls
 existing_keys = {
     input_handler.KEY_a, input_handler.KEY_d, input_handler.KEY_w, input_handler.KEY_s,
-    input_handler.KEY_x, input_handler.KEY_z, input_handler.KEY_LSHIFT,
-    input_handler.KEY_ESCAPE
+    input_handler.KEY_x, input_handler.KEY_LSHIFT,
+    input_handler.KEY_ESCAPE, pygame.K_UP, pygame.K_DOWN, pygame.K_LEFT, pygame.K_RIGHT,
+    pygame.K_RETURN, pygame.K_SPACE
 }
 
 for char in string.ascii_lowercase + string.digits:
@@ -36,7 +63,7 @@ for char in string.ascii_lowercase + string.digits:
         input_handler.InputHandler.set_keyboard_action(key_const, "keyboard")
 
 # Special keys for TextInput
-for key_name in ["SPACE", "BACKSPACE", "RETURN", "KP_ENTER", "DELETE", "LEFT", "RIGHT"]:
+for key_name in ["BACKSPACE", "KP_ENTER", "DELETE"]:
     key_const = getattr(pygame, f"K_{key_name}", None)
     if key_const is not None and key_const not in existing_keys:
         input_handler.InputHandler.set_keyboard_action(key_const, "keyboard")
@@ -47,10 +74,12 @@ RADIO_FADEOUT_TIME = 2.0
 
 TITLE = "Vibe Taxi"
 
-VERSION = "1.3.0"
+VERSION = "1.4.0"
 
 
 DIALOGUE_DISPLAY_TIME = 5.0
+ALLOW_GAMEOVER_SKIP = False
+TUTORIAL_ENABLED = False
 
 BASE_DIR = pathlib.Path(__file__).parent
 
@@ -78,7 +107,14 @@ PASSENGER_DETECTION_RADIUS = 30
 PASSENGER_DELIVERY_RADIUS = 60
 
 PASSENGER_NEXT_PAGE_TIME = 1.0
-BAD_MUSIC_PENALTY_TIME = 1.5  # Seconds of wrong/no music before comfort starts decreasing
+BAD_MUSIC_PENALTY_TIME = 1.5
+MOUSE_MAX_SPEED_RADIUS = 80
+GAMEPAD_DEADZONE = 0.25
+
+# Vibe Mode Ghosting
+GHOSTING_SPAWN_RATE = 0.08  # seconds between ghosts
+GHOSTING_DURATION = 0.4     # seconds until alpha reaches 0
+GHOSTING_ALPHA_START = 120  # initial alpha (0-255)
 
 # Arcade Scoring
 ARCADE_BASE_SCORE = 150
@@ -114,6 +150,12 @@ VIBE_COLORS = {
 TRAFFIC_SPAWN_INTERVAL = 0.2
 TRAFFIC_MAX_CARS = 20
 
+PEDESTRIAN_SPAWN_INTERVAL = 0.8
+PEDESTRIAN_MAX_COUNT = 25
+PEDESTRIAN_SPAWN_RANGE = 600
+PEDESTRIAN_MAX_DISTANCE = 900
+PEDESTRIAN_SPAWN_CHANCE = 0.65
+
 CANT_MUSIC_CHANNELS = 5
 
 PHYSICS_DEBUG = False
@@ -133,6 +175,7 @@ TEXTURES = {
     "taximeter": pygame.image.load(BASE_DIR / "assets" / "graphics" / "taximeter.png"),
     "background_car_view": pygame.image.load(BASE_DIR / "assets" / "graphics" / "background_car_view.png"),
     "game_icon": pygame.image.load(BASE_DIR / "assets" / "graphics" / "icon.png"),
+    "music_notes": pygame.image.load(BASE_DIR / "assets" / "graphics" / "music_notes.png"),
 }
 
 TILEMAPS = {
@@ -145,7 +188,8 @@ FRAMES = {
     "props": frames.generate_frames(TEXTURES["props"], 16, 16),
     "button-less": frames.generate_frames(TEXTURES["button-less"], 47, 24),
     "button-plus": frames.generate_frames(TEXTURES["button-plus"], 47, 24),
-    "peds": frames.generate_frames(TEXTURES["peds"], 16, 16)
+    "peds": frames.generate_frames(TEXTURES["peds"], 16, 16),
+    "music_notes": frames.generate_frames(TEXTURES["music_notes"], 12, 15)
 }
 
 FONTS = {
@@ -199,7 +243,16 @@ REPAIR_COST = 40.0
 
 SAVE_MANAGER = SaveManager(save_dir=BASE_DIR / 'saves')
 
+# Configurable runtime flags
+SHOW_FPS = False
+PHYSICS_DEBUG = False
 LANGUAGE = None
-if SAVE_MANAGER.exists("config"):
-    _config = SAVE_MANAGER.load("config")
-    LANGUAGE = _config.get("language")
+DISCORD_CLIENT_ID = "1558733170730344582"
+
+try:
+    from src import config
+    config.load()
+except Exception:
+    if SAVE_MANAGER.exists("config"):
+        _config = SAVE_MANAGER.load("config")
+        LANGUAGE = _config.get("language")

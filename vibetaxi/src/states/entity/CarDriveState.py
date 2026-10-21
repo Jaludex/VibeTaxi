@@ -1,5 +1,6 @@
 import math
 import pygame
+import settings
 from src.states.entity.BaseEntityState import BaseEntityState
 
 class CarDriveState(BaseEntityState):
@@ -8,13 +9,28 @@ class CarDriveState(BaseEntityState):
         dy = self.entity.target_y - self.entity.y
         distance = math.hypot(dx, dy)
         
-        is_reversing = getattr(self.entity, "is_reversing", False)
         is_accelerating = getattr(self.entity, "is_accelerating", True)
-        is_braking = getattr(self.entity, "is_braking", False)
+        is_braking_input = getattr(self.entity, "is_braking", False)
+        
+        is_reversing = False
+        is_braking = is_braking_input
+        
+        if getattr(self.entity, "prevent_movement", False):
+            is_accelerating = False
+            is_braking = True
+            is_reversing = False
+        elif is_braking_input and getattr(self.entity, "speed", 0) <= 0.5 and getattr(self.entity, "can_reverse", True):
+            # Reversing behavior: holding brake when stopped/slow
+            is_reversing = True
+            is_braking = False
         
         dir_sign = -1 if is_reversing else 1
-        target_angle = math.atan2(dy, dx) + (math.pi if is_reversing else 0)
         
+        if distance > 5:
+            target_angle = math.atan2(dy, dx) + (math.pi if is_reversing else 0)
+        else:
+            target_angle = self.entity.angle
+            
         angle_diff = (target_angle - self.entity.angle + math.pi) % (2 * math.pi) - math.pi
 
         reverse_ratio = getattr(self.entity, "reverse_speed_ratio", 0.5)
@@ -34,10 +50,11 @@ class CarDriveState(BaseEntityState):
         self.entity.angle = (self.entity.angle + math.pi) % (2 * math.pi) - math.pi
 
         target_speed = 0.0
+        max_dist = getattr(settings, 'MOUSE_MAX_SPEED_RADIUS', 150)
         if not is_reversing and distance < 15:
             target_speed = 0.0
         elif (is_accelerating or is_reversing) and not is_braking:
-            speed_limit = max_spd if (is_reversing or distance >= 150) else max_spd * (distance / 150.0)
+            speed_limit = max_spd if (is_reversing or distance >= max_dist) else max_spd * (distance / max_dist)
             target_speed = speed_limit * dir_sign
 
         accel_rate = self.entity.acceleration * dt

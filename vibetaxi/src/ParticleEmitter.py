@@ -3,6 +3,7 @@ import pygame
 from gale.particle_system import ParticleSystem
 from gale.timer import Timer
 
+_PARTICLE_SURF_CACHE = {}
 
 class ParticleEmitter:
     def __init__(
@@ -98,19 +99,40 @@ class ParticleEmitter:
     def render(self, surface: pygame.Surface, camera: Any = None) -> None:
         size = self.particle_size
         half_size = max(1, size // 2)
+
+        cam_x, cam_y = (0.0, 0.0)
+        zoom = 1.0
+        has_cam = camera is not None
+        if has_cam:
+            cam_x, cam_y = camera.offset
+            zoom = camera.zoom
+            vw, vh = camera.viewport_width, camera.viewport_height
+
         for ps in self.systems:
             for p in ps.particles:
                 if ps.timer < p.life_time:
-                    if camera is not None:
-                        rect = camera.apply(pygame.Rect(int(p.x), int(p.y), size, size))
-                    else:
-                        rect = pygame.Rect(int(p.x), int(p.y), size, size)
-
-                    s = pygame.Surface((size, size), pygame.SRCALPHA)
                     alpha = p.color[3] if len(p.color) >= 4 else 255
+                    if alpha <= 0:
+                        continue
+
+                    if has_cam:
+                        dest_x = round((int(p.x) - cam_x) * zoom)
+                        dest_y = round((int(p.y) - cam_y) * zoom)
+                        if dest_x + size < 0 or dest_x > vw or dest_y + size < 0 or dest_y > vh:
+                            continue
+                    else:
+                        dest_x = int(p.x)
+                        dest_y = int(p.y)
+
                     color = (p.color[0], p.color[1], p.color[2], alpha)
-                    pygame.draw.circle(s, color, (half_size, half_size), half_size)
-                    surface.blit(s, rect)
+                    cache_key = (size, color)
+                    s = _PARTICLE_SURF_CACHE.get(cache_key)
+                    if s is None:
+                        s = pygame.Surface((size, size), pygame.SRCALPHA)
+                        pygame.draw.circle(s, color, (half_size, half_size), half_size)
+                        _PARTICLE_SURF_CACHE[cache_key] = s
+
+                    surface.blit(s, (dest_x, dest_y))
 
     @classmethod
     def create_sparks(

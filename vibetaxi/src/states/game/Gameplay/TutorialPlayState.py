@@ -13,11 +13,18 @@ from src.i18n import tr
 import settings
 
 class TutorialPlayState(PlayState):
+    def get_discord_presence(self) -> dict:
+        return {
+            "details": "Tutorial",
+            "state": "Learning the ropes",
+        }
+
     def enter(self, **enter_params: Dict[str, Any]) -> None:
         # Force tutorial map
         if "city_map" not in enter_params or enter_params["city_map"] is None:
             enter_params["city_map"] = CityMap("tutorial")
             
+        self.next_strategy = enter_params.get("next_strategy", None)
         super().enter(**enter_params)
         
         # Custom tutorial passengers setup
@@ -79,6 +86,23 @@ class TutorialPlayState(PlayState):
         print(f"Unknown tutorial condition: {condition}")
         return True # Default to passing if unknown
         
+    def _get_formatted_tutorial_message(self, message_key: str) -> str:
+        raw_msg = tr(message_key)
+        
+        active_strategy = getattr(self.taxi, "input_strategy", None)
+        
+        if active_strategy and hasattr(active_strategy, "get_binding_texts"):
+            bindings = active_strategy.get_binding_texts()
+        else:
+            # Fallback bindings if strategy is somehow missing
+            from src.input_strategies import MouseInputStrategy
+            bindings = MouseInputStrategy().get_binding_texts()
+            
+        try:
+            return raw_msg.format(**bindings)
+        except KeyError:
+            return raw_msg
+
     def _check_tutorial_triggers(self):
         if self.tutorial_paused:
             return
@@ -113,7 +137,7 @@ class TutorialPlayState(PlayState):
                     self.state_machine.push(MessageBoxState(
                         self.state_machine, 
                         tr("tutorial_title", default="Tutorial"), 
-                        tr(trigger["message"]), 
+                        self._get_formatted_tutorial_message(trigger["message"]), 
                         on_close=on_close
                     ))
                 else:
@@ -133,8 +157,8 @@ class TutorialPlayState(PlayState):
                     self.taxi.state_machine.change('idle')
                     
                     self.fade_alpha = 0.0
-                    if "crash_car" in settings.SOUNDS:
-                        settings.SOUNDS["crash_car"].play()
+                    from src import audio
+                    audio.play_sfx("crash_car")
                         
                     def fade_in():
                         Timer.tween(0.4, [(self, {"fade_alpha": 0.0})], on_finish=lambda: setattr(self, "tutorial_paused", False))
@@ -174,16 +198,22 @@ class TutorialPlayState(PlayState):
                     pass
             self.taxi.state_machine.change('idle')
             
-            def return_to_title():
-                while len(self.state_machine.states) > 0:
-                    self.state_machine.pop()
-                self.state_machine.push(TitleScreenState(self.state_machine))
+            def return_to_title_or_next_mode():
+                if getattr(self, "next_strategy", None) is not None:
+                    next_strat = self.next_strategy
+                    while len(self.state_machine.states) > 0:
+                        self.state_machine.pop()
+                    self.state_machine.push(PlayState(self.state_machine), game_rule_strategy=next_strat)
+                else:
+                    while len(self.state_machine.states) > 0:
+                        self.state_machine.pop()
+                    self.state_machine.push(TitleScreenState(self.state_machine))
                 
             self.state_machine.push(MessageBoxState(
                 self.state_machine,
                 tr("tutorial_completed_title", default="Tutorial Completed!"),
                 tr("tutorial_completed_msg", default="You have completed the tutorial. Ready for the real work!"),
-                on_close=return_to_title
+                on_close=return_to_title_or_next_mode
             ))
 
     def update(self, dt: float):

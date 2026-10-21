@@ -57,6 +57,26 @@ class WorkdayStrategy(BaseRuleStrategy):
     def get_start_text(self) -> str:
         return tr("mode_workday_initial_text", day=self.day, fee=self.fee)
 
+    def get_discord_presence(self, play_state=None) -> dict:
+        day = int(getattr(self, "day", 1))
+        money = float(getattr(self, "money", 0.0))
+        fee = float(getattr(self, "fee", 80.0))
+
+        pax = getattr(play_state, "active_passenger", None) if play_state else None
+        if pax is not None:
+            pax_def = getattr(pax, "definition", {})
+            pax_name = pax_def.get("name", "Passenger")
+            state_text = f"Carrying {pax_name} | ${money:.0f} earned"
+        else:
+            state_text = f"Cruising | ${money:.0f} / Goal ${fee:.0f}"
+
+        return {
+            "details": f"Workday - Day {day}",
+            "state": state_text,
+            "small_image": "workday",
+            "small_text": f"Day {day}",
+        }
+
     def on_passenger_delivered(self, passenger, distance: float):
         # Base gain
         base_gain = 10.0
@@ -87,9 +107,8 @@ class WorkdayStrategy(BaseRuleStrategy):
             if time_bonus > 0: reasons.append(tr("bonus_fast", default="Fast!"))
             if safety_bonus > 0: reasons.append(tr("bonus_safe", default="Safe!"))
             self.money_popup_text += f"\n({', '.join(reasons)})"
-            import settings
-            if "bonus" in settings.SOUNDS:
-                settings.SOUNDS["bonus"].play()
+            from src import audio
+            audio.play_sfx("bonus")
             
         self.money_popup_alpha = 0.0
         self.money_popup_y_offset = 0.0

@@ -7,13 +7,15 @@ from gale.state import BaseState
 from gale.timer import Timer
 from gale.text import render_text
 from gale.ui.manager import UIManager
-from gale.ui.container import Container
+from src.gui.SpatialContainer import SpatialContainer
 from gale.ui.button import Button
 from gale.ui.theme import Theme
 
 from src.states.game.Menus.TitleScreenState import TitleScreenState
 
 class RecordsState(BaseState):
+    discord_presence = {"details": "Hall of Fame", "state": "Checking top scores"}
+
     def __init__(self, state_machine: Any) -> None:
         super().__init__(state_machine)
         
@@ -27,7 +29,7 @@ class RecordsState(BaseState):
         
     def _setup_ui(self):
         from src.themes import BUTTON_THEME
-        container = Container(0, 0, settings.VIRTUAL_WIDTH, settings.VIRTUAL_HEIGHT)
+        container = SpatialContainer(0, 0, settings.VIRTUAL_WIDTH, settings.VIRTUAL_HEIGHT)
         
         btn_back = Button(
             settings.VIRTUAL_WIDTH / 2 - 50, settings.VIRTUAL_HEIGHT - 40,
@@ -51,7 +53,8 @@ class RecordsState(BaseState):
         
     def on_back_click(self):
         if self.is_exiting: return
-        settings.SOUNDS["press"].play()
+        from src import audio
+        audio.play_sfx("press")
         self.is_exiting = True
         
         def exit_to_title():
@@ -64,6 +67,9 @@ class RecordsState(BaseState):
         self.ui.update(dt)
 
     def on_input(self, input_id, input_data):
+        from src.menu_navigation import handle_menu_navigation
+        if handle_menu_navigation(self.ui, input_id, input_data):
+            return
         self.ui.on_input(input_id, input_data)
 
     def render(self, surface: pygame.Surface):

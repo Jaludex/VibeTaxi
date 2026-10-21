@@ -6,7 +6,7 @@ import settings
 from gale.state import BaseState
 from gale.timer import Timer
 from gale.ui.button import Button
-from gale.ui.container import Container
+from src.gui.SpatialContainer import SpatialContainer
 from gale.ui.label import Label
 from gale.ui.manager import UIManager
 from gale.ui.panel import Panel
@@ -56,7 +56,7 @@ class ConfirmationState(BaseState):
             theme=BUTTON_THEME
         )
         
-        self.container = Container(0, 0, settings.VIRTUAL_WIDTH, settings.VIRTUAL_HEIGHT, children=[
+        self.container = SpatialContainer(0, 0, settings.VIRTUAL_WIDTH, settings.VIRTUAL_HEIGHT, children=[
             self.panel, self.label_msg, self.btn_yes, self.btn_no
         ])
         
@@ -92,13 +92,15 @@ class ConfirmationState(BaseState):
     def _on_yes(self):
         if self.is_exiting: return
         self.is_exiting = True
-        if "press" in settings.SOUNDS: settings.SOUNDS["press"].play()
+        from src import audio
+        audio.play_sfx("press")
         self._exit_to_callback(self.on_confirm_callback)
         
     def _on_no(self):
         if self.is_exiting: return
         self.is_exiting = True
-        if "press" in settings.SOUNDS: settings.SOUNDS["press"].play()
+        from src import audio
+        audio.play_sfx("press")
         self._exit_to_callback(self.on_cancel_callback)
         
     def _exit_to_callback(self, callback):
@@ -119,6 +121,9 @@ class ConfirmationState(BaseState):
         self.ui.update(dt)
 
     def on_input(self, input_id, input_data):
+        from src.menu_navigation import handle_menu_navigation
+        if handle_menu_navigation(self.ui, input_id, input_data):
+            return
         self.ui.on_input(input_id, input_data)
 
     def render(self, surface: pygame.Surface):

@@ -5,15 +5,12 @@ from src import commands
 
 class TaxiDriveState(CarDriveState):
     def update(self, dt):
-        px, py = pygame.mouse.get_pos()
-        
-        vx, vy = physical_to_virtual(px, py)
-        
-        camera = getattr(self.entity, "camera", None)
-        if camera:
-            self.entity.target_x, self.entity.target_y = camera.screen_to_world((vx, vy))
-        else:
-            self.entity.target_x, self.entity.target_y = vx, vy
+        strategy = getattr(self.entity, "input_strategy", None)
+        if not strategy:
+            from src.input_strategies import MouseInputStrategy
+            strategy = MouseInputStrategy()
+            self.entity.input_strategy = strategy
+        self.entity.target_x, self.entity.target_y = strategy.get_target_position(self.entity, dt)
             
         if type(self).__name__ == "TaxiDriveState":
             self.entity.is_drifting = False

@@ -4,13 +4,15 @@ from gale.state import BaseState
 from gale.timer import Timer
 from gale.ui.manager import UIManager
 from gale.ui.button import Button
-from gale.ui.container import Container
+from src.gui.SpatialContainer import SpatialContainer
 from gale.text import render_text
 
 from src.themes import BUTTON_THEME
 from src.i18n import texts, tr
 
 class LanguageSelectionState(BaseState):
+    discord_presence = {"details": "Settings", "state": "Tuning options"}
+
     def __init__(self, state_machine, on_close=None):
         super().__init__(state_machine)
         self.on_close = on_close
@@ -19,7 +21,7 @@ class LanguageSelectionState(BaseState):
         self.container_y = settings.VIRTUAL_HEIGHT + 200
         self.target_y = settings.VIRTUAL_HEIGHT / 2
         
-        container = Container(0, 0, settings.VIRTUAL_WIDTH, settings.VIRTUAL_HEIGHT)
+        container = SpatialContainer(0, 0, settings.VIRTUAL_WIDTH, settings.VIRTUAL_HEIGHT)
         
         available_langs = list(texts.keys())
         
@@ -72,6 +74,9 @@ class LanguageSelectionState(BaseState):
         self.ui.update(dt)
         
     def on_input(self, input_id, input_data):
+        from src.menu_navigation import handle_menu_navigation
+        if handle_menu_navigation(self.ui, input_id, input_data):
+            return
         self.ui.on_input(input_id, input_data)
         
     def render(self, surface):
@@ -102,15 +107,10 @@ class LanguageSelectionState(BaseState):
         self.ui.render(surface)
         
     def _on_language_select(self, lang_code):
-        settings.SOUNDS["press"].play()
+        from src import audio, config
+        audio.play_sfx("press")
         settings.LANGUAGE = lang_code
-        
-        # Save configuration
-        config = {}
-        if settings.SAVE_MANAGER.exists("config"):
-            config = settings.SAVE_MANAGER.load("config")
-        config["language"] = lang_code
-        settings.SAVE_MANAGER.save("config", config)
+        config.set("language", lang_code, auto_save=True)
         
         Timer.tween(
             0.3, 

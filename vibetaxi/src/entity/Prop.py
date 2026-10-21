@@ -12,6 +12,8 @@ class Prop(Entity):
         self.angle = 0
         # removal scheduling guard
         self._removal_scheduled = False
+        # mark as prop to allow physics sync pruning
+        self._is_prop = True
         # per-prop on_collide callback from definitions
         self._on_collide_def = definition.get("on_collide")
 
@@ -43,7 +45,12 @@ class Prop(Entity):
             self.align_body_to_render_center()
         except Exception:
             pass
+
     def update(self, dt: float) -> None:
+        # Stationary props without particles do not need update or physics sync
+        if not self._removal_scheduled and not getattr(self, 'particle_system', None):
+            return
+
         super().update(dt)
         if hasattr(self, 'particle_system') and self.particle_system:
             self.particle_system.update(dt)
@@ -60,7 +67,7 @@ class Prop(Entity):
                     return
                 except TypeError:
                     pass
-            if camera:
+            if camera and hasattr(self.particle_system, 'particles'):
                 import pygame
                 for p in self.particle_system.particles:
                     if self.particle_system.timer < p.life_time:
@@ -69,5 +76,5 @@ class Prop(Entity):
                         color = (p.color[0], p.color[1], p.color[2], p.color[3])
                         pygame.draw.circle(s, color, (2, 2), 2)
                         surface.blit(s, rect)
-            else:
+            elif not camera and hasattr(self.particle_system, 'render'):
                 self.particle_system.render(surface)

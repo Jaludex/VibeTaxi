@@ -6,22 +6,24 @@ from typing import Dict, Any, Optional
 from gale.state import BaseState
 from gale.timer import Timer
 from gale.ui.manager import UIManager
-from gale.ui.container import Container
+from src.gui.SpatialContainer import SpatialContainer
 from gale.ui.panel import Panel
 from gale.ui.button import Button
 from gale.ui.label import Label
 from gale.ui.theme import Theme
 
 class PauseState(BaseState):
+    discord_presence = {"details": "Paused", "state": "Taking a break"}
+
     def __init__(self, state_machine: Any) -> None:
         super().__init__(state_machine)
         self.fade_alpha = 0.0
         self.panel_y = -200
-        self.target_y = settings.VIRTUAL_HEIGHT / 2 - 60
+        self.target_y = settings.VIRTUAL_HEIGHT / 2 - 85
         self.is_exiting = False
         
         panel_width = 200
-        panel_height = 155
+        panel_height = 185
         from src.themes import BUTTON_THEME, LABEL_THEME, PANEL_THEME
         self.panel = Panel(
             settings.VIRTUAL_WIDTH / 2 - panel_width / 2, 
@@ -32,38 +34,46 @@ class PauseState(BaseState):
         
         self.label_title = Label(
             settings.VIRTUAL_WIDTH / 2, 
-            self.panel_y + 20, 
+            self.panel_y + 16, 
             tr("pause_title", default="Paused"), 
             theme=LABEL_THEME,
             center=True
         )
         
         self.btn_resume = Button(
-            settings.VIRTUAL_WIDTH / 2 - 60, self.panel_y + 50,
-            120, 25,
+            settings.VIRTUAL_WIDTH / 2 - 60, self.panel_y + 45,
+            120, 24,
             tr("btn_resume", default="Continue"),
             on_click=self.on_resume_click,
             theme=BUTTON_THEME
         )
+
+        self.btn_options = Button(
+            settings.VIRTUAL_WIDTH / 2 - 60, self.panel_y + 76,
+            120, 24,
+            tr("btn_options", default="Options"),
+            on_click=self.on_options_click,
+            theme=BUTTON_THEME
+        )
         
         self.btn_exit = Button(
-            settings.VIRTUAL_WIDTH / 2 - 60, self.panel_y + 85,
-            120, 25,
+            settings.VIRTUAL_WIDTH / 2 - 60, self.panel_y + 107,
+            120, 24,
             tr("btn_exit_menu", default="Main Menu"),
             on_click=self.on_exit_click,
             theme=BUTTON_THEME
         )
         
         self.btn_quit = Button(
-            settings.VIRTUAL_WIDTH / 2 - 60, self.panel_y + 120,
-            120, 25,
+            settings.VIRTUAL_WIDTH / 2 - 60, self.panel_y + 138,
+            120, 24,
             tr("btn_quit_desktop", default="Quit Game"),
             on_click=self.on_quit_click,
             theme=BUTTON_THEME
         )
         
-        self.container = Container(0, 0, settings.VIRTUAL_WIDTH, settings.VIRTUAL_HEIGHT, children=[
-            self.panel, self.label_title, self.btn_resume, self.btn_exit, self.btn_quit
+        self.container = SpatialContainer(0, 0, settings.VIRTUAL_WIDTH, settings.VIRTUAL_HEIGHT, children=[
+            self.panel, self.label_title, self.btn_resume, self.btn_options, self.btn_exit, self.btn_quit
         ])
         
         self.ui = UIManager(
@@ -91,14 +101,23 @@ class PauseState(BaseState):
         
     def update_ui_y(self):
         self.panel.y = self.panel_y
-        self.label_title.y = self.panel_y + 20
-        self.btn_resume.y = self.panel_y + 50
-        self.btn_exit.y = self.panel_y + 85
-        self.btn_quit.y = self.panel_y + 120
+        self.label_title.y = self.panel_y + 16
+        self.btn_resume.y = self.panel_y + 45
+        self.btn_options.y = self.panel_y + 76
+        self.btn_exit.y = self.panel_y + 107
+        self.btn_quit.y = self.panel_y + 138
         
+    def on_options_click(self):
+        if self.is_exiting: return
+        from src import audio
+        audio.play_sfx("press")
+        from src.states.game.Menus.OptionsState import OptionsState
+        self.state_machine.push(OptionsState(self.state_machine))
+
     def on_resume_click(self):
         if self.is_exiting: return
-        if "unpause" in settings.SOUNDS: settings.SOUNDS["unpause"].play()
+        from src import audio
+        audio.play_sfx("unpause")
         self.is_exiting = True
         
         def resume_game():
@@ -114,7 +133,8 @@ class PauseState(BaseState):
         
     def on_exit_click(self):
         if self.is_exiting: return
-        settings.SOUNDS["press"].play()
+        from src import audio
+        audio.play_sfx("press")
         self.is_exiting = True
         
         def exit_to_title():
@@ -127,7 +147,8 @@ class PauseState(BaseState):
 
     def on_quit_click(self):
         if self.is_exiting: return
-        settings.SOUNDS["press"].play()
+        from src import audio
+        audio.play_sfx("press")
         self.is_exiting = True
         pygame.event.post(pygame.event.Event(pygame.QUIT))
 
@@ -139,6 +160,11 @@ class PauseState(BaseState):
         if input_id == "pause" and input_data.pressed:
             self.on_resume_click()
             return
+            
+        from src.menu_navigation import handle_menu_navigation
+        if handle_menu_navigation(self.ui, input_id, input_data):
+            return
+            
         self.ui.on_input(input_id, input_data)
 
     def render(self, surface: pygame.Surface):

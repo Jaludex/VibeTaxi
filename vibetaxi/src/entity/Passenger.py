@@ -39,7 +39,8 @@ class Passenger(Entity):
                 self.music_preference = random.choice(valid_genres)
             self.definition["music_preference"] = self.music_preference
             
-        dialogues = texts[getattr(settings, 'LANGUAGE', 'en')]['dialogues']
+        active_lang = getattr(settings, 'LANGUAGE', 'en') or 'en'
+        dialogues = texts.get(active_lang, texts['en'])['dialogues']
         base_greeting = random.choice(dialogues["enter"]).format(destination=self.destination)
         genre_hints = dialogues.get("hints", {}).get(self.music_preference, [])
         hint = random.choice(genre_hints) if genre_hints else ""
@@ -84,7 +85,8 @@ class Passenger(Entity):
                 self.comfort = min(COMFORT_RULES["max_comfort"], self.comfort + COMFORT_RULES["initial_reaction_bonus"])
                 self.has_initial_music_reacted = True
                 if hud:
-                    hud.show_text(random.choice(texts[getattr(settings, 'LANGUAGE', 'en')]['dialogues']["reaction"]["good"]))
+                    act_lang = getattr(settings, 'LANGUAGE', 'en') or 'en'
+                    hud.show_text(random.choice(texts.get(act_lang, texts['en'])['dialogues']["reaction"]["good"]))
             elif self.time_riding > COMFORT_RULES["initial_reaction_time"]:
                 # Missed the window, no reaction
                 self.has_initial_music_reacted = True
@@ -104,7 +106,8 @@ class Passenger(Entity):
     def on_collision(self, hud=None):
         self.comfort = max(COMFORT_RULES["min_comfort"], self.comfort - COMFORT_RULES["collision_penalty"])
         if hud:
-            hud.show_text(random.choice(texts[getattr(settings, 'LANGUAGE', 'en')]['dialogues']["reaction"]["bad"]))
+            act_lang = getattr(settings, 'LANGUAGE', 'en') or 'en'
+            hud.show_text(random.choice(texts.get(act_lang, texts['en'])['dialogues']["reaction"]["bad"]))
             if hasattr(hud, "trigger_crash"):
                 hud.trigger_crash()
 

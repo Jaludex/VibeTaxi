@@ -64,6 +64,69 @@ class TaxiVibeState(TaxiDriveState):
         self.entity.vy = self.slide_vy
 
         self._handle_drift_particles(dt)
+        self._handle_ghosting(dt)
+
+    def _handle_ghosting(self, dt: float) -> None:
+        import settings
+        import pygame
+        from gale.timer import Timer
+        
+        if not hasattr(self.entity, "ghosts"):
+            self.entity.ghosts = []
+            
+        current_speed = math.hypot(self.slide_vx, self.slide_vy)
+        if current_speed < 50:
+            return # Only ghost when moving fast
+            
+        if not hasattr(self, "_ghost_timer"):
+            self._ghost_timer = 0.0
+            
+        self._ghost_timer += dt
+        spawn_rate = getattr(settings, 'GHOSTING_SPAWN_RATE', 0.08)
+        
+        if self._ghost_timer >= spawn_rate:
+            self._ghost_timer = 0.0
+            
+            # Create snapshot image
+            texture = settings.TEXTURES[self.entity.texture_id]
+            frame = settings.FRAMES[self.entity.texture_id][self.entity.frame_index]
+            
+            base_img = pygame.Surface((frame.width, frame.height), pygame.SRCALPHA)
+            base_img.fill((0, 0, 0, 0))
+            base_img.blit(texture, (0, 0), frame)
+            
+            try:
+                center_x, center_y, degrees = self.entity.get_render_center_and_degrees()
+            except Exception:
+                angle_offset = getattr(self.entity, "angle_offset", 0)
+                degrees = math.degrees(-self.entity.angle) + angle_offset
+                center_x, center_y = self.entity.x, self.entity.y
+                
+            rotated_img = pygame.transform.rotate(base_img, degrees)
+            
+            # Optional color tinting (e.g. vibe color)
+            vc = getattr(self.entity, "vibe_color", None)
+            vibe_color = vc if vc else (0, 255, 255) # default fallback
+                
+            # Apply color tint
+            tint_surf = rotated_img.copy()
+            tint_surf.fill(vibe_color, special_flags=pygame.BLEND_RGBA_MULT)
+            rotated_img = tint_surf
+            
+            alpha_start = getattr(settings, 'GHOSTING_ALPHA_START', 120)
+            
+            import types
+            ghost = types.SimpleNamespace(
+                image=rotated_img,
+                x=center_x,
+                y=center_y,
+                alpha=float(alpha_start)
+            )
+            
+            self.entity.ghosts.append(ghost)
+            
+            duration = getattr(settings, 'GHOSTING_DURATION', 0.4)
+            Timer.tween(duration, [(ghost, {"alpha": 0.0})], on_finish=lambda g=ghost: self.entity.ghosts.remove(g) if g in self.entity.ghosts else None)
 
     def _handle_drift_particles(self, dt: float) -> None:
         if not getattr(self.entity, "is_drifting", False):
