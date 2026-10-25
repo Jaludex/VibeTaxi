@@ -50,7 +50,7 @@ Go to the Release section, find the latest release, download the one specified f
 
 ## Requirements
 -   Python 3.12+
--   A single key dependency: [`gale-engine`](https://pypi.org/project/gale-engine/) (which in turn depends on Pygame).
+-   Installing: [`gale-engine`](https://pypi.org/project/gale-engine/) (which in turn depends on Pygame) and [`PyPresence`](https://pypi.org/project/pypresence/).
 
 ## Running the game
 
@@ -63,7 +63,7 @@ Get a copy of the latest source code from the releases section and extract it or
 If cloning was successful, you will see that files and directories have appeared.
 Then install  [GALE](https://github.com/R3mmurd/Gale/tree/main) with
 
-    pip install gale-engine
+    pip install -r requirements.txt
 After that, from the root of the repository, run:
 
     ./vibetaxi/main.py
