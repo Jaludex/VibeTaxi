@@ -1,2 +1,2 @@
 gale-engine>=1.16.0
-pyprecense>=4.6.2
+pypresence>=4.6.2
