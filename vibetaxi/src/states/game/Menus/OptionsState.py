@@ -18,6 +18,7 @@ from gale.ui.manager import UIManager
 from gale.ui.panel import Panel
 
 from src import audio, config, display
+from src.os_tools import is_android, is_mobile_mode
 from src.gui.DeadzoneVisual import DeadzoneVisual
 from src.gui.Slider import Slider
 from src.gui.SpatialContainer import SpatialContainer
@@ -222,14 +223,40 @@ class OptionsState(BaseState):
         )
         self.lbl_focus = Label(col_lbl_x + 22, self.panel_y + g_y_off + g_dy * 4 + 10, tr("opt_pause_on_focus_loss"), theme=LABEL_THEME)
 
-        # Discord RPC
         col_right_x = self.panel_x + self.panel_width - 150
+
+        # Discord RPC (Desktop only)
         self.chk_discord = Checkbox(
             col_right_x, self.panel_y + g_y_off + g_dy * 2 + 10, 15,
             checked=bool(config.get("discord_rpc", True)),
             on_change=self._on_discord_toggle,
         )
         self.lbl_discord = Label(col_right_x + 22, self.panel_y + g_y_off + g_dy * 2 + 10, tr("opt_discord_rpc"), theme=LABEL_THEME)
+
+        def link_label_to_checkbox(lbl: Label, chk: Checkbox):
+            def on_label_click(pos, data):
+                if data.released and lbl.contains(pos):
+                    chk.toggle()
+                    return True
+                return False
+            lbl.on_mouse_click = on_label_click
+
+        link_label_to_checkbox(self.lbl_fullscreen, self.chk_fullscreen)
+        link_label_to_checkbox(self.lbl_fps, self.chk_fps)
+        link_label_to_checkbox(self.lbl_debug, self.chk_debug)
+        link_label_to_checkbox(self.lbl_focus, self.chk_focus)
+        link_label_to_checkbox(self.lbl_discord, self.chk_discord)
+
+        # Touch Controls button (Mobile / Preview only)
+        self.btn_touch_controls = Button(
+            col_lbl_x,
+            self.panel_y + g_y_off,
+            160,
+            24,
+            self._get_touch_controls_button_text(),
+            on_click=self._on_touch_controls_click,
+            theme=BUTTON_THEME,
+        )
 
         # Language button
         lang_code = config.get("language") or getattr(settings, "LANGUAGE", "es") or "es"
@@ -255,16 +282,27 @@ class OptionsState(BaseState):
             theme=BUTTON_THEME,
         )
 
-        self.game_widgets = [
-            self.chk_fullscreen, self.lbl_fullscreen,
-            self.lbl_deadzone, self.sld_deadzone, self.vis_deadzone,
-            self.chk_fps, self.lbl_fps,
-            self.chk_debug, self.lbl_debug,
-            self.chk_focus, self.lbl_focus,
-            self.chk_discord, self.lbl_discord,
-            self.btn_language,
-            self.btn_fps,
-        ]
+        if is_mobile_mode():
+            self.game_widgets = [
+                self.btn_touch_controls,
+                self.lbl_deadzone, self.sld_deadzone, self.vis_deadzone,
+                self.chk_fps, self.lbl_fps,
+                self.chk_debug, self.lbl_debug,
+                self.chk_focus, self.lbl_focus,
+                self.btn_language,
+                self.btn_fps,
+            ]
+        else:
+            self.game_widgets = [
+                self.chk_fullscreen, self.lbl_fullscreen,
+                self.lbl_deadzone, self.sld_deadzone, self.vis_deadzone,
+                self.chk_fps, self.lbl_fps,
+                self.chk_debug, self.lbl_debug,
+                self.chk_focus, self.lbl_focus,
+                self.chk_discord, self.lbl_discord,
+                self.btn_language,
+                self.btn_fps,
+            ]
 
         self.container = SpatialContainer(0, 0, settings.VIRTUAL_WIDTH, settings.VIRTUAL_HEIGHT)
         self.ui = UIManager(
@@ -329,6 +367,20 @@ class OptionsState(BaseState):
     def _on_language_changed(self) -> None:
         self._build_ui()
         self.update_ui_y()
+
+    def _get_touch_controls_button_text(self) -> str:
+        current_mode = config.get("touch_control_mode", "touch")
+        label = tr("opt_touch_controls", default="Controls")
+        mode_str = tr("control_touch_direct", default="Direct Touch") if current_mode == "touch" else tr("control_virtual_joystick", default="Virtual Joystick")
+        return f"{label}: {mode_str}"
+
+    def _on_touch_controls_click(self) -> None:
+        audio.play_sfx("press")
+        current_mode = config.get("touch_control_mode", "touch")
+        next_mode = "joystick" if current_mode == "touch" else "touch"
+        config.set("touch_control_mode", next_mode, auto_save=True)
+        settings.TOUCH_CONTROL_MODE = next_mode
+        self.btn_touch_controls.text = self._get_touch_controls_button_text()
 
     def _get_fps_button_text(self) -> str:
         val = config.get("fps_limit", 60)
@@ -420,16 +472,19 @@ class OptionsState(BaseState):
     def update(self, dt: float) -> None:
         self.update_ui_y()
         # Keep fullscreen checkbox synced with physical display (e.g. F11 pressed)
-        if self.chk_fullscreen.checked != display.is_fullscreen():
-            self.chk_fullscreen.checked = display.is_fullscreen()
+        if not is_mobile_mode() and hasattr(self, "chk_fullscreen"):
+            if self.chk_fullscreen.checked != display.is_fullscreen():
+                self.chk_fullscreen.checked = display.is_fullscreen()
 
     def render(self, surface: pygame.Surface) -> None:
         if self.fade_alpha > 0:
-            fade_surface = pygame.Surface(
-                (settings.VIRTUAL_WIDTH, settings.VIRTUAL_HEIGHT), pygame.SRCALPHA
-            )
-            fade_surface.fill((0, 0, 0, int(self.fade_alpha)))
-            surface.blit(fade_surface, (0, 0))
+            if not hasattr(self, "_fade_surf"):
+                self._fade_surf = pygame.Surface(
+                    (settings.VIRTUAL_WIDTH, settings.VIRTUAL_HEIGHT)
+                )
+                self._fade_surf.fill((0, 0, 0))
+            self._fade_surf.set_alpha(int(self.fade_alpha))
+            surface.blit(self._fade_surf, (0, 0))
 
         self.ui.render(surface)
 

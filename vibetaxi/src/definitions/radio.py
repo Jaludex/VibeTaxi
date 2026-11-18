@@ -1,24 +1,29 @@
+import os
 from pathlib import Path
 
 import pygame
 import settings
 
-USERTRACKS_DIR = Path.home() / "Vibe Taxi User Tracks"
+if "ANDROID_PRIVATE" in os.environ:
+    USERTRACKS_DIR = Path(os.environ["ANDROID_PRIVATE"]) / "user_tracks"
+else:
+    USERTRACKS_DIR = Path.home() / "Vibe Taxi User Tracks"
+
 SUPPORTED_AUDIO_EXTENSIONS = {".mp3", ".ogg", ".wav"}
 
 def is_valid_audio(file_path: Path) -> bool:
     try:
         pygame.mixer.music.load(str(file_path))
         return True
-    except pygame.error:
+    except (pygame.error, Exception):
         return False
 
 def get_station_tracks(genre: str, base_tracks: list) -> list:
     if genre == "off":
         return []
 
-    genre_dir = USERTRACKS_DIR / genre
     try:
+        genre_dir = USERTRACKS_DIR / genre
         genre_dir.mkdir(parents=True, exist_ok=True)
         user_tracks = []
         for file in genre_dir.iterdir():
@@ -26,7 +31,7 @@ def get_station_tracks(genre: str, base_tracks: list) -> list:
                 if is_valid_audio(file):
                     user_tracks.append(str(file))
         return base_tracks + user_tracks
-    except OSError:
+    except Exception:
         return base_tracks
 
 

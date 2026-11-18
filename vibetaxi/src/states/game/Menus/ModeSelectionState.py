@@ -151,8 +151,8 @@ class ModeSelectionState(BaseState):
                 top_state.mode_selection_triggered = False
         
     def start_game(self):
-        self.state_machine.pop() # Pops ModeSelectionState
-        self.state_machine.pop() # Pops TitleScreenState
+        while len(self.state_machine.states) > 0:
+            self.state_machine.pop()
         
         tutorial_active = getattr(settings, "TUTORIAL_ENABLED", False)
         
@@ -192,16 +192,18 @@ class ModeSelectionState(BaseState):
         self.ui.on_input(input_id, input_data)
 
     def render(self, surface: pygame.Surface):
+        if not hasattr(self, "_fade_surf"):
+            self._fade_surf = pygame.Surface((settings.VIRTUAL_WIDTH, settings.VIRTUAL_HEIGHT))
+            self._fade_surf.fill((0, 0, 0))
+
         if self.fade_alpha > 0:
-            fade_surf = pygame.Surface((settings.VIRTUAL_WIDTH, settings.VIRTUAL_HEIGHT), pygame.SRCALPHA)
-            fade_surf.fill((0, 0, 0, int(max(0.0, min(255.0, self.fade_alpha)))))
-            surface.blit(fade_surf, (0, 0))
+            self._fade_surf.set_alpha(int(max(0.0, min(255.0, self.fade_alpha))))
+            surface.blit(self._fade_surf, (0, 0))
             
         self.ui.render(surface)
         
         # Exit fade (to black, used for start_game)
         if self.fade_alpha > 180.0 and self.selected_mode and self.is_exiting and self.target_y == self.panel_y:
             top_alpha = (self.fade_alpha - 180.0) / (255.0 - 180.0) * 255.0
-            top_fade = pygame.Surface((settings.VIRTUAL_WIDTH, settings.VIRTUAL_HEIGHT), pygame.SRCALPHA)
-            top_fade.fill((0, 0, 0, int(max(0.0, min(255.0, top_alpha)))))
-            surface.blit(top_fade, (0, 0))
+            self._fade_surf.set_alpha(int(max(0.0, min(255.0, top_alpha))))
+            surface.blit(self._fade_surf, (0, 0))

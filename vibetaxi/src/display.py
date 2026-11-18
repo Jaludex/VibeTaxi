@@ -29,6 +29,10 @@ def toggle_fullscreen() -> None:
 
 def init_display() -> None:
     """Apply saved fullscreen preference on game boot."""
+    from src.os_tools import is_android
+    if is_android():
+        return
+
     target_fs = config.get("fullscreen", False)
     if target_fs and not is_fullscreen():
         try:

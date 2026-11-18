@@ -9,9 +9,11 @@ from gale import tilemap
 
 from gale.save import SaveManager
 from src.frame_tools import generate_car_frames
+from src.os_tools import get_save_dir
 
 input_handler.InputHandler.set_keyboard_action(input_handler.KEY_F11, "toggle_fullscreen")
 input_handler.InputHandler.set_keyboard_action(input_handler.KEY_ESCAPE, "pause")
+input_handler.InputHandler.set_keyboard_action(input_handler.KEY_AC_BACK, "pause")
 input_handler.InputHandler.set_mouse_click_action(input_handler.MOUSE_BUTTON_1, "mouse_click")
 input_handler.InputHandler.set_mouse_motion_action(None, "mouse_motion")
 input_handler.InputHandler.set_keyboard_action(input_handler.KEY_x, "brake")
@@ -20,6 +22,57 @@ input_handler.InputHandler.set_keyboard_action(input_handler.KEY_a, "prev-song")
 input_handler.InputHandler.set_keyboard_action(input_handler.KEY_d, "next-song")
 input_handler.InputHandler.set_keyboard_action(input_handler.KEY_w, "vol-up")
 input_handler.InputHandler.set_keyboard_action(input_handler.KEY_s, "vol-down")
+
+# Multi-touch SDL2 support for mobile
+class FingerTouchData:
+    def __init__(self, event: pygame.event.Event) -> None:
+        self.pressed = event.type == pygame.FINGERDOWN
+        self.released = event.type == pygame.FINGERUP
+        self.motion = event.type == pygame.FINGERMOTION
+        self.finger_id = getattr(event, "finger_id", 0)
+        self.x = event.x
+        self.y = event.y
+        self.dx = getattr(event, "dx", 0.0)
+        self.dy = getattr(event, "dy", 0.0)
+        try:
+            from src.mouse_tools import finger_to_virtual
+            self.vx, self.vy = finger_to_virtual(event.x, event.y)
+        except Exception:
+            self.vx = event.x * VIRTUAL_WIDTH
+            self.vy = event.y * VIRTUAL_HEIGHT
+
+        if self.pressed or self.released:
+            try:
+                import gale.log
+                gale.log.get_logger("touch").info(
+                    f"FINGER {'DOWN' if self.pressed else 'UP'}: id={self.finger_id} raw=({self.x:.3f}, {self.y:.3f}) -> virt=({self.vx:.1f}, {self.vy:.1f})"
+                )
+            except Exception:
+                pass
+
+    @staticmethod
+    def get_action_key(event: pygame.event.Event):
+        return None
+
+    @staticmethod
+    def get_action_name():
+        return "finger_touch"
+
+input_handler.INPUT_EVENTS = input_handler.INPUT_EVENTS + (
+    pygame.FINGERDOWN,
+    pygame.FINGERUP,
+    pygame.FINGERMOTION,
+)
+try:
+    import gale.game
+    gale.game.INPUT_EVENTS = input_handler.INPUT_EVENTS
+except Exception:
+    pass
+
+input_handler.InputHandler.INPUT_DATA_TABLE[pygame.FINGERDOWN] = FingerTouchData
+input_handler.InputHandler.INPUT_DATA_TABLE[pygame.FINGERUP] = FingerTouchData
+input_handler.InputHandler.INPUT_DATA_TABLE[pygame.FINGERMOTION] = FingerTouchData
+input_handler.InputHandler.input_binding["finger_touch"] = {None: "touch_event"}
 
 # Gamepad bindings
 input_handler.InputHandler.set_gamepad_button_action(input_handler.GAMEPAD_BUTTON_LEFTSHOULDER, "prev-song")
@@ -74,7 +127,7 @@ RADIO_FADEOUT_TIME = 2.0
 
 TITLE = "Vibe Taxi"
 
-VERSION = "1.4.0"
+VERSION = "1.5.0"
 
 
 DIALOGUE_DISPLAY_TIME = 5.0
@@ -83,7 +136,7 @@ TUTORIAL_ENABLED = False
 
 BASE_DIR = pathlib.Path(__file__).parent
 
-SAVE_DIR = BASE_DIR / "saves"
+SAVE_DIR = get_save_dir(BASE_DIR / "saves")
 
 VIRTUAL_WIDTH = 640
 VIRTUAL_HEIGHT = 360
@@ -160,22 +213,61 @@ CANT_MUSIC_CHANNELS = 5
 
 PHYSICS_DEBUG = False
 
+def _load_texture(path):
+    try:
+        if not pygame.display.get_init():
+            pygame.display.init()
+        return pygame.image.load(path)
+    except Exception as e:
+        print(f"Warning: Failed to load texture {path}: {e}")
+        return pygame.Surface((16, 16))
+
+def _load_font(path, size):
+    try:
+        if not pygame.font.get_init():
+            pygame.font.init()
+        return pygame.font.Font(path, size)
+    except Exception as e:
+        print(f"Warning: Failed to load font {path}: {e}")
+        return pygame.font.Font(None, size)
+
+class DummySound:
+    def play(self, *args, **kwargs):
+        pass
+    def stop(self, *args, **kwargs):
+        pass
+    def set_volume(self, *args, **kwargs):
+        pass
+    def get_volume(self):
+        return 1.0
+    def get_length(self):
+        return 0.0
+
+def _load_sound(path):
+    try:
+        if not pygame.mixer.get_init():
+            pygame.mixer.init(44100, -16, 2, 2048)
+        return pygame.mixer.Sound(path)
+    except Exception as e:
+        print(f"Warning: Failed to load sound {path}: {e}")
+        return DummySound()
+
 TEXTURES = {
-    "city_tiles": pygame.image.load(BASE_DIR / "assets" / "graphics" / "city_tileset.png"),
-    "cars": pygame.image.load(BASE_DIR / "assets" / "graphics" / "cars.png"),
-    "props": pygame.image.load(BASE_DIR / "assets" / "graphics" / "props.png"),
-    "radio": pygame.image.load(BASE_DIR / "assets" / "graphics" / "radio.png"),
-    "button-radio": pygame.image.load(BASE_DIR / "assets" / "graphics" / "button_radio.png"),
-    "button-plus": pygame.image.load(BASE_DIR / "assets" / "graphics" / "button_plus.png"),
-    "button-less": pygame.image.load(BASE_DIR / "assets" / "graphics" / "button_less.png"),
-    "marker": pygame.image.load(BASE_DIR / "assets" / "graphics" / "marker.png"),
-    "peds": pygame.image.load(BASE_DIR / "assets" / "graphics" / "peds.png"),
-    "arrow": pygame.image.load(BASE_DIR / "assets" / "graphics" / "arrow.png"),
-    "title_gradient": pygame.image.load(BASE_DIR / "assets" / "graphics" / "title_gradient.png"),
-    "taximeter": pygame.image.load(BASE_DIR / "assets" / "graphics" / "taximeter.png"),
-    "background_car_view": pygame.image.load(BASE_DIR / "assets" / "graphics" / "background_car_view.png"),
-    "game_icon": pygame.image.load(BASE_DIR / "assets" / "graphics" / "icon.png"),
-    "music_notes": pygame.image.load(BASE_DIR / "assets" / "graphics" / "music_notes.png"),
+    "city_tiles": _load_texture(BASE_DIR / "assets" / "graphics" / "city_tileset.png"),
+    "cars": _load_texture(BASE_DIR / "assets" / "graphics" / "cars.png"),
+    "props": _load_texture(BASE_DIR / "assets" / "graphics" / "props.png"),
+    "radio": _load_texture(BASE_DIR / "assets" / "graphics" / "radio.png"),
+    "button-radio": _load_texture(BASE_DIR / "assets" / "graphics" / "button_radio.png"),
+    "button-plus": _load_texture(BASE_DIR / "assets" / "graphics" / "button_plus.png"),
+    "button-less": _load_texture(BASE_DIR / "assets" / "graphics" / "button_less.png"),
+    "marker": _load_texture(BASE_DIR / "assets" / "graphics" / "marker.png"),
+    "peds": _load_texture(BASE_DIR / "assets" / "graphics" / "peds.png"),
+    "arrow": _load_texture(BASE_DIR / "assets" / "graphics" / "arrow.png"),
+    "title_gradient": _load_texture(BASE_DIR / "assets" / "graphics" / "title_gradient.png"),
+    "taximeter": _load_texture(BASE_DIR / "assets" / "graphics" / "taximeter.png"),
+    "background_car_view": _load_texture(BASE_DIR / "assets" / "graphics" / "background_car_view.png"),
+    "game_icon": _load_texture(BASE_DIR / "assets" / "graphics" / "icon.png"),
+    "music_notes": _load_texture(BASE_DIR / "assets" / "graphics" / "music_notes.png"),
 }
 
 TILEMAPS = {
@@ -193,47 +285,47 @@ FRAMES = {
 }
 
 FONTS = {
-    "rank": pygame.font.Font(BASE_DIR / "assets" / "fonts" / "Big.ttf", 64),
-    "big": pygame.font.Font(BASE_DIR / "assets" / "fonts" / "Big.ttf", 32),
-    "medium": pygame.font.Font(BASE_DIR/ "assets" / "fonts" / "medium.ttf", 14),
-    "led": pygame.font.Font(BASE_DIR / "assets" / "fonts" / "led.ttf", 16),
-    "led_small": pygame.font.Font(BASE_DIR / "assets" / "fonts" / "led.ttf", 8),
-    "minecraft": pygame.font.Font(BASE_DIR / "assets" / "fonts" / "medium.ttf", 14),
-    "minecraft_small": pygame.font.Font(BASE_DIR / "assets" / "fonts" / "medium.ttf", 11),
+    "rank": _load_font(BASE_DIR / "assets" / "fonts" / "Big.ttf", 64),
+    "big": _load_font(BASE_DIR / "assets" / "fonts" / "Big.ttf", 32),
+    "medium": _load_font(BASE_DIR/ "assets" / "fonts" / "medium.ttf", 14),
+    "led": _load_font(BASE_DIR / "assets" / "fonts" / "led.ttf", 16),
+    "led_small": _load_font(BASE_DIR / "assets" / "fonts" / "led.ttf", 8),
+    "minecraft": _load_font(BASE_DIR / "assets" / "fonts" / "medium.ttf", 14),
+    "minecraft_small": _load_font(BASE_DIR / "assets" / "fonts" / "medium.ttf", 11),
 }
 
 SOUNDS = {
-    "crash_car": pygame.mixer.Sound(BASE_DIR / "assets" / "sounds" / "crash_sounds" / "crash_car.wav"),
-    "crash_mail": pygame.mixer.Sound(BASE_DIR / "assets" / "sounds" / "crash_sounds" / "crash_mail.wav"),
-    "crash_solid": pygame.mixer.Sound(BASE_DIR / "assets" / "sounds" / "crash_sounds" / "crash_solid.wav"),
-    "crash_wall": pygame.mixer.Sound(BASE_DIR / "assets" / "sounds" / "crash_sounds" / "crash_wall.wav"),
-    "engine_start": pygame.mixer.Sound(BASE_DIR / "assets" / "sounds" / "car_sounds" / "engine_start.wav"),
-    "drifting": pygame.mixer.Sound(BASE_DIR / "assets" / "sounds" / "car_sounds" / "drifting.wav"),
-    "idle_normal": pygame.mixer.Sound(BASE_DIR / "assets" / "sounds" / "car_sounds" / "idle-normal.wav"),
-    "idle_damaged": pygame.mixer.Sound(BASE_DIR / "assets" / "sounds" / "car_sounds" / "idle-damaged.wav"),
-    "engine1": pygame.mixer.Sound(BASE_DIR / "assets" / "sounds" / "car_sounds" / "engine1.wav"),
-    "engine2": pygame.mixer.Sound(BASE_DIR / "assets" / "sounds" / "car_sounds" / "engine2.wav"),
-    "into_vibe": pygame.mixer.Sound(BASE_DIR / "assets" / "sounds" / "misc" / "into_vibe.wav"),
-    "out_vibe": pygame.mixer.Sound(BASE_DIR / "assets" / "sounds" / "misc" / "out_vibe.wav"),
-    "win": pygame.mixer.Sound(BASE_DIR / "assets" / "sounds" / "misc" / "victory.wav"),
-    "honk": pygame.mixer.Sound(BASE_DIR / "assets" / "sounds" / "car_sounds" / "car_honk.wav"),
-    "money": pygame.mixer.Sound(BASE_DIR / "assets" / "sounds" / "misc" / "gain_money.wav"),
-    "fix": pygame.mixer.Sound(BASE_DIR / "assets" / "sounds" / "misc" / "fix.wav"),
-    "press": pygame.mixer.Sound(BASE_DIR / "assets" / "sounds" / "misc" / "press.wav"),
-    "game_over": pygame.mixer.Sound(BASE_DIR / "assets" / "sounds" / "misc" / "game_over.wav"),
-    "pause": pygame.mixer.Sound(BASE_DIR / "assets" / "sounds" / "misc" / "pause.wav"),
-    "unpause": pygame.mixer.Sound(BASE_DIR / "assets" / "sounds" / "misc" / "unpause.wav"),
-    "bleep1": pygame.mixer.Sound(BASE_DIR / "assets" / "sounds" / "text_blips" / "bleep001.wav"),
-    "bleep2": pygame.mixer.Sound(BASE_DIR / "assets" / "sounds" / "text_blips" / "bleep002.wav"),
-    "bleep3": pygame.mixer.Sound(BASE_DIR / "assets" / "sounds" / "text_blips" / "bleep003.wav"),
-    "bleep4": pygame.mixer.Sound(BASE_DIR / "assets" / "sounds" / "text_blips" / "bleep004.wav"),
-    "bleep5": pygame.mixer.Sound(BASE_DIR / "assets" / "sounds" / "text_blips" / "bleep005.wav"),
-    "bonus": pygame.mixer.Sound(BASE_DIR / "assets" / "sounds" / "misc" / "bonus.wav"),
-    "fatal": pygame.mixer.Sound(BASE_DIR / "assets" / "sounds" / "ranks" / "fatal.ogg"),
-    "bad": pygame.mixer.Sound(BASE_DIR / "assets" / "sounds" / "ranks" / "bad.wav"),
-    "good": pygame.mixer.Sound(BASE_DIR / "assets" / "sounds" / "ranks" / "good.ogg"),
-    "awesome": pygame.mixer.Sound(BASE_DIR / "assets" / "sounds" / "ranks" / "awesome.wav"),
-    "vibe": pygame.mixer.Sound(BASE_DIR / "assets" / "sounds" / "ranks" / "vibe.wav"),
+    "crash_car": _load_sound(BASE_DIR / "assets" / "sounds" / "crash_sounds" / "crash_car.wav"),
+    "crash_mail": _load_sound(BASE_DIR / "assets" / "sounds" / "crash_sounds" / "crash_mail.wav"),
+    "crash_solid": _load_sound(BASE_DIR / "assets" / "sounds" / "crash_sounds" / "crash_solid.wav"),
+    "crash_wall": _load_sound(BASE_DIR / "assets" / "sounds" / "crash_sounds" / "crash_wall.wav"),
+    "engine_start": _load_sound(BASE_DIR / "assets" / "sounds" / "car_sounds" / "engine_start.wav"),
+    "drifting": _load_sound(BASE_DIR / "assets" / "sounds" / "car_sounds" / "drifting.wav"),
+    "idle_normal": _load_sound(BASE_DIR / "assets" / "sounds" / "car_sounds" / "idle-normal.wav"),
+    "idle_damaged": _load_sound(BASE_DIR / "assets" / "sounds" / "car_sounds" / "idle-damaged.wav"),
+    "engine1": _load_sound(BASE_DIR / "assets" / "sounds" / "car_sounds" / "engine1.wav"),
+    "engine2": _load_sound(BASE_DIR / "assets" / "sounds" / "car_sounds" / "engine2.wav"),
+    "into_vibe": _load_sound(BASE_DIR / "assets" / "sounds" / "misc" / "into_vibe.wav"),
+    "out_vibe": _load_sound(BASE_DIR / "assets" / "sounds" / "misc" / "out_vibe.wav"),
+    "win": _load_sound(BASE_DIR / "assets" / "sounds" / "misc" / "victory.wav"),
+    "honk": _load_sound(BASE_DIR / "assets" / "sounds" / "car_sounds" / "car_honk.wav"),
+    "money": _load_sound(BASE_DIR / "assets" / "sounds" / "misc" / "gain_money.wav"),
+    "fix": _load_sound(BASE_DIR / "assets" / "sounds" / "misc" / "fix.wav"),
+    "press": _load_sound(BASE_DIR / "assets" / "sounds" / "misc" / "press.wav"),
+    "game_over": _load_sound(BASE_DIR / "assets" / "sounds" / "misc" / "game_over.wav"),
+    "pause": _load_sound(BASE_DIR / "assets" / "sounds" / "misc" / "pause.wav"),
+    "unpause": _load_sound(BASE_DIR / "assets" / "sounds" / "misc" / "unpause.wav"),
+    "bleep1": _load_sound(BASE_DIR / "assets" / "sounds" / "text_blips" / "bleep001.wav"),
+    "bleep2": _load_sound(BASE_DIR / "assets" / "sounds" / "text_blips" / "bleep002.wav"),
+    "bleep3": _load_sound(BASE_DIR / "assets" / "sounds" / "text_blips" / "bleep003.wav"),
+    "bleep4": _load_sound(BASE_DIR / "assets" / "sounds" / "text_blips" / "bleep004.wav"),
+    "bleep5": _load_sound(BASE_DIR / "assets" / "sounds" / "text_blips" / "bleep005.wav"),
+    "bonus": _load_sound(BASE_DIR / "assets" / "sounds" / "misc" / "bonus.wav"),
+    "fatal": _load_sound(BASE_DIR / "assets" / "sounds" / "ranks" / "fatal.ogg"),
+    "bad": _load_sound(BASE_DIR / "assets" / "sounds" / "ranks" / "bad.wav"),
+    "good": _load_sound(BASE_DIR / "assets" / "sounds" / "ranks" / "good.ogg"),
+    "awesome": _load_sound(BASE_DIR / "assets" / "sounds" / "ranks" / "awesome.wav"),
+    "vibe": _load_sound(BASE_DIR / "assets" / "sounds" / "ranks" / "vibe.wav"),
 }
 
 MUSIC = {
@@ -241,12 +333,13 @@ MUSIC = {
 }
 REPAIR_COST = 40.0
 
-SAVE_MANAGER = SaveManager(save_dir=BASE_DIR / 'saves')
+SAVE_MANAGER = SaveManager(save_dir=SAVE_DIR)
 
 # Configurable runtime flags
 SHOW_FPS = False
 PHYSICS_DEBUG = False
 LANGUAGE = None
+TOUCH_CONTROL_MODE = "touch"
 DISCORD_CLIENT_ID = "1558733170730344582"
 
 try:

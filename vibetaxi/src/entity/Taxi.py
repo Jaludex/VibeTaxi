@@ -18,6 +18,13 @@ class Taxi(Car):
         self.is_accelerating = False
         self.is_crashed = False
 
+        # Touch & Virtual Joystick state attributes
+        self.touch_active = False
+        self.touch_x = None
+        self.touch_y = None
+        self.touch_joystick_x = 0.0
+        self.touch_joystick_y = 0.0
+
         self.state_machine = StateMachine({
             'idle': lambda sm: TaxiIdleState(self, sm),
             'drive': lambda sm: TaxiDriveState(self, sm),
@@ -26,15 +33,19 @@ class Taxi(Car):
         })
         
         import settings
+        from src.os_tools import is_mobile_mode
+        from src.input_strategies import (
+            GamepadInputStrategy, KeyboardInputStrategy, MouseInputStrategy, get_touch_strategy
+        )
+
         last_device = getattr(settings, "LAST_INPUT_DEVICE", "mouse")
-        if last_device == "gamepad":
-            from src.input_strategies import GamepadInputStrategy
+        if is_mobile_mode():
+            self.input_strategy = get_touch_strategy()
+        elif last_device == "gamepad":
             self.input_strategy = GamepadInputStrategy()
         elif last_device == "keyboard":
-            from src.input_strategies import KeyboardInputStrategy
             self.input_strategy = KeyboardInputStrategy()
         else:
-            from src.input_strategies import MouseInputStrategy
             self.input_strategy = MouseInputStrategy()
         
         from gale.command import CommandBindings
@@ -195,19 +206,25 @@ class Taxi(Car):
         if not self.is_crashed:
             # Auto-switch input strategy based on the device being used
             import settings
-            from src.input_strategies import GamepadInputStrategy, KeyboardInputStrategy, MouseInputStrategy
+            from src.os_tools import is_mobile_mode
+            from src.input_strategies import (
+                GamepadInputStrategy, KeyboardInputStrategy, MouseInputStrategy,
+                TouchDirectInputStrategy, TouchJoystickInputStrategy, get_touch_strategy
+            )
             from gale.input_handler import KeyboardData, GamepadButtonData, GamepadAxisData, MouseMotionData, MouseClickData
-            
+
+            is_touch_strat = isinstance(self.input_strategy, (TouchDirectInputStrategy, TouchJoystickInputStrategy))
+
             if isinstance(input_data, GamepadAxisData) and input_id in ("steer_x", "steer_y") and abs(input_data.value) >= getattr(settings, 'GAMEPAD_DEADZONE', 0.25):
                 if not isinstance(self.input_strategy, GamepadInputStrategy):
                     self.input_strategy = GamepadInputStrategy()
             elif isinstance(input_data, KeyboardData) and input_id in ("move_up", "move_down", "move_left", "move_right"):
                 if not isinstance(self.input_strategy, KeyboardInputStrategy):
                     self.input_strategy = KeyboardInputStrategy()
-            elif isinstance(input_data, MouseClickData):
+            elif isinstance(input_data, MouseClickData) and not (is_mobile_mode() and is_touch_strat):
                 if not isinstance(self.input_strategy, MouseInputStrategy):
                     self.input_strategy = MouseInputStrategy()
-            elif isinstance(input_data, MouseMotionData) and any(input_data.buttons):
+            elif isinstance(input_data, MouseMotionData) and any(input_data.buttons) and not (is_mobile_mode() and is_touch_strat):
                 if not isinstance(self.input_strategy, MouseInputStrategy):
                     self.input_strategy = MouseInputStrategy()
             

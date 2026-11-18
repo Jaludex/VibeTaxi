@@ -90,6 +90,10 @@ class NewRecordState(BaseState):
         
         def focus_input():
             self.text_input.focused = True
+            try:
+                pygame.key.start_text_input()
+            except Exception:
+                pass
             
         Timer.tween(0.3, [(self, {"fade_alpha": 180.0})])
         Timer.tween(0.5, [(self, {"panel_y": self.target_y})], ease_function_name="out_cubic", on_finish=focus_input)
@@ -103,6 +107,10 @@ class NewRecordState(BaseState):
         
     def on_submit_click(self):
         if self.is_exiting: return
+        try:
+            pygame.key.stop_text_input()
+        except Exception:
+            pass
         from src import audio
         audio.play_sfx("press")
         self.is_exiting = True

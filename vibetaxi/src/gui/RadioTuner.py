@@ -72,32 +72,53 @@ class Radio:
     def render(self, surface):
         if self.alpha <= 0:
             return
-            
-        radio_surf = pygame.Surface((settings.VIRTUAL_WIDTH, settings.VIRTUAL_HEIGHT), pygame.SRCALPHA)
-        
-        radio_surf.blit(settings.TEXTURES["radio"], (self.x, self.y))
-        radio_surf.blit(settings.TEXTURES["marker"], (self.pos_marker_x, self.pos_marker_y))
-        
-        angle = self.knob_angle
-        rotated_knob = pygame.transform.rotate(settings.TEXTURES["button-radio"], angle)
-        knob_rect = rotated_knob.get_rect(center=self.knob_center_pos)
-        radio_surf.blit(rotated_knob, knob_rect.topleft)
-        
-        radio_surf.blit(settings.TEXTURES["button-plus"], self.pos_btn_plus, settings.FRAMES["button-plus"][self.state_plus])
-        radio_surf.blit(settings.TEXTURES["button-less"], self.pos_btn_less, settings.FRAMES["button-less"][self.state_less])
-        
-        render_text(
-            radio_surf,
-            f"{self.songs[self.ind_song]}",
-            settings.FONTS["minecraft"],
-            self.x + 240,
-            self.y + 6,
-            (0, 0, 0),
-            center=True
-        )
-        
-        radio_surf.set_alpha(int(self.alpha))
-        surface.blit(radio_surf, (0, 0))
+
+        rad_tex = settings.TEXTURES.get("radio")
+        if not rad_tex:
+            return
+        rw, rh = rad_tex.get_size()
+
+        # If fully opaque, blit directly to target surface for max performance.
+        # Otherwise, render onto a radio-sized buffer (480x64) with uniform alpha.
+        if self.alpha >= 254.0:
+            target_surf = surface
+            ox, oy = int(self.x), int(self.y)
+        else:
+            if not hasattr(self, "_radio_buf") or self._radio_buf.get_size() != (rw, rh):
+                self._radio_buf = pygame.Surface((rw, rh)).convert()
+            target_surf = self._radio_buf
+            ox, oy = 0, 0
+
+        target_surf.blit(rad_tex, (ox, oy))
+        target_surf.blit(settings.TEXTURES["marker"], (ox + int(self.pos_marker_x - self.x), oy + 24))
+
+        angle = round(self.knob_angle, 1)
+        if not hasattr(self, "_knob_cache"):
+            self._knob_cache = {}
+        knob_surf = self._knob_cache.get(angle)
+        if knob_surf is None:
+            knob_surf = pygame.transform.rotate(settings.TEXTURES["button-radio"], angle)
+            if len(self._knob_cache) < 40:
+                self._knob_cache[angle] = knob_surf
+        knob_rect = knob_surf.get_rect(center=(ox + 36, oy + 31))
+        target_surf.blit(knob_surf, knob_rect.topleft)
+
+        target_surf.blit(settings.TEXTURES["button-plus"], (ox + 422, oy + 7), settings.FRAMES["button-plus"][self.state_plus])
+        target_surf.blit(settings.TEXTURES["button-less"], (ox + 421, oy + 32), settings.FRAMES["button-less"][self.state_less])
+
+        curr_song = self.songs[self.ind_song]
+        if not hasattr(self, "_cached_txts"):
+            self._cached_txts = {}
+        txt_surf = self._cached_txts.get(curr_song)
+        if txt_surf is None:
+            txt_surf = settings.FONTS["minecraft"].render(curr_song, True, (0, 0, 0))
+            self._cached_txts[curr_song] = txt_surf
+        rect = txt_surf.get_rect(center=(ox + 240, oy + 6))
+        target_surf.blit(txt_surf, rect)
+
+        if self.alpha < 254.0:
+            self._radio_buf.set_alpha(int(self.alpha))
+            surface.blit(self._radio_buf, (int(self.x), int(self.y)))
 
     def change_station(self):
         Timer.tween(
@@ -112,14 +133,18 @@ class Radio:
         pygame.mixer.music.stop()
         station = self.stations[self.ind_song]
         if station["songs"]:
+            from src.os_tools import is_android
             song = random.choice(station["songs"])
-            start_time = random.uniform(0.0, 60.0)
             pygame.mixer.music.load(song)
-            try:
-                # Play once (0 loops) with time jump
-                pygame.mixer.music.play(0, start=start_time)
-            except Exception:
+            if is_android():
+                # On Android, avoid synchronous MP3 seek which freezes the main thread by ~500ms
                 pygame.mixer.music.play(0)
+            else:
+                try:
+                    start_time = random.uniform(0.0, 60.0)
+                    pygame.mixer.music.play(0, start=start_time)
+                except Exception:
+                    pygame.mixer.music.play(0)
 
     def _start_fade_out(self):
         if self._alpha_tween:

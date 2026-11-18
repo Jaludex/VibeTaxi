@@ -20,6 +20,7 @@ DEFAULTS: Dict[str, Any] = {
     "pause_on_focus_loss": True,
     "discord_rpc": True,
     "fps_limit": 60,
+    "touch_control_mode": "touch",  # "touch" or "joystick"
 }
 
 _config: Dict[str, Any] = {}
@@ -66,6 +67,7 @@ def _apply_to_settings() -> None:
     settings.PHYSICS_DEBUG = bool(_config.get("physics_debug", False))
     settings.FPS_LIMIT = _config.get("fps_limit", 60)
     settings.EFFECTIVE_FPS = get_effective_fps()
+    settings.TOUCH_CONTROL_MODE = _config.get("touch_control_mode", "touch")
 
 
 def get(key: str, default: Any = None) -> Any:

@@ -1,7 +1,7 @@
 import pygame
 import math
 import random
-from typing import Any, List
+from typing import Any, List, Dict, Tuple, Optional
 
 from gale.physics import BodyType, BoxShape, World
 from gale.tilemap import load_tiled_map
@@ -15,6 +15,10 @@ from src.definitions.passengers import PASSENGER_DEFS
 from src.entity.Traffic import TrafficSystem
 from src.entity.PedestrianSystem import PedestrianSystem
 from src.definitions.radio import RADIO_STATIONS
+
+# Shared cache across CityMap instances for the same map
+_SHARED_CHUNK_CACHE: Dict[Tuple[str, Tuple[str, ...], int, int], Optional[pygame.Surface]] = {}
+
 class CityMap:
     def __init__(self, map_key: str = "city", enable_pedestrians: bool = False) -> None:
         self.map_key = map_key
@@ -26,6 +30,9 @@ class CityMap:
 
         self.props: List[Prop] = []
         self._gid_cache: Dict[int, Any] = {}
+        self._chunk_cache: Dict[Tuple[Any, ...], Optional[pygame.Surface]] = {}
+        self._chunk_tiles: int = 16
+        self._chunk_px: int = self._chunk_tiles * self.tilemap.tile_width
         self.prop_grid: Dict[tuple, List[Prop]] = {}
         self.grid_cell_size: int = 256
         self.particle_emitters: List[Any] = []
@@ -39,6 +46,25 @@ class CityMap:
             self.pedestrian_system = PedestrianSystem(self)
         else:
             self.pedestrian_system = None
+
+        self._bake_all_chunks()
+
+    def _bake_all_chunks(self) -> None:
+        chunk_tiles = self._chunk_tiles
+        num_c = (self.tilemap.cols + chunk_tiles - 1) // chunk_tiles
+        num_r = (self.tilemap.rows + chunk_tiles - 1) // chunk_tiles
+
+        layer_groups = [
+            tuple(settings.TILED_GROUND_LAYERS),
+            tuple(settings.TILED_MIDDLE_LAYERS),
+            tuple(settings.TILED_UPPER_NO_SHADOW_LAYERS),
+            tuple(settings.TILED_UPPER_SHADOW_LAYERS),
+        ]
+
+        for group in layer_groups:
+            for cr in range(num_r):
+                for cc in range(num_c):
+                    self._get_chunk(group, cc, cr)
 
     def _load_collisions(self) -> None:
         self.collision_rects = []
@@ -409,11 +435,105 @@ class CityMap:
         except Exception:
             pass
 
+    def _get_chunk(self, layer_names_tuple: tuple, chunk_col: int, chunk_row: int) -> Optional[pygame.Surface]:
+        shared_key = (self.map_key, layer_names_tuple, chunk_col, chunk_row)
+        if shared_key in _SHARED_CHUNK_CACHE:
+            return _SHARED_CHUNK_CACHE[shared_key]
+
+        key = (layer_names_tuple, chunk_col, chunk_row)
+        if key in self._chunk_cache:
+            return self._chunk_cache[key]
+
+        start_col = chunk_col * self._chunk_tiles
+        start_row = chunk_row * self._chunk_tiles
+        end_col = min(self.tilemap.cols, start_col + self._chunk_tiles)
+        end_row = min(self.tilemap.rows, start_row + self._chunk_tiles)
+
+        is_opaque_ground = (layer_names_tuple == tuple(settings.TILED_GROUND_LAYERS))
+
+        has_any_tiles = False
+        grids = []
+        for name in layer_names_tuple:
+            if name in self.tilemap.layer_names():
+                g = self.tilemap.get_layer(name)
+                grids.append(g)
+                if not has_any_tiles:
+                    for r in range(start_row, end_row):
+                        row_data = g[r]
+                        for c in range(start_col, end_col):
+                            if row_data[c] != 0:
+                                has_any_tiles = True
+                                break
+                        if has_any_tiles:
+                            break
+
+        if not has_any_tiles:
+            self._chunk_cache[key] = None
+            _SHARED_CHUNK_CACHE[shared_key] = None
+            return None
+
+        tw, th = self.tilemap.tile_width, self.tilemap.tile_height
+
+        if is_opaque_ground:
+            surf = pygame.Surface((self._chunk_px, self._chunk_px)).convert()
+        else:
+            surf = pygame.Surface((self._chunk_px, self._chunk_px)).convert()
+            surf.fill((255, 0, 255))
+            surf.set_colorkey((255, 0, 255))
+
+        cache = self._gid_cache
+        for g in grids:
+            for r in range(start_row, end_row):
+                dest_y = (r - start_row) * th
+                row_tiles = g[r]
+                for c in range(start_col, end_col):
+                    gid = row_tiles[c]
+                    if gid == 0:
+                        continue
+                    tile_info = cache.get(gid)
+                    if tile_info is None:
+                        tileset = self.tilemap.tileset_for_gid(gid)
+                        if tileset is None:
+                            continue
+                        tile_info = (tileset.image, tileset.rect_for(gid))
+                        cache[gid] = tile_info
+                    dest_x = (c - start_col) * tw
+                    surf.blit(tile_info[0], (dest_x, dest_y), tile_info[1])
+
+        self._chunk_cache[key] = surf
+        _SHARED_CHUNK_CACHE[shared_key] = surf
+        return surf
+
     def render_layers(self, surface: pygame.Surface, camera: Any = None, layer_names: list = None) -> None:
         target_layers = layer_names or []
-        for name in target_layers:
-            self._render_single_layer(surface, camera, name)
-            
+        if not target_layers:
+            return
+
+        if camera is None:
+            for name in target_layers:
+                self._render_single_layer(surface, camera, name)
+            return
+
+        layers_key = tuple(target_layers)
+        offset_x, offset_y = camera.offset
+        zoom = camera.zoom
+        vw, vh = camera.viewport_width, camera.viewport_height
+
+        chunk_px = self._chunk_px
+        min_chunk_col = max(0, int(offset_x // chunk_px))
+        max_chunk_col = min(int((self.tilemap.cols + self._chunk_tiles - 1) // self._chunk_tiles) - 1, int((offset_x + vw) // chunk_px))
+        min_chunk_row = max(0, int(offset_y // chunk_px))
+        max_chunk_row = min(int((self.tilemap.rows + self._chunk_tiles - 1) // self._chunk_tiles) - 1, int((offset_y + vh) // chunk_px))
+
+        for cr in range(min_chunk_row, max_chunk_row + 1):
+            chunk_wy = cr * chunk_px
+            dest_y = round((chunk_wy - offset_y) * zoom)
+            for cc in range(min_chunk_col, max_chunk_col + 1):
+                chunk_surf = self._get_chunk(layers_key, cc, cr)
+                if chunk_surf is not None:
+                    chunk_wx = cc * chunk_px
+                    dest_x = round((chunk_wx - offset_x) * zoom)
+                    surface.blit(chunk_surf, (dest_x, dest_y))
 
     def _render_single_layer(self, surface: pygame.Surface, camera: Any, name: str) -> None:
         grid = self.tilemap.get_layer(name)

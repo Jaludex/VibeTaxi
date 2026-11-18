@@ -138,9 +138,11 @@ class MessageBoxState(BaseState):
 
     def render(self, surface: pygame.Surface):
         if self.fade_alpha > 0:
-            fade_surf = pygame.Surface((settings.VIRTUAL_WIDTH, settings.VIRTUAL_HEIGHT), pygame.SRCALPHA)
-            fade_surf.fill((0, 0, 0, int(max(0.0, min(255.0, self.fade_alpha)))))
-            surface.blit(fade_surf, (0, 0))
+            if not hasattr(self, "_fade_surf"):
+                self._fade_surf = pygame.Surface((settings.VIRTUAL_WIDTH, settings.VIRTUAL_HEIGHT))
+                self._fade_surf.fill((0, 0, 0))
+            self._fade_surf.set_alpha(int(max(0.0, min(255.0, self.fade_alpha))))
+            surface.blit(self._fade_surf, (0, 0))
             
         self.ui.render(surface)
 

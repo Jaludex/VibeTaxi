@@ -12,6 +12,7 @@ from gale.text import render_text
 from src.world.CityMap import CityMap
 from src.states.game.Gameplay.PlayState import PlayState
 from src.i18n import tr
+from src.os_tools import is_android
 
 
 class TitleScreenState(BaseState):
@@ -166,15 +167,16 @@ class TitleScreenState(BaseState):
         )
         container.add_child(self.btn_tutorial_toggle)
 
-        btn_usertracks = Button(
-            settings.VIRTUAL_WIDTH - 120,
-            settings.VIRTUAL_HEIGHT - 80,
-            100, 30,
-            tr("btn_user_tracks"),
-            on_click=self._on_user_tracks,
-            theme=BUTTON_THEME
-        )
-        container.add_child(btn_usertracks)
+        if not is_android():
+            btn_usertracks = Button(
+                settings.VIRTUAL_WIDTH - 120,
+                settings.VIRTUAL_HEIGHT - 80,
+                100, 30,
+                tr("btn_user_tracks"),
+                on_click=self._on_user_tracks,
+                theme=BUTTON_THEME
+            )
+            container.add_child(btn_usertracks)
 
         btn_options = Button(
             settings.VIRTUAL_WIDTH - 120,
@@ -395,6 +397,10 @@ class TitleScreenState(BaseState):
     def on_input(self, input_id, input_data):
         if getattr(self, "input_cooldown", 0.0) > 0:
             return
+
+        if input_id == "pause" and getattr(input_data, "pressed", False):
+            self._on_quit()
+            return
             
         from src.menu_navigation import handle_menu_navigation
         if hasattr(self, 'ui') and handle_menu_navigation(self.ui, input_id, input_data):
@@ -404,7 +410,10 @@ class TitleScreenState(BaseState):
             self.ui.on_input(input_id, input_data)
 
     def render(self, surface: pygame.Surface):
+        import time
+        t0 = time.perf_counter()
         surface.fill((20, 20, 30))
+        t1 = time.perf_counter()
 
         # Render city background
         if self.city_map and self.camera:
@@ -414,42 +423,62 @@ class TitleScreenState(BaseState):
             self.city_map.render_traffic(surface, self.camera)
             self.city_map.render_layers(surface, self.camera, settings.TILED_UPPER_NO_SHADOW_LAYERS)
             self.city_map.render_layers(surface, self.camera, settings.TILED_UPPER_SHADOW_LAYERS)
+        t2 = time.perf_counter()
 
         # Scene fade overlay (for camera transitions)
         if self._scene_alpha > 0:
-            fade_surf = pygame.Surface((settings.VIRTUAL_WIDTH, settings.VIRTUAL_HEIGHT), pygame.SRCALPHA)
-            fade_surf.fill((0, 0, 0, int(max(0.0, min(255.0, self._scene_alpha)))))
-            surface.blit(fade_surf, (0, 0))
+            if not hasattr(self, "_fade_surf"):
+                self._fade_surf = pygame.Surface((settings.VIRTUAL_WIDTH, settings.VIRTUAL_HEIGHT))
+                self._fade_surf.fill((0, 0, 0))
+            self._fade_surf.set_alpha(int(max(0.0, min(255.0, self._scene_alpha))))
+            surface.blit(self._fade_surf, (0, 0))
+        t3 = time.perf_counter()
 
-        # Title gradient overlay
-        gradient = settings.TEXTURES.get("title_gradient")
-        if gradient:
-            surface.blit(gradient, (0, 0))
+        # Title gradient overlay (using 6 uniform-alpha bands for ultra-fast SDL blit)
+        if not hasattr(self, "_gradient_bands"):
+            self._gradient_bands = []
+            num_bands = 6
+            band_h = settings.VIRTUAL_HEIGHT // num_bands
+            for i in range(num_bands):
+                b = pygame.Surface((settings.VIRTUAL_WIDTH, band_h)).convert()
+                b.fill((69, 40, 60))
+                alpha = int(100 + (255 - 100) * (i / (num_bands - 1)))
+                b.set_alpha(alpha)
+                self._gradient_bands.append((b, (0, i * band_h)))
+        for b_surf, b_pos in self._gradient_bands:
+            surface.blit(b_surf, b_pos)
+        t4 = time.perf_counter()
 
-        # Title
-        render_text(
-            surface,
-            tr("game_title"),
-            settings.FONTS["big"],
-            settings.VIRTUAL_WIDTH / 2,
-            settings.VIRTUAL_HEIGHT / 2 - 40,
-            (255, 220, 50),
-            center=True,
-            shadowed=True
-        )
+        # Title and Version text
+        curr_lang = getattr(settings, "CURRENT_LOCALE", "en")
+        if not hasattr(self, "_title_txt") or getattr(self, "_txt_lang", None) != curr_lang:
+            from gale.text import Text
+            self._title_txt = Text(
+                tr("game_title"),
+                settings.FONTS["big"],
+                settings.VIRTUAL_WIDTH / 2,
+                settings.VIRTUAL_HEIGHT / 2 - 40,
+                (255, 220, 50),
+                center=True,
+                shadowed=True
+            )
+            self._version_txt = Text(
+                tr("version", version=settings.VERSION),
+                settings.FONTS["medium"],
+                5,
+                settings.VIRTUAL_HEIGHT - 20,
+                (255, 255, 255),
+                shadowed=True
+            )
+            self._txt_lang = curr_lang
 
-        render_text(
-            surface,
-            tr("version", version=settings.VERSION),
-            settings.FONTS["medium"],
-            5,
-            settings.VIRTUAL_HEIGHT - 20,
-            (255, 255, 255),
-            shadowed=True
-        )
+        self._title_txt.render(surface)
+        self._version_txt.render(surface)
 
-        render_text(
-                    surface,
+        if not is_android():
+            if not hasattr(self, "_fs_hint_txt") or getattr(self, "_fs_txt_lang", None) != curr_lang:
+                from gale.text import Text
+                self._fs_hint_txt = Text(
                     tr("fullscreen_hint"),
                     settings.FONTS["medium"],
                     5,
@@ -457,13 +486,32 @@ class TitleScreenState(BaseState):
                     (255, 255, 255),
                     shadowed=True
                 )
+                self._fs_txt_lang = curr_lang
+            self._fs_hint_txt.render(surface)
+        t5 = time.perf_counter()
 
         if hasattr(self, 'ui') and self.ui:
             self.ui.render(surface)
+        t6 = time.perf_counter()
 
         # Entry fade (from OpeningState transition)
         if self.fade_alpha > 0:
-            fade_surf = pygame.Surface((settings.VIRTUAL_WIDTH, settings.VIRTUAL_HEIGHT), pygame.SRCALPHA)
-            fade_surf.fill((0, 0, 0, int(max(0.0, min(255.0, self.fade_alpha)))))
-            surface.blit(fade_surf, (0, 0))
+            if not hasattr(self, "_fade_surf"):
+                self._fade_surf = pygame.Surface((settings.VIRTUAL_WIDTH, settings.VIRTUAL_HEIGHT))
+                self._fade_surf.fill((0, 0, 0))
+            self._fade_surf.set_alpha(int(max(0.0, min(255.0, self.fade_alpha))))
+            surface.blit(self._fade_surf, (0, 0))
+        t7 = time.perf_counter()
+
+        if not hasattr(self, "_diag_cnt"):
+            self._diag_cnt = 0
+            import gale.log
+            self._logger = gale.log.get_logger("title")
+        self._diag_cnt += 1
+        if self._diag_cnt % 30 == 0:
+            self._logger.info(
+                f"[TITLE RENDER BREAKDOWN] fill={(t1-t0)*1000:.1f}ms city={(t2-t1)*1000:.1f}ms "
+                f"sc_fade={(t3-t2)*1000:.1f}ms grad={(t4-t3)*1000:.1f}ms text={(t5-t4)*1000:.1f}ms "
+                f"ui={(t6-t5)*1000:.1f}ms entry_fade={(t7-t6)*1000:.1f}ms"
+            )
 

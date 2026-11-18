@@ -46,6 +46,50 @@ class OpeningState(BaseState):
         self.alpha = 0.0
         slide = self.slides[index]
         
+        # Pre-render slide content once to avoid allocating surfaces and rasterizing text every frame
+        self._cached_slide_surf = pygame.Surface((settings.VIRTUAL_WIDTH, settings.VIRTUAL_HEIGHT))
+        self._cached_slide_surf.fill((0, 0, 0))
+
+        center_x = settings.VIRTUAL_WIDTH / 2
+        center_y = settings.VIRTUAL_HEIGHT / 2
+
+        icon = slide.get("icon")
+        icon_surface = None
+        if isinstance(icon, str) and icon in settings.TEXTURES:
+            icon_surface = settings.TEXTURES[icon]
+        elif isinstance(icon, pygame.Surface):
+            icon_surface = icon
+
+        text_y_offset = 0
+        if icon_surface:
+            icon_rect = icon_surface.get_rect(center=(center_x, center_y - 25))
+            self._cached_slide_surf.blit(icon_surface, icon_rect.topleft)
+            text_y_offset = 25
+
+        title_text = slide.get("text", "")
+        if title_text:
+            render_text(
+                self._cached_slide_surf,
+                title_text,
+                settings.FONTS["big"],
+                center_x,
+                center_y + text_y_offset - 10,
+                (255, 255, 255),
+                center=True
+            )
+
+        subtext = slide.get("subtext", "")
+        if subtext:
+            render_text(
+                self._cached_slide_surf,
+                subtext,
+                settings.FONTS["minecraft"],
+                center_x,
+                center_y + text_y_offset + 18,
+                (180, 180, 180),
+                center=True
+            )
+
         self._cancel_timers()
         
         self._current_tween = Timer.tween(
@@ -103,12 +147,15 @@ class OpeningState(BaseState):
             from src.states.game.Menus.TitleScreenState import TitleScreenState
             
             def on_lang_close():
-                # Now push title screen state
+                while len(self.state_machine.states) > 0:
+                    self.state_machine.pop()
                 self.state_machine.push(TitleScreenState(self.state_machine))
                     
             self.state_machine.push(LanguageSelectionState(self.state_machine, on_close=on_lang_close))
         else:
             from src.states.game.Menus.TitleScreenState import TitleScreenState
+            while len(self.state_machine.states) > 0:
+                self.state_machine.pop()
             self.state_machine.push(TitleScreenState(self.state_machine))
 
     def on_input(self, input_id: str, input_data: InputData) -> None:
@@ -123,54 +170,6 @@ class OpeningState(BaseState):
 
     def render(self, surface: pygame.Surface) -> None:
         surface.fill((0, 0, 0))
-        
-        if self.current_index >= len(self.slides):
-            return
-            
-        slide = self.slides[self.current_index]
-        
-        slide_surface = pygame.Surface((settings.VIRTUAL_WIDTH, settings.VIRTUAL_HEIGHT), pygame.SRCALPHA)
-        slide_surface.fill((0, 0, 0, 0))
-        
-        center_x = settings.VIRTUAL_WIDTH / 2
-        center_y = settings.VIRTUAL_HEIGHT / 2
-        
-        icon = slide.get("icon")
-        icon_surface = None
-        if isinstance(icon, str) and icon in settings.TEXTURES:
-            icon_surface = settings.TEXTURES[icon]
-        elif isinstance(icon, pygame.Surface):
-            icon_surface = icon
-            
-        text_y_offset = 0
-        if icon_surface:
-            icon_rect = icon_surface.get_rect(center=(center_x, center_y - 25))
-            slide_surface.blit(icon_surface, icon_rect.topleft)
-            text_y_offset = 25
-            
-        title_text = slide.get("text", "")
-        if title_text:
-            render_text(
-                slide_surface,
-                title_text,
-                settings.FONTS["big"],
-                center_x,
-                center_y + text_y_offset - 10,
-                (255, 255, 255),
-                center=True
-            )
-            
-        subtext = slide.get("subtext", "")
-        if subtext:
-            render_text(
-                slide_surface,
-                subtext,
-                settings.FONTS["minecraft"],
-                center_x,
-                center_y + text_y_offset + 18,
-                (180, 180, 180),
-                center=True
-            )
-            
-        slide_surface.set_alpha(int(max(0.0, min(255.0, self.alpha))))
-        surface.blit(slide_surface, (0, 0))
+        if hasattr(self, "_cached_slide_surf") and self.alpha > 0:
+            self._cached_slide_surf.set_alpha(int(max(0.0, min(255.0, self.alpha))))
+            surface.blit(self._cached_slide_surf, (0, 0))

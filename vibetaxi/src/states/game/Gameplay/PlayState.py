@@ -98,6 +98,12 @@ class PlayState(BaseState):
         self.taxi.init_sounds()
         self.exited = False
         
+        from src.os_tools import is_mobile_mode
+        self.mobile_controls = None
+        if is_mobile_mode():
+            from src.gui.MobileControls import MobileControlsHUD
+            self.mobile_controls = MobileControlsHUD(self.taxi, self.radio, self.state_machine)
+
         self.danger_color = (255, 0, 0)
         from gale.timer import Timer
         self.danger_timer = Timer.every(0.5, self._toggle_danger_color)
@@ -178,6 +184,8 @@ class PlayState(BaseState):
             self.camera.update(dt)
 
         self.radio.update(dt)
+        if getattr(self, "mobile_controls", None):
+            self.mobile_controls.update(dt)
         
         
         self.game_rule_strategy.update(dt)
@@ -499,6 +507,8 @@ class PlayState(BaseState):
                     break
 
     def render(self, surface):
+        import time
+        t0 = time.perf_counter()
         self.city_map.render_layers(surface, self.camera, settings.TILED_GROUND_LAYERS)
         for emitter in self.city_map.particle_emitters:
             if getattr(emitter, "is_ground", False):
@@ -558,9 +568,12 @@ class PlayState(BaseState):
         vibe_alpha = getattr(self, "vibe_alpha", 0.0)
         vibe_color = getattr(self, "vibe_color", None)
         if vibe_alpha > 0 and vibe_color:
-            filter_surf = pygame.Surface((settings.VIRTUAL_WIDTH, settings.VIRTUAL_HEIGHT), pygame.SRCALPHA)
-            filter_surf.fill((*vibe_color, int(vibe_alpha)))
-            surface.blit(filter_surf, (0, 0))
+            if not hasattr(self, "_vibe_surf") or getattr(self, "_last_vibe_color", None) != vibe_color:
+                self._vibe_surf = pygame.Surface((settings.VIRTUAL_WIDTH, settings.VIRTUAL_HEIGHT))
+                self._vibe_surf.fill(vibe_color)
+                self._last_vibe_color = vibe_color
+            self._vibe_surf.set_alpha(int(vibe_alpha))
+            surface.blit(self._vibe_surf, (0, 0))
 
         self.radio.render(surface)
         if self.active_passenger and self.active_passenger.is_riding():
@@ -590,38 +603,53 @@ class PlayState(BaseState):
             
         self.game_rule_strategy.render_ui(surface, settings.FONTS["minecraft"], 20, 20)
         
+        if getattr(self, "mobile_controls", None):
+            self.mobile_controls.render(surface)
+
         fade_alpha = getattr(self, "fade_overlay_alpha", 0)
         if fade_alpha > 0:
-            fade_surf = pygame.Surface((settings.VIRTUAL_WIDTH, settings.VIRTUAL_HEIGHT), pygame.SRCALPHA)
-            fade_surf.fill((0, 0, 0, int(fade_alpha)))
-            surface.blit(fade_surf, (0, 0))
+            if not hasattr(self, "_fade_overlay_surf"):
+                self._fade_overlay_surf = pygame.Surface((settings.VIRTUAL_WIDTH, settings.VIRTUAL_HEIGHT))
+                self._fade_overlay_surf.fill((0, 0, 0))
+            self._fade_overlay_surf.set_alpha(int(fade_alpha))
+            surface.blit(self._fade_overlay_surf, (0, 0))
             
         text_alpha = getattr(self, "day_text_alpha", 0)
         if text_alpha > 0:
-            text_layer = pygame.Surface((settings.VIRTUAL_WIDTH, settings.VIRTUAL_HEIGHT), pygame.SRCALPHA)
-            
-            lines = getattr(self, "start_text", "").split('\n')
-            center_y = settings.VIRTUAL_HEIGHT / 2
-
-            total_height = len(lines) * settings.FONTS["big"].get_linesize()
-            start_y = center_y - total_height / 2 + settings.FONTS["big"].get_height() / 2
-
-            from gale.text import render_text
-            
-            for i, line in enumerate(lines):
-                render_text(
-                    text_layer,
-                    line,
-                    settings.FONTS["big"],
-                    settings.VIRTUAL_WIDTH / 2,
-                    start_y + i * settings.FONTS["big"].get_linesize(),
-                    (255, 255, 255),
-                    center=True,
-                    shadowed=True
+            if not hasattr(self, "_cached_start_text_surf") or getattr(self, "_cached_start_text", None) != self.start_text:
+                lines = getattr(self, "start_text", "").split('\n')
+                font = settings.FONTS["big"]
+                line_surfs = [font.render(line, True, (255, 255, 255)) for line in lines]
+                shadow_surfs = [font.render(line, True, (0, 0, 0)) for line in lines]
+                
+                max_w = max((s.get_width() for s in line_surfs), default=10) + 8
+                line_h = font.get_linesize()
+                total_h = len(lines) * line_h + 8
+                
+                surf = pygame.Surface((max_w, total_h), pygame.SRCALPHA)
+                for i, (l_surf, s_surf) in enumerate(zip(line_surfs, shadow_surfs)):
+                    lx = (max_w - l_surf.get_width()) // 2
+                    ly = i * line_h
+                    surf.blit(s_surf, (lx + 2, ly + 2))
+                    surf.blit(l_surf, (lx, ly))
+                self._cached_start_text_surf = surf
+                self._cached_start_text = self.start_text
+                self._cached_start_text_pos = (
+                    (settings.VIRTUAL_WIDTH - max_w) // 2,
+                    (settings.VIRTUAL_HEIGHT - total_h) // 2,
                 )
-            
-            text_layer.set_alpha(int(text_alpha))
-            surface.blit(text_layer, (0, 0))
+
+            self._cached_start_text_surf.set_alpha(int(text_alpha))
+            surface.blit(self._cached_start_text_surf, self._cached_start_text_pos)
+
+        if not hasattr(self, "_play_diag_cnt"):
+            self._play_diag_cnt = 0
+            import gale.log
+            self._play_logger = gale.log.get_logger("play")
+        self._play_diag_cnt += 1
+        if self._play_diag_cnt % 30 == 0:
+            dur = (time.perf_counter() - t0) * 1000.0
+            self._play_logger.info(f"[PLAY RENDER] total={dur:.1f}ms")
         
     def _render_detection_circle(self, surface, x, y, radius, color):
         if self.camera:
@@ -689,6 +717,34 @@ class PlayState(BaseState):
     def on_input(self, input_id: str, input_data: InputData) -> None:
         if getattr(self, "game_over_triggered", False):
             return
+
+        if getattr(self, "mobile_controls", None):
+            if input_id == "touch_event":
+                self._has_touch_events = True
+                vx, vy = input_data.vx, input_data.vy
+                fid = input_data.finger_id
+                if input_data.pressed:
+                    self.mobile_controls.handle_touch_down(vx, vy, fid)
+                elif input_data.motion:
+                    self.mobile_controls.handle_touch_move(vx, vy, fid)
+                elif input_data.released:
+                    self.mobile_controls.handle_touch_up(vx, vy, fid)
+                return
+            elif input_id in ("mouse_click", "mouse_motion"):
+                # If genuine touch events are already streaming, ignore SDL emulated mouse events to avoid collisions
+                if getattr(self, "_has_touch_events", False):
+                    return
+                from src.mouse_tools import physical_to_virtual
+                if input_id == "mouse_click":
+                    vx, vy = physical_to_virtual(input_data.position[0], input_data.position[1])
+                    if input_data.pressed:
+                        self.mobile_controls.handle_touch_down(vx, vy, finger_id=None)
+                    elif input_data.released:
+                        self.mobile_controls.handle_touch_up(vx, vy, finger_id=None)
+                elif input_id == "mouse_motion":
+                    vx, vy = physical_to_virtual(input_data.position[0], input_data.position[1])
+                    if any(input_data.buttons):
+                        self.mobile_controls.handle_touch_move(vx, vy, finger_id=None)
             
         if input_id == "pause" and input_data.pressed:
             from src import audio
@@ -732,6 +788,10 @@ class PlayState(BaseState):
         if getattr(self, "_click_emitter", None) is not None:
             self._click_emitter.stop()
             self._click_emitter = None
+        if getattr(self, "mobile_controls", None):
+            for btn in self.mobile_controls.buttons:
+                btn.release()
+            self.mobile_controls.joystick.reset()
 
     def exit(self) -> None:
         self.exited = True

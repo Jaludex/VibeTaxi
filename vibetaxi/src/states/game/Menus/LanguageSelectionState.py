@@ -82,14 +82,25 @@ class LanguageSelectionState(BaseState):
     def render(self, surface):
         if len(self.state_machine.states) <= 1:
             surface.fill((20, 20, 30))
-            gradient = settings.TEXTURES.get("title_gradient")
-            if gradient:
-                surface.blit(gradient, (0, 0))
+            if not hasattr(self, "_gradient_bands"):
+                self._gradient_bands = []
+                num_bands = 6
+                band_h = settings.VIRTUAL_HEIGHT // num_bands
+                for i in range(num_bands):
+                    b = pygame.Surface((settings.VIRTUAL_WIDTH, band_h)).convert()
+                    b.fill((69, 40, 60))
+                    alpha = int(100 + (255 - 100) * (i / (num_bands - 1)))
+                    b.set_alpha(alpha)
+                    self._gradient_bands.append((b, (0, i * band_h)))
+            for b_surf, b_pos in self._gradient_bands:
+                surface.blit(b_surf, b_pos)
                 
         # Draw a dim background
-        dim = pygame.Surface((settings.VIRTUAL_WIDTH, settings.VIRTUAL_HEIGHT), pygame.SRCALPHA)
-        dim.fill((0, 0, 0, 150))
-        surface.blit(dim, (0, 0))
+        if not hasattr(self, "_dim_surf"):
+            self._dim_surf = pygame.Surface((settings.VIRTUAL_WIDTH, settings.VIRTUAL_HEIGHT))
+            self._dim_surf.fill((0, 0, 0))
+            self._dim_surf.set_alpha(150)
+        surface.blit(self._dim_surf, (0, 0))
         
         # Draw the title
         title_y = self.container_y - 100
